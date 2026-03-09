@@ -34,9 +34,8 @@ HAML setup:
 CI setup from reference project:
 
 ```bash
-# GitHub path (copy/adapt from reference project)
-git fetch base_project
-git diff --name-status HEAD..base_project/main -- .github/workflows/
+# GitHub path (read remotely, no local clone)
+curl -fsSL https://api.github.com/repos/purple-magic/base_project/contents/.github/workflows?ref=main
 ```
 
 If service is not GitHub, implement CI for chosen service with scenario parity to reference GitHub Actions (lint, tests, security checks, deploy gates).
@@ -96,15 +95,15 @@ find app/views -type f \( -name "*.erb" -o -name "*.builder" \)
 ## Upgrade from reference project
 
 ```bash
-git remote add base_project https://github.com/purple-magic/base_project.git
-git fetch base_project
-git diff --name-status HEAD..base_project/main
+# Read reference repository metadata remotely (no local clone)
+curl -fsSL https://api.github.com/repos/purple-magic/base_project/contents?ref=main
 ```
 
 Inspect config-first differences:
 
 ```bash
-git diff HEAD..base_project/main -- config/ Gemfile Gemfile.lock .github/ docker-compose* Procfile* bin/
+# Compare against remote reference files by downloading specific paths when needed
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/Gemfile
 ```
 
 ## Jobs and cache

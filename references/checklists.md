@@ -20,7 +20,7 @@
 
 ## Reference Project Upgrade (`base_project`)
 
-1. Fetch latest `https://github.com/purple-magic/base_project`.
+1. Read latest `https://github.com/purple-magic/base_project` remotely (do not clone locally).
 2. Diff current project with reference, starting from `config/`, `Gemfile*`, CI, and tooling files.
 3. Confirm repository service (GitHub, GitLab, etc.) and apply CI rules:
    - GitHub: sync applicable updates from `.github/workflows` in reference project.

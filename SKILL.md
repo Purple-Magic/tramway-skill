@@ -40,7 +40,8 @@ Rules:
 2. Pull only applicable updates; do not blindly overwrite app-specific code.
 3. Never copy domain models, business logic, or exact product functionality from `base_project`.
 4. Reuse only application-level setup: framework configuration, infrastructure wiring, tooling, CI/CD, security defaults, and implementation approaches.
-5. Document what was adopted, skipped, and why.
+5. Do not clone `base_project` locally; read it remotely from GitHub.
+6. Document what was adopted, skipped, and why.
 
 ## Workflow
 
@@ -244,7 +245,7 @@ Use this feature whenever the user asks for `upgrade` or periodic maintenance.
 
 Procedure:
 
-1. Fetch latest `base_project`.
+1. Read latest `base_project` remotely from GitHub (no local clone).
 2. Diff current project vs reference at config/tooling layers first.
 3. Classify changes:
    - Safe to apply directly.
