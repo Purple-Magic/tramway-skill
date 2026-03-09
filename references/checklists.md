@@ -22,15 +22,18 @@
 
 1. Fetch latest `https://github.com/purple-magic/base_project`.
 2. Diff current project with reference, starting from `config/`, `Gemfile*`, CI, and tooling files.
-3. Mark each reference change as:
+3. Confirm repository service (GitHub, GitLab, etc.) and apply CI rules:
+   - GitHub: sync applicable updates from `.github/workflows` in reference project.
+   - Non-GitHub: keep equivalent CI scenarios on chosen platform.
+4. Mark each reference change as:
    - Applicable as-is
    - Applicable with adaptation
    - Not applicable
-4. Exclude models, business logic, and feature-specific behavior from sync scope.
-5. Apply changes in small thematic batches.
-6. Preserve HAML-only views and avoid introducing new `.erb` files.
-7. Run `dip rails db:prepare`, boot check, and tests after each batch.
-8. Summarize applied/skipped updates with reasons.
+5. Exclude models, business logic, and feature-specific behavior from sync scope.
+6. Apply changes in small thematic batches.
+7. Preserve HAML-only views and avoid introducing new `.erb` files.
+8. Run `dip rails db:prepare`, boot check, and tests after each batch.
+9. Summarize applied/skipped updates with reasons.
 
 ## Migration Safety
 

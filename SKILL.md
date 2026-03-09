@@ -106,6 +106,7 @@ When asked to `create rails project`, do this first:
 
 1. Explicitly ask for the project name before running any command.
 2. Tell the user: "Choose a simple name. Try to avoid `-` character besides you want explicitly. Renaming a Rails project later is possible but usually difficult and time-consuming."
+3. Explicitly ask which git service they use (GitHub, GitLab, etc.).
 
 After the user confirms `<project_name>`, use this baseline flow:
 
@@ -114,8 +115,7 @@ if ! command -v rails >/dev/null 2>&1; then gem install rails; fi
 rails new <project_name> -d postgresql
 cd <project_name>
 if ! command -v dip >/dev/null 2>&1; then gem install dip; fi
-dip bundle install
-dip rails db:prepare
+dip provision
 ```
 
 Enable HAML generators immediately after creation:
@@ -135,14 +135,19 @@ API-only option:
 ```bash
 if ! command -v rails >/dev/null 2>&1; then gem install rails; fi
 rails new <project_name> --api -d postgresql
+cd <project_name>
+if ! command -v dip >/dev/null 2>&1; then gem install dip; fi
+dip provision
 ```
 
 Then align with the reference baseline:
 
 1. Compare generated files against `base_project`.
 2. Apply applicable config differences (CI, lint, security, deployment defaults).
-3. Ensure view layer is HAML-only (`app/views/**/*.haml`).
-4. Verify app boot and tests.
+3. If service is GitHub, copy/adapt GitHub Actions workflows from `base_project/.github/workflows/`.
+4. If service is not GitHub, create CI for the chosen service with the same scenarios covered by reference GitHub Actions (for example: lint, test, security checks, build/deploy gates).
+5. Ensure view layer is HAML-only (`app/views/**/*.haml`).
+6. Verify app boot and tests.
 
 ## 3) Daily Task Flows
 
@@ -257,6 +262,11 @@ Procedure:
 6. Keep or enforce HAML-only view setup (`haml-rails`, generator config, no new `.erb`).
 7. Run validation after each batch.
 8. Provide summary of adopted vs skipped updates.
+
+CI parity rule during upgrades:
+
+1. For GitHub repositories, keep `.github/workflows` aligned with applicable updates from `base_project`.
+2. For non-GitHub repositories, keep CI scenarios equivalent to reference GitHub Actions even if syntax/platform differs.
 
 Minimum validation:
 

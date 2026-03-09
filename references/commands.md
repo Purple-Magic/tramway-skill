@@ -14,15 +14,16 @@ dip rails db:prepare
 
 ## Create Rails project
 
-Before running commands, ask user for `<project_name>` explicitly and warn that project name should be simple because renaming later is difficult.
+Before running commands:
+- Ask user for `<project_name>` explicitly and warn that project name should be simple because renaming later is difficult.
+- Ask which git service is used (GitHub, GitLab, etc.).
 
 ```bash
 if ! command -v rails >/dev/null 2>&1; then gem install rails; fi
 rails new <project_name> -d postgresql
 cd <project_name>
 if ! command -v dip >/dev/null 2>&1; then gem install dip; fi
-dip bundle install
-dip rails db:prepare
+dip provision
 ```
 
 Set HAML as default template engine:
@@ -36,6 +37,16 @@ Rails.application.config.generators do |g|
 end
 RUBY
 ```
+
+CI setup from reference project:
+
+```bash
+# GitHub path (copy/adapt from reference project)
+git fetch base_project
+git diff --name-status HEAD..base_project/main -- .github/workflows/
+```
+
+If service is not GitHub, implement CI for chosen service with scenario parity to reference GitHub Actions (lint, tests, security checks, deploy gates).
 
 ## App lifecycle
 
