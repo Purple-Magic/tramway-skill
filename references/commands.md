@@ -15,9 +15,17 @@ dip rails db:prepare
 ## Create Rails project
 
 Before running commands:
+- Ask questions separately (one question per message), not as one large questionnaire.
+- Do not ask whether to use `base_project`; notify user it is used by default.
 - Ask user for `<project_name>` explicitly and warn that project name should be simple because renaming later is difficult.
 - Ask which git service is used (GitHub, GitLab, etc.).
 - Ask which chat should receive CI notifications. Supported chats: `Discord`.
+- Ask where to store repository (GitHub, GitLab, etc.).
+- Ask for remote URL or organization name.
+- Default repository visibility to private unless user asks for public.
+- Check whether provided repository URL/name already exists on chosen service.
+- If repository does not exist, ask user whether to create it.
+- Do not ask about app type; create standard Rails app by default.
 
 ```bash
 if ! command -v rails >/dev/null 2>&1; then gem install rails; fi

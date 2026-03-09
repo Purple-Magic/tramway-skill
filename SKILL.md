@@ -41,7 +41,8 @@ Rules:
 3. Never copy domain models, business logic, or exact product functionality from `base_project`.
 4. Reuse only application-level setup: framework configuration, infrastructure wiring, tooling, CI/CD, security defaults, and implementation approaches.
 5. Do not clone `base_project` locally; read it remotely from GitHub.
-6. Document what was adopted, skipped, and why.
+6. Do not ask user whether to use `base_project`; use it by default and only notify user that it is being used.
+7. Document what was adopted, skipped, and why.
 
 ## Workflow
 
@@ -105,26 +106,28 @@ gem install dip
 
 When asked to `create rails project`, do this first:
 
+Questioning style:
+
+1. Ask setup questions one-by-one in separate messages.
+2. Do not send all setup questions in one message.
+3. Do not ask whether to use `base_project`; notify that it will be used by default.
+
 1. Explicitly ask for the project name before running any command.
 2. Tell the user: "Choose a simple name. Try to avoid `-` character besides you want explicitly. Renaming a Rails project later is possible but usually difficult and time-consuming."
 3. Explicitly ask which git service they use (GitHub, GitLab, etc.).
 4. Explicitly ask which chat to connect for CI notifications. Supported chats: `Discord`.
+5. Explicitly ask where they want to store the repository (GitHub, GitLab, etc.).
+6. Ask for either remote URL or organization name to create the repository.
+7. Make repository private by default unless user explicitly asks for public.
+8. Do not ask about app type (standard vs API-only); create a standard Rails app by default.
+9. After user provides repository URL or name, check whether it already exists on the selected service.
+10. If repository does not exist, ask user explicitly whether they want to create it.
 
 After the user confirms `<project_name>`, use this baseline flow:
 
 ```bash
 if ! command -v rails >/dev/null 2>&1; then gem install rails; fi
 rails new <project_name> -d postgresql
-cd <project_name>
-if ! command -v dip >/dev/null 2>&1; then gem install dip; fi
-dip provision
-```
-
-API-only option:
-
-```bash
-if ! command -v rails >/dev/null 2>&1; then gem install rails; fi
-rails new <project_name> --api -d postgresql
 cd <project_name>
 if ! command -v dip >/dev/null 2>&1; then gem install dip; fi
 dip provision
@@ -141,7 +144,9 @@ Then align with the reference baseline:
 7. If chat is not `Discord` and user does not want generated notifications, do not apply Discord notification configuration from reference workflows.
 8. Take HAML setup and configuration from `base_project` (do not configure HAML manually in this step).
 9. Ensure view layer is HAML-only (`app/views/**/*.haml`).
-10. Verify app boot and tests.
+10. Create or connect repository using provided remote URL or organization, private by default.
+11. If repository was missing and user confirmed creation, create it as private unless they asked otherwise.
+12. Verify app boot and tests.
 
 ## 3) Daily Task Flows
 
