@@ -1,65 +1,67 @@
 # Rails Command Cookbook
 
-Use project wrappers first (`dip`, `bin/*`, `bundle exec`) based on repository conventions.
+Use `dip` for all Rails/Ruby project commands, except `rails new` during initial project creation.
+Assume Ruby is already installed. If Rails is missing, install it first.
 
 ## Environment bootstrap
 
 ```bash
-bin/setup
-bundle install
-bin/rails db:prepare
+dip bundle install
+dip rails db:prepare
 ```
 
 ## Create Rails project
 
 ```bash
+rails -v || gem install rails
 rails new my_app -d postgresql
 cd my_app
-bin/setup || (bundle install && bin/rails db:prepare)
+dip bundle install
+dip rails db:prepare
 ```
 
 ## App lifecycle
 
 ```bash
-bin/dev
-bin/rails server
-bin/rails console
-bin/rails runner 'puts Rails.version'
+dip up
+dip rails server
+dip rails console
+dip rails runner 'puts Rails.version'
 ```
 
 ## Testing
 
 ```bash
-bin/rspec
-bin/rspec path/to/spec.rb:42
-bin/rails test
-bin/rails test test/models/user_test.rb:10
+dip rspec
+dip rspec path/to/spec.rb:42
+dip rails test
+dip rails test test/models/user_test.rb:10
 ```
 
 ## Lint and security
 
 ```bash
-bundle exec rubocop
-bundle exec brakeman -q
-bundle audit check --update
+dip rubocop
+dip brakeman -q
+dip bundle audit check --update
 ```
 
 ## Database
 
 ```bash
-bin/rails db:prepare
-bin/rails db:migrate
-bin/rails db:rollback STEP=1
-bin/rails db:seed
-bin/rails dbconsole
+dip rails db:prepare
+dip rails db:migrate
+dip rails db:rollback STEP=1
+dip rails db:seed
+dip rails dbconsole
 ```
 
 ## Code health
 
 ```bash
-bin/rails zeitwerk:check
-bin/rails routes
-bin/rails about
+dip rails zeitwerk:check
+dip rails routes
+dip rails about
 ```
 
 ## Upgrade from reference project
@@ -79,6 +81,6 @@ git diff HEAD..base_project/main -- config/ Gemfile Gemfile.lock .github/ docker
 ## Jobs and cache
 
 ```bash
-bin/rails runner 'puts ActiveJob::Base.queue_adapter.class'
-bin/rails tmp:cache:clear
+dip rails runner 'puts ActiveJob::Base.queue_adapter.class'
+dip rails tmp:cache:clear
 ```

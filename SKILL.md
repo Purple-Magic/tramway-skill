@@ -7,6 +7,14 @@ description: Manage Ruby on Rails projects end-to-end with reliable workflows fo
 
 Use this skill as an operational playbook. Prefer small, safe, verifiable changes over big-bang edits.
 
+Command policy:
+
+1. Assume Ruby is already installed on the host system.
+2. Run Rails/Ruby project commands through `dip`.
+3. Exception: use direct `rails new ...` only when creating a brand-new Rails project (before `dip` setup exists).
+4. If Rails is missing on host, install it before project creation (`gem install rails`).
+5. Do not suggest direct `bundle`, `bin/rails`, or `bin/rspec` commands for project operations.
+
 ## Canonical Reference Project
 
 Use `https://github.com/purple-magic/base_project` as the main reference for baseline project structure and configuration.
@@ -15,8 +23,9 @@ Rules:
 
 1. Always compare the current project against `base_project` during upgrade/maintenance tasks.
 2. Pull only applicable updates; do not blindly overwrite app-specific code.
-3. Prioritize security, framework, CI, and infra configuration updates from the reference project.
-4. Document what was adopted, skipped, and why.
+3. Never copy domain models, business logic, or exact product functionality from `base_project`.
+4. Reuse only application-level setup: framework configuration, infrastructure wiring, tooling, CI/CD, security defaults, and implementation approaches.
+5. Document what was adopted, skipped, and why.
 
 ## Workflow
 
@@ -40,31 +49,32 @@ Detect key rails signals:
 - Gem management: `Gemfile`, `Gemfile.lock`
 - App stack: `config/application.rb`, `config/environments/*`
 - DB stack: `config/database.yml`, `db/schema.rb` or `db/structure.sql`
-- Test stack: `spec/`, `test/`, `bin/rspec`, CI config
-- Tooling: `bin/setup`, `bin/dev`, `Procfile*`, `docker-compose*`, `dip*`
+- Test stack: `spec/`, `test/`, CI config
+- Tooling: `dip.yml`, `dip*`, `Procfile*`, `docker-compose*`
 
-Choose execution path from project tooling. Prefer project wrappers (`dip`, `bin/*`) over global commands.
+Choose execution path from project tooling. Use `dip` as the default command runner.
 
 ## 2) Bootstrap Safely
 
 Run the smallest setup path first:
 
 ```bash
-bin/setup
+dip bundle install
+dip rails db:prepare
 ```
 
 If unavailable, run equivalent steps:
 
 ```bash
-bundle install
-bin/rails db:prepare
+dip bundle install
+dip rails db:prepare
 ```
 
 Verify app boots:
 
 ```bash
-bin/rails runner 'puts Rails.version'
-bin/rails zeitwerk:check
+dip rails runner 'puts Rails.version'
+dip rails zeitwerk:check
 ```
 
 If setup fails, capture exact command, error, and missing dependency before attempting fixes.
@@ -74,14 +84,17 @@ If setup fails, capture exact command, error, and missing dependency before atte
 When asked to `create rails project`, use this baseline flow:
 
 ```bash
+rails -v || gem install rails
 rails new my_app -d postgresql
 cd my_app
-bin/setup || (bundle install && bin/rails db:prepare)
+dip bundle install
+dip rails db:prepare
 ```
 
 API-only option:
 
 ```bash
+rails -v || gem install rails
 rails new my_api --api -d postgresql
 ```
 
@@ -121,15 +134,15 @@ Then align with the reference baseline:
 Start with fast, deterministic signals:
 
 ```bash
-bin/rails routes | head
-bin/rails runner 'puts ActiveRecord::Base.connection_db_config.database'
+dip rails routes | head
+dip rails runner 'puts ActiveRecord::Base.connection_db_config.database'
 ```
 
 For failing tests:
 
 ```bash
-bin/rspec path/to/spec.rb:123
-bin/rspec --seed <seed>
+dip rspec path/to/spec.rb:123
+dip rspec --seed <seed>
 ```
 
 For runtime issues:
@@ -153,9 +166,9 @@ Rules:
 Before merge:
 
 ```bash
-bin/rails db:migrate
-bin/rails db:rollback STEP=1
-bin/rails db:migrate
+dip rails db:migrate
+dip rails db:rollback STEP=1
+dip rails db:migrate
 ```
 
 If project uses `structure.sql`, ensure dump is updated by project convention.
@@ -178,9 +191,9 @@ For each bump:
 Use:
 
 ```bash
-bundle outdated
-bundle exec brakeman -q
-bundle exec rubocop
+dip bundle outdated
+dip brakeman -q
+dip rubocop
 ```
 
 If command wrappers exist in project, use them instead.
@@ -197,16 +210,17 @@ Procedure:
    - Safe to apply directly.
    - Needs adaptation for local domain logic.
    - Not applicable.
-4. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
-5. Run validation after each batch.
-6. Provide summary of adopted vs skipped updates.
+4. Exclude models and feature-level behavior from sync scope; keep upgrades to app/platform layers only.
+5. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
+6. Run validation after each batch.
+7. Provide summary of adopted vs skipped updates.
 
 Minimum validation:
 
 ```bash
-bin/rails zeitwerk:check
-bin/rails db:prepare
-bin/rspec || bin/rails test
+dip rails zeitwerk:check
+dip rails db:prepare
+dip rspec || dip rails test
 ```
 
 ## 7) Release and Operations

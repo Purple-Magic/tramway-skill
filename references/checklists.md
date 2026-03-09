@@ -13,7 +13,7 @@
 
 1. Read release notes and breaking changes.
 2. Upgrade smallest unit (patch -> minor -> major).
-3. Run `zeitwerk:check`, targeted tests, then full suite.
+3. Run `dip rails zeitwerk:check`, targeted tests, then full suite.
 4. Address deprecations and autoloading warnings.
 5. Validate asset pipeline / JS / CSS integration.
 6. Record follow-up cleanup tasks.
@@ -26,9 +26,10 @@
    - Applicable as-is
    - Applicable with adaptation
    - Not applicable
-4. Apply changes in small thematic batches.
-5. Run `db:prepare`, boot check, and tests after each batch.
-6. Summarize applied/skipped updates with reasons.
+4. Exclude models, business logic, and feature-specific behavior from sync scope.
+5. Apply changes in small thematic batches.
+6. Run `dip rails db:prepare`, boot check, and tests after each batch.
+7. Summarize applied/skipped updates with reasons.
 
 ## Migration Safety
 
