@@ -1,7 +1,9 @@
 # Rails Command Cookbook
 
 Use `dip` for all Rails/Ruby project commands, except `rails new` during initial project creation.
-Assume Ruby is already installed. If Rails is missing, install it first.
+Inside a Rails project, all Bundler commands must be run via `dip`.
+Assume Ruby is already installed. If Rails is missing, run `gem install rails`.
+If `dip` is missing, offer installing it via `gem install dip`.
 
 ## Environment bootstrap
 
@@ -12,12 +14,27 @@ dip rails db:prepare
 
 ## Create Rails project
 
+Before running commands, ask user for `<project_name>` explicitly and warn that project name should be simple because renaming later is difficult.
+
 ```bash
-rails -v || gem install rails
-rails new my_app -d postgresql
-cd my_app
+if ! command -v rails >/dev/null 2>&1; then gem install rails; fi
+rails new <project_name> -d postgresql
+cd <project_name>
+if ! command -v dip >/dev/null 2>&1; then gem install dip; fi
 dip bundle install
 dip rails db:prepare
+```
+
+Set HAML as default template engine:
+
+```bash
+dip bundle add haml-rails
+mkdir -p config/initializers
+cat > config/initializers/generators.rb <<'RUBY'
+Rails.application.config.generators do |g|
+  g.template_engine :haml
+end
+RUBY
 ```
 
 ## App lifecycle
@@ -31,11 +48,13 @@ dip rails runner 'puts Rails.version'
 
 ## Testing
 
+Default policy:
+- Use RSpec for feature generation unless user explicitly asks for another framework.
+- Do not generate model tests unless user explicitly requests model tests.
+
 ```bash
 dip rspec
 dip rspec path/to/spec.rb:42
-dip rails test
-dip rails test test/models/user_test.rb:10
 ```
 
 ## Lint and security
@@ -62,6 +81,7 @@ dip rails dbconsole
 dip rails zeitwerk:check
 dip rails routes
 dip rails about
+find app/views -type f \( -name "*.erb" -o -name "*.builder" \)
 ```
 
 ## Upgrade from reference project

@@ -28,8 +28,9 @@
    - Not applicable
 4. Exclude models, business logic, and feature-specific behavior from sync scope.
 5. Apply changes in small thematic batches.
-6. Run `dip rails db:prepare`, boot check, and tests after each batch.
-7. Summarize applied/skipped updates with reasons.
+6. Preserve HAML-only views and avoid introducing new `.erb` files.
+7. Run `dip rails db:prepare`, boot check, and tests after each batch.
+8. Summarize applied/skipped updates with reasons.
 
 ## Migration Safety
 

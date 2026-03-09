@@ -12,8 +12,23 @@ Command policy:
 1. Assume Ruby is already installed on the host system.
 2. Run Rails/Ruby project commands through `dip`.
 3. Exception: use direct `rails new ...` only when creating a brand-new Rails project (before `dip` setup exists).
-4. If Rails is missing on host, install it before project creation (`gem install rails`).
-5. Do not suggest direct `bundle`, `bin/rails`, or `bin/rspec` commands for project operations.
+4. If Rails is missing on host, run `gem install rails` before project creation.
+5. Inside a Rails project, run all Bundler commands via `dip` (for example, `dip bundle install`, `dip bundle add ...`, `dip bundle outdated`).
+6. If `dip` is missing, explicitly offer the user to install it with `gem install dip`.
+7. Do not suggest direct `bundle`, `bin/rails`, or `bin/rspec` commands for project operations.
+
+View policy:
+
+1. All Rails views must use HAML.
+2. Do not add new `.erb` templates.
+3. If touched feature still uses `.erb`, migrate it to `.haml` as part of the change when safe.
+
+Testing policy:
+
+1. For every generated feature, create RSpec tests by default.
+2. Switch to another test framework only when user explicitly asks for it.
+3. Do not create model tests by default.
+4. Create model tests only when user explicitly asks for model tests.
 
 ## Canonical Reference Project
 
@@ -79,40 +94,67 @@ dip rails zeitwerk:check
 
 If setup fails, capture exact command, error, and missing dependency before attempting fixes.
 
-## 2.1) Create New Rails Project
-
-When asked to `create rails project`, use this baseline flow:
+If `dip` is not available, ask user whether to install it and use:
 
 ```bash
-rails -v || gem install rails
-rails new my_app -d postgresql
-cd my_app
+gem install dip
+```
+
+## 2.1) Create New Rails Project
+
+When asked to `create rails project`, do this first:
+
+1. Explicitly ask for the project name before running any command.
+2. Tell the user: "Choose a simple name. Try to avoid `-` character besides you want explicitly. Renaming a Rails project later is possible but usually difficult and time-consuming."
+
+After the user confirms `<project_name>`, use this baseline flow:
+
+```bash
+if ! command -v rails >/dev/null 2>&1; then gem install rails; fi
+rails new <project_name> -d postgresql
+cd <project_name>
+if ! command -v dip >/dev/null 2>&1; then gem install dip; fi
 dip bundle install
 dip rails db:prepare
+```
+
+Enable HAML generators immediately after creation:
+
+```bash
+dip bundle add haml-rails
+mkdir -p config/initializers
+cat > config/initializers/generators.rb <<'RUBY'
+Rails.application.config.generators do |g|
+  g.template_engine :haml
+end
+RUBY
 ```
 
 API-only option:
 
 ```bash
-rails -v || gem install rails
-rails new my_api --api -d postgresql
+if ! command -v rails >/dev/null 2>&1; then gem install rails; fi
+rails new <project_name> --api -d postgresql
 ```
 
 Then align with the reference baseline:
 
 1. Compare generated files against `base_project`.
 2. Apply applicable config differences (CI, lint, security, deployment defaults).
-3. Verify app boot and tests.
+3. Ensure view layer is HAML-only (`app/views/**/*.haml`).
+4. Verify app boot and tests.
 
 ## 3) Daily Task Flows
 
 ### Feature work
 
 1. Reproduce or define acceptance criteria.
-2. Add or update focused tests first (request/model/system as appropriate).
-3. Implement minimal code change.
-4. Run nearest tests, then affected suite.
-5. Check schema/migration side effects.
+2. Add or update RSpec tests first for the feature.
+3. Skip model specs unless user explicitly requests them.
+4. Implement minimal code change.
+5. Keep view changes in HAML only; avoid introducing `.erb`.
+6. Run nearest tests, then affected suite.
+7. Check schema/migration side effects.
 
 ### Bugfix work
 
@@ -212,8 +254,9 @@ Procedure:
    - Not applicable.
 4. Exclude models and feature-level behavior from sync scope; keep upgrades to app/platform layers only.
 5. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
-6. Run validation after each batch.
-7. Provide summary of adopted vs skipped updates.
+6. Keep or enforce HAML-only view setup (`haml-rails`, generator config, no new `.erb`).
+7. Run validation after each batch.
+8. Provide summary of adopted vs skipped updates.
 
 Minimum validation:
 
