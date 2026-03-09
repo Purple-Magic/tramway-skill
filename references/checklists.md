@@ -36,15 +36,20 @@
    - Use private visibility by default.
    - Check whether provided repository URL/name exists.
    - If missing, ask user whether to create repository.
-7. Mark each reference change as:
+7. Before running `dip provision`, fetch `dip.yml` and `config/database.yml` from reference project remotely.
+8. Mark each reference change as:
    - Applicable as-is
    - Applicable with adaptation
    - Not applicable
-8. Exclude models, business logic, and feature-specific behavior from sync scope.
-9. Apply changes in small thematic batches.
-10. Preserve HAML-only views and avoid introducing new `.erb` files.
-11. Run `dip rails db:prepare`, boot check, and tests after each batch.
-12. Summarize applied/skipped updates with reasons.
+9. For every downloaded reference file/snippet, verify applicability and adapt current project values:
+   - Replace `base_project` names/identifiers with current project/repository names.
+   - Update env keys/values and service-specific placeholders.
+10. Before applying bootstrap imports, present one combined plan (files, applicability, adaptations) and ask once for `yes` or changes.
+11. Exclude models, business logic, and feature-specific behavior from sync scope.
+12. Apply changes in small thematic batches.
+13. Preserve HAML-only views and avoid introducing new `.erb` files.
+14. Run `dip rails db:prepare`, boot check, and tests after each batch.
+15. Summarize applied/skipped updates with reasons.
 
 ## Migration Safety
 

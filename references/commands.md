@@ -26,18 +26,24 @@ Before running commands:
 - Check whether provided repository URL/name already exists on chosen service.
 - If repository does not exist, ask user whether to create it.
 - Do not ask about app type; create standard Rails app by default.
+- For `base_project` imports during bootstrap, do not ask file-by-file.
+- Share one combined plan of files + applicability + adaptations, then ask once for `yes` or changes.
 
 ```bash
 if ! command -v rails >/dev/null 2>&1; then gem install rails; fi
 rails new <project_name> -d postgresql
 cd <project_name>
 if ! command -v dip >/dev/null 2>&1; then gem install dip; fi
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/dip.yml -o dip.yml
+mkdir -p config
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/config/database.yml -o config/database.yml
 dip provision
 ```
 
 HAML setup:
 - Take HAML gem/configuration from `base_project`.
 - Do not install or configure HAML manually here.
+- Check applicability first, then adapt names/values to current project (for example, replace `base_project` identifiers with current project/repo names).
 
 CI setup from reference project:
 
@@ -113,6 +119,10 @@ Inspect config-first differences:
 # Compare against remote reference files by downloading specific paths when needed
 curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/Gemfile
 ```
+
+After downloading reference content:
+- Verify it is applicable to current project setup.
+- Rewrite project-specific values (project name, repository URL, CI env vars, service identifiers) before applying.
 
 ## Jobs and cache
 

@@ -42,7 +42,9 @@ Rules:
 4. Reuse only application-level setup: framework configuration, infrastructure wiring, tooling, CI/CD, security defaults, and implementation approaches.
 5. Do not clone `base_project` locally; read it remotely from GitHub.
 6. Do not ask user whether to use `base_project`; use it by default and only notify user that it is being used.
-7. Document what was adopted, skipped, and why.
+7. Every downloaded file/snippet from `base_project` must be checked for applicability to current project setup before applying.
+8. Adapt imported content to current project context (for example, rename `base_project`-specific names, repository identifiers, and environment values to `<project_name>`/current repo values).
+9. Document what was adopted, skipped, and why.
 
 ## Workflow
 
@@ -111,6 +113,9 @@ Questioning style:
 1. Ask setup questions one-by-one in separate messages.
 2. Do not send all setup questions in one message.
 3. Do not ask whether to use `base_project`; notify that it will be used by default.
+4. During bootstrap import from `base_project`, do not ask about each file separately.
+5. Collect full planned import list (files to download, applicability notes, planned adaptations) and ask once for confirmation.
+6. Accept either `yes` (apply all) or user-requested changes to the plan.
 
 1. Explicitly ask for the project name before running any command.
 2. Tell the user: "Choose a simple name. Try to avoid `-` character besides you want explicitly. Renaming a Rails project later is possible but usually difficult and time-consuming."
@@ -130,6 +135,9 @@ if ! command -v rails >/dev/null 2>&1; then gem install rails; fi
 rails new <project_name> -d postgresql
 cd <project_name>
 if ! command -v dip >/dev/null 2>&1; then gem install dip; fi
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/dip.yml -o dip.yml
+mkdir -p config
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/config/database.yml -o config/database.yml
 dip provision
 ```
 
@@ -144,9 +152,11 @@ Then align with the reference baseline:
 7. If chat is not `Discord` and user does not want generated notifications, do not apply Discord notification configuration from reference workflows.
 8. Take HAML setup and configuration from `base_project` (do not configure HAML manually in this step).
 9. Ensure view layer is HAML-only (`app/views/**/*.haml`).
-10. Create or connect repository using provided remote URL or organization, private by default.
-11. If repository was missing and user confirmed creation, create it as private unless they asked otherwise.
-12. Verify app boot and tests.
+10. Prepare one consolidated bootstrap-import plan (all files + adaptations) and ask once for approval (`yes`) or changes.
+11. Create or connect repository using provided remote URL or organization, private by default.
+12. If repository was missing and user confirmed creation, create it as private unless they asked otherwise.
+13. Ensure imported reference content is adapted to current project naming/settings.
+14. Verify app boot and tests.
 
 ## 3) Daily Task Flows
 
@@ -257,10 +267,11 @@ Procedure:
    - Needs adaptation for local domain logic.
    - Not applicable.
 4. Exclude models and feature-level behavior from sync scope; keep upgrades to app/platform layers only.
-5. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
-6. Keep or enforce HAML-only view setup from `base_project` (no new `.erb`).
-7. Run validation after each batch.
-8. Provide summary of adopted vs skipped updates.
+5. For any downloaded reference content, apply required project-specific rewrites (project name, repository path, env keys/values) before merge.
+6. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
+7. Keep or enforce HAML-only view setup from `base_project` (no new `.erb`).
+8. Run validation after each batch.
+9. Provide summary of adopted vs skipped updates.
 
 CI parity rule during upgrades:
 
