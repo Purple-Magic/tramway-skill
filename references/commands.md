@@ -17,6 +17,7 @@ dip rails db:prepare
 Before running commands:
 - Ask user for `<project_name>` explicitly and warn that project name should be simple because renaming later is difficult.
 - Ask which git service is used (GitHub, GitLab, etc.).
+- Ask which chat should receive CI notifications. Supported chats: `Discord`.
 
 ```bash
 if ! command -v rails >/dev/null 2>&1; then gem install rails; fi
@@ -26,17 +27,9 @@ if ! command -v dip >/dev/null 2>&1; then gem install dip; fi
 dip provision
 ```
 
-Set HAML as default template engine:
-
-```bash
-dip bundle add haml-rails
-mkdir -p config/initializers
-cat > config/initializers/generators.rb <<'RUBY'
-Rails.application.config.generators do |g|
-  g.template_engine :haml
-end
-RUBY
-```
+HAML setup:
+- Take HAML gem/configuration from `base_project`.
+- Do not install or configure HAML manually here.
 
 CI setup from reference project:
 
@@ -47,6 +40,11 @@ git diff --name-status HEAD..base_project/main -- .github/workflows/
 ```
 
 If service is not GitHub, implement CI for chosen service with scenario parity to reference GitHub Actions (lint, tests, security checks, deploy gates).
+
+CI notifications:
+- If chat is `Discord`, copy/adapt Discord notification steps from reference GitHub workflows and ask user for `DISCORD_WEBHOOK_URL`.
+- If chat is not `Discord` (for example Telegram), ask user whether they still want CI notifications and clearly warn that this config will be fully generated and not tested.
+- If chat is not `Discord` and user does not want generated notifications, do not apply Discord notification configuration from reference workflows.
 
 ## App lifecycle
 

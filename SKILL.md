@@ -107,6 +107,7 @@ When asked to `create rails project`, do this first:
 1. Explicitly ask for the project name before running any command.
 2. Tell the user: "Choose a simple name. Try to avoid `-` character besides you want explicitly. Renaming a Rails project later is possible but usually difficult and time-consuming."
 3. Explicitly ask which git service they use (GitHub, GitLab, etc.).
+4. Explicitly ask which chat to connect for CI notifications. Supported chats: `Discord`.
 
 After the user confirms `<project_name>`, use this baseline flow:
 
@@ -116,18 +117,6 @@ rails new <project_name> -d postgresql
 cd <project_name>
 if ! command -v dip >/dev/null 2>&1; then gem install dip; fi
 dip provision
-```
-
-Enable HAML generators immediately after creation:
-
-```bash
-dip bundle add haml-rails
-mkdir -p config/initializers
-cat > config/initializers/generators.rb <<'RUBY'
-Rails.application.config.generators do |g|
-  g.template_engine :haml
-end
-RUBY
 ```
 
 API-only option:
@@ -146,8 +135,12 @@ Then align with the reference baseline:
 2. Apply applicable config differences (CI, lint, security, deployment defaults).
 3. If service is GitHub, copy/adapt GitHub Actions workflows from `base_project/.github/workflows/`.
 4. If service is not GitHub, create CI for the chosen service with the same scenarios covered by reference GitHub Actions (for example: lint, test, security checks, build/deploy gates).
-5. Ensure view layer is HAML-only (`app/views/**/*.haml`).
-6. Verify app boot and tests.
+5. If chat is `Discord`, copy/adapt Discord CI notification configuration from reference GitHub workflows and ask for `DISCORD_WEBHOOK_URL`.
+6. If chat is not `Discord` (for example Telegram), ask whether they still want CI notifications and clearly warn: configuration will be fully generated and not tested.
+7. If chat is not `Discord` and user does not want generated notifications, do not apply Discord notification configuration from reference workflows.
+8. Take HAML setup and configuration from `base_project` (do not configure HAML manually in this step).
+9. Ensure view layer is HAML-only (`app/views/**/*.haml`).
+10. Verify app boot and tests.
 
 ## 3) Daily Task Flows
 
@@ -259,7 +252,7 @@ Procedure:
    - Not applicable.
 4. Exclude models and feature-level behavior from sync scope; keep upgrades to app/platform layers only.
 5. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
-6. Keep or enforce HAML-only view setup (`haml-rails`, generator config, no new `.erb`).
+6. Keep or enforce HAML-only view setup from `base_project` (no new `.erb`).
 7. Run validation after each batch.
 8. Provide summary of adopted vs skipped updates.
 
@@ -267,6 +260,9 @@ CI parity rule during upgrades:
 
 1. For GitHub repositories, keep `.github/workflows` aligned with applicable updates from `base_project`.
 2. For non-GitHub repositories, keep CI scenarios equivalent to reference GitHub Actions even if syntax/platform differs.
+3. Apply Discord notification config only when user chose `Discord`.
+4. For non-Discord chat notifications, ask for explicit confirmation and warn that generated notification config is untested.
+5. If non-Discord notifications are not explicitly requested, keep notification config without Discord-specific workflow parts.
 
 Minimum validation:
 

@@ -25,15 +25,19 @@
 3. Confirm repository service (GitHub, GitLab, etc.) and apply CI rules:
    - GitHub: sync applicable updates from `.github/workflows` in reference project.
    - Non-GitHub: keep equivalent CI scenarios on chosen platform.
-4. Mark each reference change as:
+4. Confirm CI notification chat choice (supported: `Discord`) and apply notification rules:
+   - Discord: sync Discord notification workflow config and require `DISCORD_WEBHOOK_URL`.
+   - Not Discord: ask if generated notifications are needed, and warn they are fully generated and not tested.
+   - Not Discord + no explicit confirmation: do not sync Discord-specific workflow notifications.
+5. Mark each reference change as:
    - Applicable as-is
    - Applicable with adaptation
    - Not applicable
-5. Exclude models, business logic, and feature-specific behavior from sync scope.
-6. Apply changes in small thematic batches.
-7. Preserve HAML-only views and avoid introducing new `.erb` files.
-8. Run `dip rails db:prepare`, boot check, and tests after each batch.
-9. Summarize applied/skipped updates with reasons.
+6. Exclude models, business logic, and feature-specific behavior from sync scope.
+7. Apply changes in small thematic batches.
+8. Preserve HAML-only views and avoid introducing new `.erb` files.
+9. Run `dip rails db:prepare`, boot check, and tests after each batch.
+10. Summarize applied/skipped updates with reasons.
 
 ## Migration Safety
 
