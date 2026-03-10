@@ -6,6 +6,7 @@ description: Manage Ruby on Rails projects end-to-end with reliable workflows fo
 # Tramway Skill
 
 Use this skill as an operational playbook. Prefer small, safe, verifiable changes over big-bang edits.
+At every stage, the user can skip any proposed step; respect skips, note risks briefly, and continue with the remaining workflow.
 
 Command policy:
 
@@ -29,6 +30,7 @@ Testing policy:
 2. Switch to another test framework only when user explicitly asks for it.
 3. Do not create model tests by default.
 4. Create model tests only when user explicitly asks for model tests.
+5. Run RSpec tests via `dip rspec` (not direct `rspec`/`bin/rspec`).
 
 ## Canonical Reference Project
 
@@ -42,17 +44,47 @@ Rules:
 4. Reuse only application-level setup: framework configuration, infrastructure wiring, tooling, CI/CD, security defaults, and implementation approaches.
 5. Do not clone `base_project` locally; read it remotely from GitHub.
 6. Do not ask user whether to use `base_project`; use it by default and only notify user that it is being used.
-7. Every downloaded file/snippet from `base_project` must be checked for applicability to current project setup before applying.
-8. Adapt imported content to current project context (for example, rename `base_project`-specific names, repository identifiers, and environment values to `<project_name>`/current repo values).
-9. Document what was adopted, skipped, and why.
+7. Always read/download `base_project` content from the `main` branch.
+8. Every downloaded file/snippet from `base_project` must be checked for applicability to current project setup before applying.
+9. Adapt imported content to current project context (for example, rename `base_project`-specific names, repository identifiers, and environment values to `<project_name>`/current repo values).
+10. Document what was adopted, skipped, and why.
+11. Never ask for approval file-by-file when importing from `base_project`.
+12. Ask the user only decision-level inputs that matter (for example: git platform, team chat choice, deployment target, privacy, and integration preferences), not file names.
+13. Internally build the full candidate file list and adaptation plan without exposing file-by-file prompts to the user.
+14. Execute imports through a temporary script that contains all required commands, then remove the script after execution.
+15. Ensure repository is created/connected before configuring team chat integrations and related secrets.
 
 ## Workflow
 
+0. On skill start, check current directory context and announce capabilities.
 1. Identify project shape and constraints.
 2. Bootstrap and verify the environment.
 3. Execute task-specific workflow (feature, bugfix, maintenance, upgrade, release).
 4. Validate with targeted then broader tests.
 5. Summarize risk and next actions.
+
+## 0) Start-of-Skill Context Check
+
+Before any other step, determine whether the current working directory is a Rails project.
+
+Do not describe technical detection details to the user. Only state the conclusion.
+
+If inside a Rails project, tell the user you figured out you are in a Rails project and list what you can do there, for example:
+
+1. Feature implementation with RSpec-first workflow.
+2. Bug reproduction and targeted fixes with regression tests.
+3. Refactors with safety checks.
+4. Rails/gem upgrades using `base_project` as reference.
+5. Migration review and DB safety checks.
+6. CI/CD and deploy-readiness improvements.
+
+If not inside a Rails project, tell the user you figured out you are not in a Rails project and that you can create a best-practice, fully configured Rails project with:
+
+1. CI configured for their selected git platform.
+2. Deployment setup and release workflow.
+3. Team chat notifications integration (for example, Discord by default and other chats on request).
+4. HAML-first view setup and RSpec testing baseline.
+5. Secure, production-ready defaults and useful starter features.
 
 ## 1) Identify Project Shape
 
@@ -114,19 +146,32 @@ Questioning style:
 2. Do not send all setup questions in one message.
 3. Do not ask whether to use `base_project`; notify that it will be used by default.
 4. During bootstrap import from `base_project`, do not ask about each file separately.
-5. Collect full planned import list (files to download, applicability notes, planned adaptations) and ask once for confirmation.
-6. Accept either `yes` (apply all) or user-requested changes to the plan.
+5. Ask only about project-level decisions that matter; do not ask the user which files to copy.
+6. Collect full planned import list internally (files to download, applicability notes, planned adaptations) without asking file-by-file questions.
+7. Build a temporary script with all download/apply commands, run it, and delete it right after execution.
+8. Accept either `yes` (apply all) or user-requested changes to the high-level plan.
+9. When asking about team chat, briefly explain value: shared visibility for CI status, deploy events, failures, and release updates helps the team react faster and stay aligned.
+10. User may skip any setup step or integration; accept skip, record what was skipped, and continue.
 
 1. Explicitly ask for the project name before running any command.
 2. Tell the user: "Choose a simple name. Try to avoid `-` character besides you want explicitly. Renaming a Rails project later is possible but usually difficult and time-consuming."
 3. Explicitly ask which git service they use (GitHub, GitLab, etc.).
-4. Explicitly ask which chat to connect for CI notifications. Supported chats: `Discord`.
-5. Explicitly ask where they want to store the repository (GitHub, GitLab, etc.).
+4. Explicitly ask which team chat they want to connect. Supported chats: `Discord`.
+5. Explicitly ask where they want to store the repository (GitHub recommended; GitLab, etc. also supported).
 6. Ask for either remote URL or organization name to create the repository.
 7. Make repository private by default unless user explicitly asks for public.
 8. Do not ask about app type (standard vs API-only); create a standard Rails app by default.
 9. After user provides repository URL or name, check whether it already exists on the selected service.
+   - For GitHub, always run `scripts/check_github_repo_exists.sh <owner/repo>` for this check.
 10. If repository does not exist, ask user explicitly whether they want to create it.
+11. Before creating a GitHub repository, check `gh` availability and authentication:
+    - Run `command -v gh` to verify GitHub CLI is installed.
+    - Run `gh auth status` to verify it is authenticated.
+    - If auth check fails, run `env -u GH_TOKEN -u GITHUB_TOKEN gh auth status` to rule out stale env-token override.
+12. If `gh` is missing, tell user to pause this chat, install GitHub CLI for their OS, and authenticate `gh` in another terminal window.
+13. If both auth checks fail, ask user to run `gh auth status` in their terminal. If user confirms it works there, continue and attempt repo creation anyway.
+14. If repo creation command fails due to auth, then tell user to pause this chat, authenticate `gh` in another terminal window, and resume this Codex chat.
+15. When repository is missing and user approved creation, Codex should attempt to create it (private by default) instead of stopping at instructions.
 
 After the user confirms `<project_name>`, use this baseline flow:
 
@@ -147,16 +192,26 @@ Then align with the reference baseline:
 2. Apply applicable config differences (CI, lint, security, deployment defaults).
 3. If service is GitHub, copy/adapt GitHub Actions workflows from `base_project/.github/workflows/`.
 4. If service is not GitHub, create CI for the chosen service with the same scenarios covered by reference GitHub Actions (for example: lint, test, security checks, build/deploy gates).
-5. If chat is `Discord`, copy/adapt Discord CI notification configuration from reference GitHub workflows and ask for `DISCORD_WEBHOOK_URL`.
-6. If chat is not `Discord` (for example Telegram), ask whether they still want CI notifications and clearly warn: configuration will be fully generated and not tested.
-7. If chat is not `Discord` and user does not want generated notifications, do not apply Discord notification configuration from reference workflows.
-8. Take HAML setup and configuration from `base_project` (do not configure HAML manually in this step).
-9. Ensure view layer is HAML-only (`app/views/**/*.haml`).
-10. Prepare one consolidated bootstrap-import plan (all files + adaptations) and ask once for approval (`yes`) or changes.
-11. Create or connect repository using provided remote URL or organization, private by default.
-12. If repository was missing and user confirmed creation, create it as private unless they asked otherwise.
-13. Ensure imported reference content is adapted to current project naming/settings.
-14. Verify app boot and tests.
+5. Create or connect repository using provided remote URL or organization, private by default.
+6. If repository was missing and user confirmed creation, Codex should run repository creation command (`gh repo create ... --private`) unless user asked for public.
+7. Prepare one consolidated bootstrap-import plan at decision level (scope, integrations, risks) and ask once for approval (`yes`) or changes.
+8. Build a temporary bootstrap script with all required file downloads/adaptations/commands.
+9. Run the script and then delete it.
+10. If chat is `Discord`, copy/adapt Discord CI/deploy/team-update notification configuration from reference GitHub workflows.
+11. If chat is `Discord`, ask user for `DISCORD_WEBHOOK_URL` only after repository exists, then instruct how to create it in Discord and store it in repository secrets.
+12. If chat is not `Discord` (for example Telegram), ask whether they still want team chat integration for CI/deploy updates and clearly warn: configuration will be fully generated and not tested.
+13. If chat is not `Discord` and user does not want generated team chat integration, do not apply Discord notification configuration from reference workflows.
+14. Take HAML setup and configuration from `base_project` (do not configure HAML manually in this step).
+15. Ensure view layer is HAML-only (`app/views/**/*.haml`).
+16. Ensure imported reference content is adapted to current project naming/settings.
+17. Verify app boot and tests.
+
+When requesting `DISCORD_WEBHOOK_URL`, provide these instructions:
+
+1. In Discord: open Server Settings -> Integrations -> Webhooks -> New Webhook, choose channel, copy webhook URL.
+2. In repository secrets, create secret `DISCORD_WEBHOOK_URL` with that value before running CI notification jobs.
+3. For GitHub: Settings -> Secrets and variables -> Actions -> New repository secret.
+4. For GitLab: Settings -> CI/CD -> Variables -> Add variable (`Key`: `DISCORD_WEBHOOK_URL`, masked/protected as needed).
 
 ## 3) Daily Task Flows
 
@@ -260,7 +315,7 @@ Use this feature whenever the user asks for `upgrade` or periodic maintenance.
 
 Procedure:
 
-1. Read latest `base_project` remotely from GitHub (no local clone).
+1. Read latest `base_project` remotely from GitHub `main` branch (no local clone).
 2. Diff current project vs reference at config/tooling layers first.
 3. Classify changes:
    - Safe to apply directly.
@@ -272,21 +327,24 @@ Procedure:
 7. Keep or enforce HAML-only view setup from `base_project` (no new `.erb`).
 8. Run validation after each batch.
 9. Provide summary of adopted vs skipped updates.
+10. For reference-file imports, request user approval once per import batch, not once per file.
+11. Ask only decision-level upgrade questions, not file-level copy questions.
+12. For each approved batch, build one temporary script for import/apply commands, run it, then remove it.
 
 CI parity rule during upgrades:
 
 1. For GitHub repositories, keep `.github/workflows` aligned with applicable updates from `base_project`.
 2. For non-GitHub repositories, keep CI scenarios equivalent to reference GitHub Actions even if syntax/platform differs.
 3. Apply Discord notification config only when user chose `Discord`.
-4. For non-Discord chat notifications, ask for explicit confirmation and warn that generated notification config is untested.
-5. If non-Discord notifications are not explicitly requested, keep notification config without Discord-specific workflow parts.
+4. For non-Discord team chat integration, ask for explicit confirmation and warn that generated notification config is untested.
+5. If non-Discord team chat integration is not explicitly requested, keep notification config without Discord-specific workflow parts.
 
 Minimum validation:
 
 ```bash
 dip rails zeitwerk:check
 dip rails db:prepare
-dip rspec || dip rails test
+dip rspec
 ```
 
 ## 7) Release and Operations
