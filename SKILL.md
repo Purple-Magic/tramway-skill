@@ -23,6 +23,8 @@ View policy:
 1. All Rails views must use HAML.
 2. Do not add new `.erb` templates.
 3. If touched feature still uses `.erb`, migrate it to `.haml` as part of the change when safe.
+4. Use Tailwind as the main CSS framework.
+5. Use `tailwindcss-rails` gem for Tailwind integration.
 
 Testing policy:
 
@@ -201,14 +203,18 @@ Then align with the reference baseline:
 11. If chat is `Discord`, ask user for `DISCORD_WEBHOOK_URL` only after repository exists, then instruct how to create it in Discord and store it in repository secrets.
 12. If chat is not `Discord` (for example Telegram), ask whether they still want team chat integration for CI/deploy updates and clearly warn: configuration will be fully generated and not tested.
 13. If chat is not `Discord` and user does not want generated team chat integration, do not apply Discord notification configuration from reference workflows.
-14. Take HAML setup and configuration from `base_project` (do not configure HAML manually in this step).
-15. Enable PostgreSQL `uuid-ossp` extension during bootstrap by creating a migration that enables extension (follow the approach from `base_project`).
+14. Get and apply `.gitignore` from `base_project` `main` branch, adapting entries only if needed for current project specifics.
+    - Clearly warn user that `config/master.key` and `config/credentials/*.key` are ignored by git and will not be stored in repository history.
+    - Tell user to save these keys in a secure place (for example 1Password or another secrets manager) and keep backup/recovery access.
+15. Take HAML setup and configuration from `base_project` (do not configure HAML manually in this step).
+16. Ensure Tailwind is configured as the main CSS framework via `tailwindcss-rails` gem (follow `base_project` approach where applicable).
+17. Enable PostgreSQL `uuid-ossp` extension during bootstrap by creating a migration that enables extension (follow the approach from `base_project`).
     - Tell user this supports security-minded public IDs: expose UUID-based record IDs publicly instead of sequential integer IDs, because incrementable IDs can leak approximate dataset size and make unauthorized record enumeration easier.
-16. Ensure view layer is HAML-only (`app/views/**/*.haml`).
-17. Ensure imported reference content is adapted to current project naming/settings.
-18. Verify app boot and tests.
-19. After bootstrap is complete, commit and push created code to the configured repository (unless user explicitly skips push).
-20. After bootstrap is complete, tell user how to run server with both options and explain tradeoffs:
+18. Ensure view layer is HAML-only (`app/views/**/*.haml`).
+19. Ensure imported reference content is adapted to current project naming/settings.
+20. Verify app boot and tests.
+21. After bootstrap is complete, commit and push created code to the configured repository (unless user explicitly skips push).
+22. After bootstrap is complete, tell user how to run server with both options and explain tradeoffs:
     - `dip rails s`: runs server with ability to interact with the container in the same terminal (for example, breakpoints), but shows logs only from Rails container.
     - `dip up web`: shows logs from all containers, but does not allow connecting to the running container in the same terminal.
 
