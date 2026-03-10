@@ -202,11 +202,13 @@ Then align with the reference baseline:
 12. If chat is not `Discord` (for example Telegram), ask whether they still want team chat integration for CI/deploy updates and clearly warn: configuration will be fully generated and not tested.
 13. If chat is not `Discord` and user does not want generated team chat integration, do not apply Discord notification configuration from reference workflows.
 14. Take HAML setup and configuration from `base_project` (do not configure HAML manually in this step).
-15. Ensure view layer is HAML-only (`app/views/**/*.haml`).
-16. Ensure imported reference content is adapted to current project naming/settings.
-17. Verify app boot and tests.
-18. After bootstrap is complete, commit and push created code to the configured repository (unless user explicitly skips push).
-19. After bootstrap is complete, tell user how to run server with both options and explain tradeoffs:
+15. Enable PostgreSQL `uuid-ossp` extension during bootstrap by creating a migration that enables extension (follow the approach from `base_project`).
+    - Tell user this supports security-minded public IDs: expose UUID-based record IDs publicly instead of sequential integer IDs, because incrementable IDs can leak approximate dataset size and make unauthorized record enumeration easier.
+16. Ensure view layer is HAML-only (`app/views/**/*.haml`).
+17. Ensure imported reference content is adapted to current project naming/settings.
+18. Verify app boot and tests.
+19. After bootstrap is complete, commit and push created code to the configured repository (unless user explicitly skips push).
+20. After bootstrap is complete, tell user how to run server with both options and explain tradeoffs:
     - `dip rails s`: runs server with ability to interact with the container in the same terminal (for example, breakpoints), but shows logs only from Rails container.
     - `dip up web`: shows logs from all containers, but does not allow connecting to the running container in the same terminal.
 
