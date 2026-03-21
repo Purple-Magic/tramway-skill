@@ -310,6 +310,8 @@ For each bump:
 2. Run boot checks and focused tests.
 3. Run full suite when stable.
 4. Record deprecations and follow-ups.
+5. If the bumped dependency is the `tramway` gem, get the target `tramway` version first and replace the version in the project's `Gemfile` explicitly instead of leaving it implicit.
+6. If the `tramway` gem version was upgraded, it is mandatory to run `dip rails g tramway:install` right after the bundle update step before broader validation.
 
 Use:
 
@@ -334,14 +336,16 @@ Procedure:
    - Needs adaptation for local domain logic.
    - Not applicable.
 4. Exclude models and feature-level behavior from sync scope; keep updates/upgrades to app/platform layers only.
-5. For any downloaded reference content, apply required project-specific rewrites (project name, repository path, env keys/values) before merge.
-6. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
-7. Keep or enforce HAML-only view setup from `base_project` (no new `.erb`).
-8. Run validation after each batch.
-9. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item.
-10. For reference-file imports, request user approval once per import batch, not once per file.
-11. Ask only decision-level update/upgrade questions, not file-level copy questions.
-12. For each approved batch, build one temporary script for import/apply commands, run it, then remove it.
+5. During any project update request, inspect the target `tramway` gem version and replace the project's `Gemfile` `tramway` version with that exact version when needed.
+6. If the `tramway` gem version changed to a newer version, running `dip rails g tramway:install` is mandatory and must happen before the rest of the update validation.
+7. For any downloaded reference content, apply required project-specific rewrites (project name, repository path, env keys/values) before merge.
+8. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
+9. Keep or enforce HAML-only view setup from `base_project` (no new `.erb`).
+10. Run validation after each batch.
+11. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item.
+12. For reference-file imports, request user approval once per import batch, not once per file.
+13. Ask only decision-level update/upgrade questions, not file-level copy questions.
+14. For each approved batch, build one temporary script for import/apply commands, run it, then remove it.
 
 CI parity rule during updates/upgrades:
 
