@@ -1,6 +1,6 @@
 ---
 name: tramway-skill
-description: Manage Ruby on Rails projects end-to-end with reliable workflows for creating new apps, setup, development, debugging, testing, maintenance, upgrades, and releases. Use when the request includes phrases like "create rails project", "new rails app", "upgrade from base project", or when working in a Rails codebase (Gemfile, config/, app/, db/, spec/ or test/) and the task involves bootstrapping environments, running app/test jobs, triaging failing specs or production issues, adding/changing features safely, upgrading gems or Rails versions, reviewing migrations, or preparing deployments. Treat https://github.com/purple-magic/base_project as the canonical reference project and always check for applicable updates from it during upgrade tasks.
+description: Manage Ruby on Rails projects end-to-end with reliable workflows for creating new apps, setup, development, debugging, testing, maintenance, updates/upgrades, and releases. Use when the request includes phrases like "create rails project", "new rails app", "update application", "upgrade from base project", or when working in a Rails codebase (Gemfile, config/, app/, db/, spec/ or test/) and the task involves bootstrapping environments, running app/test jobs, triaging failing specs or production issues, adding/changing features safely, upgrading gems or Rails versions, reviewing migrations, or preparing deployments. Treat https://github.com/purple-magic/base_project as the canonical reference project and always check for applicable updates from it during update/upgrade tasks.
 ---
 
 # Tramway Skill
@@ -40,7 +40,7 @@ Use `https://github.com/purple-magic/base_project` as the main reference for bas
 
 Rules:
 
-1. Always compare the current project against `base_project` during upgrade/maintenance tasks.
+1. Always compare the current project against `base_project` during update/upgrade/maintenance tasks.
 2. Pull only applicable updates; do not blindly overwrite app-specific code.
 3. Never copy domain models, business logic, or exact product functionality from `base_project`.
 4. Reuse only application-level setup: framework configuration, infrastructure wiring, tooling, CI/CD, security defaults, and implementation approaches.
@@ -61,7 +61,7 @@ Rules:
 0. On skill start, check current directory context and announce capabilities.
 1. Identify project shape and constraints.
 2. Bootstrap and verify the environment.
-3. Execute task-specific workflow (feature, bugfix, maintenance, upgrade, release).
+3. Execute task-specific workflow (feature, bugfix, maintenance, update/upgrade, release).
 4. Validate with targeted then broader tests.
 5. Summarize risk and next actions.
 
@@ -76,7 +76,7 @@ If inside a Rails project, tell the user you figured out you are in a Rails proj
 1. Feature implementation with RSpec-first workflow.
 2. Bug reproduction and targeted fixes with regression tests.
 3. Refactors with safety checks.
-4. Rails/gem upgrades using `base_project` as reference.
+4. Rails/gem updates and upgrades using `base_project` as reference.
 5. Migration review and DB safety checks.
 6. CI/CD and deploy-readiness improvements.
 
@@ -321,9 +321,9 @@ dip rubocop
 
 If command wrappers exist in project, use them instead.
 
-## 6.1) Upgrade From Reference Project
+## 6.1) Update/Upgrade From Reference Project
 
-Use this feature whenever the user asks for `upgrade` or periodic maintenance.
+Use this feature whenever the user asks for `update`, `upgrade`, or periodic maintenance.
 
 Procedure:
 
@@ -333,17 +333,17 @@ Procedure:
    - Safe to apply directly.
    - Needs adaptation for local domain logic.
    - Not applicable.
-4. Exclude models and feature-level behavior from sync scope; keep upgrades to app/platform layers only.
+4. Exclude models and feature-level behavior from sync scope; keep updates/upgrades to app/platform layers only.
 5. For any downloaded reference content, apply required project-specific rewrites (project name, repository path, env keys/values) before merge.
 6. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
 7. Keep or enforce HAML-only view setup from `base_project` (no new `.erb`).
 8. Run validation after each batch.
-9. Provide summary of adopted vs skipped updates.
+9. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item.
 10. For reference-file imports, request user approval once per import batch, not once per file.
-11. Ask only decision-level upgrade questions, not file-level copy questions.
+11. Ask only decision-level update/upgrade questions, not file-level copy questions.
 12. For each approved batch, build one temporary script for import/apply commands, run it, then remove it.
 
-CI parity rule during upgrades:
+CI parity rule during updates/upgrades:
 
 1. For GitHub repositories, keep `.github/workflows` aligned with applicable updates from `base_project`.
 2. For non-GitHub repositories, keep CI scenarios equivalent to reference GitHub Actions even if syntax/platform differs.
@@ -389,4 +389,4 @@ Use concrete file paths and commands. Avoid vague "should work" conclusions.
 Load only what is needed:
 
 - Command cookbook: `references/commands.md`
-- Incident, upgrade, and release checklists: `references/checklists.md`
+- Incident, update/upgrade, and release checklists: `references/checklists.md`

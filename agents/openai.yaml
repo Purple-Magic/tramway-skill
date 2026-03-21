@@ -1,4 +1,4 @@
 interface:
   display_name: "Rails Project Manager"
   short_description: "Safe Rails workflows for build, debug, and release"
-  default_prompt: "Use this skill to manage Rails projects with safe, test-driven workflows for setup, development, debugging, upgrades, and deployment readiness."
+  default_prompt: "Use this skill to manage Rails projects with safe, test-driven workflows for setup, development, debugging, updates/upgrades, and deployment readiness."

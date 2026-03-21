@@ -18,7 +18,7 @@
 5. Validate asset pipeline / JS / CSS integration.
 6. Record follow-up cleanup tasks.
 
-## Reference Project Upgrade (`base_project`)
+## Reference Project Update/Upgrade (`base_project`)
 
 1. Read latest `https://github.com/purple-magic/base_project` remotely (do not clone locally).
 2. Do not ask whether to use `base_project`; apply it by default and notify user.
@@ -49,7 +49,7 @@
 12. Apply changes in small thematic batches.
 13. Preserve HAML-only views and avoid introducing new `.erb` files.
 14. Run `dip rails db:prepare`, boot check, and tests after each batch.
-15. Summarize applied/skipped updates with reasons.
+15. Summarize applied/skipped updates with reasons for every skipped item.
 
 ## Migration Safety
 

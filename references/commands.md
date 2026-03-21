@@ -106,7 +106,7 @@ dip rails about
 find app/views -type f \( -name "*.erb" -o -name "*.builder" \)
 ```
 
-## Upgrade from reference project
+## Update/upgrade from reference project
 
 ```bash
 # Read reference repository metadata remotely (no local clone)
@@ -123,6 +123,7 @@ curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/Gemf
 After downloading reference content:
 - Verify it is applicable to current project setup.
 - Rewrite project-specific values (project name, repository URL, CI env vars, service identifiers) before applying.
+- Report what was updated and what was not updated, including reason for each non-updated item.
 
 ## Jobs and cache
 
