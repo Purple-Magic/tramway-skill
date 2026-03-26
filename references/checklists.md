@@ -18,10 +18,10 @@
 5. Validate asset pipeline / JS / CSS integration.
 6. Record follow-up cleanup tasks.
 
-## Reference Project Update/Upgrade (`base_project`)
+## Reference Project Update/Upgrade
 
 1. Read latest `https://github.com/purple-magic/base_project` remotely (do not clone locally).
-2. Do not ask whether to use `base_project`; apply it by default and notify user.
+2. Do not ask whether to use the reference project; apply it by default and notify user.
 3. Diff current project with reference, starting from `config/`, `Gemfile*`, CI, and tooling files.
 4. Confirm repository service (GitHub, GitLab, etc.) and apply CI rules:
    - GitHub: sync applicable updates from `.github/workflows` in reference project.
@@ -42,7 +42,7 @@
    - Applicable with adaptation
    - Not applicable
 9. For every downloaded reference file/snippet, verify applicability and adapt current project values:
-   - Replace `base_project` names/identifiers with current project/repository names.
+   - Replace reference-project names/identifiers with current project/repository names.
    - Update env keys/values and service-specific placeholders.
 10. Before applying bootstrap imports, present one combined plan (files, applicability, adaptations) and ask once for `yes` or changes.
 11. Exclude models, business logic, and feature-specific behavior from sync scope.

@@ -1,6 +1,6 @@
 ---
 name: tramway-skill
-description: Manage Ruby on Rails projects end-to-end with reliable workflows for creating new apps, setup, development, debugging, testing, maintenance, updates/upgrades, and releases. Use when the request includes phrases like "create rails project", "new rails app", "update application", "upgrade from base project", or when working in a Rails codebase (Gemfile, config/, app/, db/, spec/ or test/) and the task involves bootstrapping environments, running app/test jobs, triaging failing specs or production issues, adding/changing features safely, upgrading gems or Rails versions, reviewing migrations, or preparing deployments. Treat https://github.com/purple-magic/base_project as the canonical reference project and always check for applicable updates from it during update/upgrade tasks.
+description: Manage Ruby on Rails projects end-to-end with reliable workflows for creating new apps, setup, development, debugging, testing, maintenance, updates/upgrades, and releases. Use when the request includes phrases like "create rails project", "new rails app", "update application", "upgrade from reference project", or when working in a Rails codebase (Gemfile, config/, app/, db/, spec/ or test/) and the task involves bootstrapping environments, running app/test jobs, triaging failing specs or production issues, adding/changing features safely, upgrading gems or Rails versions, reviewing migrations, or preparing deployments. Treat https://github.com/purple-magic/base_project as the canonical reference project and always check for applicable updates from it during update/upgrade tasks.
 ---
 
 # Tramway Skill
@@ -34,27 +34,45 @@ Testing policy:
 4. Create model tests only when user explicitly asks for model tests.
 5. Run RSpec tests via `dip rspec` (not direct `rspec`/`bin/rspec`).
 
+Secrets policy:
+
+1. Never ask user to post secrets in chat (tokens, API keys, passwords, private keys, webhooks, credentials content).
+2. Always instruct user to store secrets locally (environment variables, `.env*`, secret manager) or in repository/CI secret storage.
+3. Ask user to confirm secret is set (for example: "done") instead of sending secret value.
+4. If user pastes a secret anyway, instruct immediate rotation and continue with secure flow.
+5. After project creation, guide secret setup directly in chat, step-by-step for each secret.
+6. Do not replace secret guidance with generating app pages/docs (for example, "main page with instructions") unless user explicitly asks for that.
+
+Host environment policy:
+
+1. Do not create or modify user home dotfiles during project setup or maintenance unless the user explicitly asks for it.
+2. This includes files such as `.bashrc`, `.zshrc`, `.psqlrc`, `.irbrc`, and similar shell/editor/database client config files.
+3. Prefer project-local configuration and explicit commands over persistent host-level changes.
+
 ## Canonical Reference Project
 
 Use `https://github.com/purple-magic/base_project` as the main reference for baseline project structure and configuration.
 
 Rules:
 
-1. Always compare the current project against `base_project` during update/upgrade/maintenance tasks.
+1. Always compare the current project against the reference project during update/upgrade/maintenance tasks.
 2. Pull only applicable updates; do not blindly overwrite app-specific code.
-3. Never copy domain models, business logic, or exact product functionality from `base_project`.
+3. Never copy domain models, business logic, or exact product functionality from the reference project.
 4. Reuse only application-level setup: framework configuration, infrastructure wiring, tooling, CI/CD, security defaults, and implementation approaches.
-5. Do not clone `base_project` locally; read it remotely from GitHub.
-6. Do not ask user whether to use `base_project`; use it by default and only notify user that it is being used.
-7. Always read/download `base_project` content from the `main` branch.
-8. Every downloaded file/snippet from `base_project` must be checked for applicability to current project setup before applying.
-9. Adapt imported content to current project context (for example, rename `base_project`-specific names, repository identifiers, and environment values to `<project_name>`/current repo values).
+5. Do not clone the reference project locally; read it remotely from GitHub.
+6. Do not ask user whether to use the reference project; use it by default and only notify user that it is being used.
+7. Always read/download reference project content from the `main` branch.
+8. Every downloaded file/snippet from the reference project must be checked for applicability to current project setup before applying.
+9. Adapt imported content to current project context (for example, rename reference-project-specific names, repository identifiers, and environment values to `<project_name>`/current repo values).
 10. Document what was adopted, skipped, and why.
-11. Never ask for approval file-by-file when importing from `base_project`.
+11. Never ask for approval file-by-file when importing from the reference project.
 12. Ask the user only decision-level inputs that matter (for example: git platform, team chat choice, deployment target, privacy, and integration preferences), not file names.
 13. Internally build the full candidate file list and adaptation plan without exposing file-by-file prompts to the user.
 14. Execute imports through a temporary script that contains all required commands, then remove the script after execution.
 15. Ensure repository is created/connected before configuring team chat integrations and related secrets.
+16. In user-facing messages, call it "reference project" (not `base_project`).
+17. If user asks what the reference project is, explain briefly and include this link: `https://github.com/purple-magic/base_project`.
+18. Never offer or request posting secrets in chat. Use local secret setup + confirmation-only flow.
 
 ## Workflow
 
@@ -76,7 +94,7 @@ If inside a Rails project, tell the user you figured out you are in a Rails proj
 1. Feature implementation with RSpec-first workflow.
 2. Bug reproduction and targeted fixes with regression tests.
 3. Refactors with safety checks.
-4. Rails/gem updates and upgrades using `base_project` as reference.
+4. Rails/gem updates and upgrades using the reference project.
 5. Migration review and DB safety checks.
 6. CI/CD and deploy-readiness improvements.
 
@@ -146,14 +164,16 @@ Questioning style:
 
 1. Ask setup questions one-by-one in separate messages.
 2. Do not send all setup questions in one message.
-3. Do not ask whether to use `base_project`; notify that it will be used by default.
-4. During bootstrap import from `base_project`, do not ask about each file separately.
+3. Do not ask whether to use the reference project; notify that it will be used by default.
+4. During bootstrap import from the reference project, do not ask about each file separately.
 5. Ask only about project-level decisions that matter; do not ask the user which files to copy.
 6. Collect full planned import list internally (files to download, applicability notes, planned adaptations) without asking file-by-file questions.
 7. Build a temporary script with all download/apply commands, run it, and delete it right after execution.
 8. Accept either `yes` (apply all) or user-requested changes to the high-level plan.
 9. When asking about team chat, briefly explain value: shared visibility for CI status, deploy events, failures, and release updates helps the team react faster and stay aligned.
 10. User may skip any setup step or integration; accept skip, record what was skipped, and continue.
+11. User-facing question messages must be plain text only in the user's language. Never include tool-call payloads, JSON, code fences, internal command logs, metadata, or text from another language unless the user asked for that language.
+12. When asking a question, do not execute unrelated actions in the same message; wait for user answer first.
 
 1. Explicitly ask for the project name before running any command.
 2. Tell the user: "Choose a simple name. Try to avoid `-` character besides you want explicitly. Renaming a Rails project later is possible but usually difficult and time-consuming."
@@ -174,6 +194,18 @@ Questioning style:
 13. If both auth checks fail, ask user to run `gh auth status` in their terminal. If user confirms it works there, continue and attempt repo creation anyway.
 14. If repo creation command fails due to auth, then tell user to pause this chat, authenticate `gh` in another terminal window, and resume this Codex chat.
 15. When repository is missing and user approved creation, Codex should attempt to create it (private by default) instead of stopping at instructions.
+16. At the end of create-project questioning, explicitly ask whether they want server creation and deploy configuration.
+17. If yes, ask whether they already have a server.
+18. If they do not have a server, ask which hosting provider they want. Recommend `DigitalOcean` because this skill has complete setup guidance for it.
+19. If hosting is `DigitalOcean`, use Terraform configuration from the reference project as baseline.
+20. If hosting is not `DigitalOcean`, build server/deploy Terraform configuration for the chosen hosting yourself.
+21. Ask which provider they use for domain/DNS hosting. Recommend `Cloudflare` because this skill has complete setup guidance for it.
+22. If domain hosting is `Cloudflare`, use Cloudflare-related Terraform configuration from the reference project.
+23. If domain hosting is not `Cloudflare`, build domain/DNS configuration for chosen provider yourself.
+24. Do not collect deploy/provider secrets during pre-project questions. Collect them only in deploy setup phase after Rails project and `terraform/` directory exist.
+25. Never commit deploy secrets (`*.tfvars`, `.env*`, tokens, private keys). Keep them in local env/secrets manager and repository secrets.
+    - For Terraform, default secret storage is `terraform/secrets.auto.tfvars` (gitignored).
+26. Do not create or edit user home dotfiles as part of setup. If host-level configuration seems necessary, stop and ask the user first.
 
 After the user confirms `<project_name>`, use this baseline flow:
 
@@ -190,9 +222,9 @@ dip provision
 
 Then align with the reference baseline:
 
-1. Compare generated files against `base_project`.
+1. Compare generated files against the reference project.
 2. Apply applicable config differences (CI, lint, security, deployment defaults).
-3. If service is GitHub, copy/adapt GitHub Actions workflows from `base_project/.github/workflows/`.
+3. If service is GitHub, copy/adapt GitHub Actions workflows from the reference project `.github/workflows/`.
 4. If service is not GitHub, create CI for the chosen service with the same scenarios covered by reference GitHub Actions (for example: lint, test, security checks, build/deploy gates).
 5. Create or connect repository using provided remote URL or organization, private by default.
 6. If repository was missing and user confirmed creation, Codex should run repository creation command (`gh repo create ... --private`) unless user asked for public.
@@ -200,30 +232,98 @@ Then align with the reference baseline:
 8. Build a temporary bootstrap script with all required file downloads/adaptations/commands.
 9. Run the script and then delete it.
 10. If chat is `Discord`, copy/adapt Discord CI/deploy/team-update notification configuration from reference GitHub workflows.
-11. If chat is `Discord`, ask user for `DISCORD_WEBHOOK_URL` only after repository exists, then instruct how to create it in Discord and store it in repository secrets.
+11. If chat is `Discord`, ask user to set `DISCORD_WEBHOOK_URL` in repository secrets only after repository exists; do not ask user to paste webhook URL in chat.
 12. If chat is not `Discord` (for example Telegram), ask whether they still want team chat integration for CI/deploy updates and clearly warn: configuration will be fully generated and not tested.
 13. If chat is not `Discord` and user does not want generated team chat integration, do not apply Discord notification configuration from reference workflows.
-14. Get and apply `.gitignore` from `base_project` `main` branch, adapting entries only if needed for current project specifics.
+14. Get and apply `.gitignore` from the reference project `main` branch, adapting entries only if needed for current project specifics.
     - Clearly warn user that `config/master.key` and `config/credentials/*.key` are ignored by git and will not be stored in repository history.
     - Tell user to save these keys in a secure place (for example 1Password or another secrets manager) and keep backup/recovery access.
-15. Take HAML setup and configuration from `base_project` (do not configure HAML manually in this step).
-16. Ensure Tailwind is configured as the main CSS framework via `tailwindcss-rails` gem (follow `base_project` approach where applicable).
-17. Enable PostgreSQL `uuid-ossp` extension during bootstrap by creating a migration that enables extension (follow the approach from `base_project`).
+15. Take HAML setup and configuration from the reference project (do not configure HAML manually in this step).
+16. Ensure Tailwind is configured as the main CSS framework via `tailwindcss-rails` gem (follow the reference project approach where applicable).
+17. Enable PostgreSQL `uuid-ossp` extension during bootstrap by creating a migration that enables extension (follow the approach from the reference project).
     - Tell user this supports security-minded public IDs: expose UUID-based record IDs publicly instead of sequential integer IDs, because incrementable IDs can leak approximate dataset size and make unauthorized record enumeration easier.
 18. Ensure view layer is HAML-only (`app/views/**/*.haml`).
 19. Ensure imported reference content is adapted to current project naming/settings.
-20. Verify app boot and tests.
-21. After bootstrap is complete, commit and push created code to the configured repository (unless user explicitly skips push).
-22. After bootstrap is complete, tell user how to run server with both options and explain tradeoffs:
+20. When importing `.dockerdev/compose.yml` from the reference project, do not modify `x-*` extension blocks/services configuration. Preserve them exactly as provided by the reference file unless the user explicitly asks to change them.
+21. Verify app boot and tests.
+22. After bootstrap is complete, commit and push created code to the configured repository (unless user explicitly skips push).
+23. After bootstrap is complete, tell user how to run server with both options and explain tradeoffs:
     - `dip rails s`: runs server with ability to interact with the container in the same terminal (for example, breakpoints), but shows logs only from Rails container.
     - `dip up web`: shows logs from all containers, but does not allow connecting to the running container in the same terminal.
 
-When requesting `DISCORD_WEBHOOK_URL`, provide these instructions:
+If user selected server/deploy setup, add this step after repository setup and before final bootstrap verification:
 
-1. In Discord: open Server Settings -> Integrations -> Webhooks -> New Webhook, choose channel, copy webhook URL.
-2. In repository secrets, create secret `DISCORD_WEBHOOK_URL` with that value before running CI notification jobs.
-3. For GitHub: Settings -> Secrets and variables -> Actions -> New repository secret.
-4. For GitLab: Settings -> CI/CD -> Variables -> Add variable (`Key`: `DISCORD_WEBHOOK_URL`, masked/protected as needed).
+23. Configure server/deploy Terraform:
+    - If hosting is `DigitalOcean`, import and adapt reference Terraform files:
+      - `terraform/main.tf`, `terraform/variables.tf`, `terraform/update_env_hosts.sh`, `terraform/wait_for_ssh.sh`
+      - Replace hardcoded reference-project identifiers (droplet name, DNS record/subdomain, default app name) with current project values.
+    - If hosting is not `DigitalOcean`, build Terraform server/deploy configuration for selected hosting yourself.
+24. Configure domain/DNS Terraform:
+    - If domain hosting is `Cloudflare`, use/adapt Cloudflare Terraform config from the reference project.
+    - If domain hosting is not `Cloudflare`, build Terraform domain/DNS configuration for selected provider yourself.
+25. Keep Terraform files in `terraform/` and ensure scripts are executable (`chmod +x terraform/*.sh`) when scripts are present.
+26. Collect deploy variables now (after project exists and `terraform/` directory is created):
+    - If hosting is `DigitalOcean`, collect:
+      - `do_token` (DigitalOcean API token)
+        1. Open DigitalOcean Control Panel -> API -> Tokens/Keys.
+        2. In "Personal access tokens", click "Generate New Token".
+        3. Give token a name, select appropriate scope (write for infra create/update), and create token.
+        4. Put token into `terraform/secrets.auto.tfvars` and reply `done`.
+      - `ssh_fingerprint`:
+        - By default, use the system default SSH public key and its DigitalOcean fingerprint (do not ask user for custom key first).
+        - Ask for custom SSH key/fingerprint only if user explicitly wants non-default key.
+        - If default key is not registered in DigitalOcean, guide user to add it in DigitalOcean -> API -> Tokens/Keys -> SSH Keys, then use its fingerprint.
+      - `region`, `size`, `app_name` (with reference defaults unless user changes)
+    - If hosting is not `DigitalOcean`, collect provider-specific infra inputs for Terraform.
+    - If domain hosting is `Cloudflare`, collect:
+      - `domain`, `cloudflare_email`, `cloudflare_api_key`
+      - Cloudflare Dashboard -> My Profile -> API Tokens -> Global API Key -> View
+      - Put key into `terraform/secrets.auto.tfvars` and reply `done`.
+    - If domain hosting is not `Cloudflare`, collect provider-specific DNS inputs for Terraform.
+    - Ensure `terraform/secrets.auto.tfvars` is gitignored.
+27. Validate tooling availability before apply:
+    - `terraform -version`
+    - `doctl version` only when using the DigitalOcean reference script (`wait_for_ssh.sh`)
+    - `nc -h` or `command -v nc` only when using `wait_for_ssh.sh`
+28. Initialize and validate Terraform:
+    - `terraform -chdir=terraform init`
+    - `terraform -chdir=terraform validate`
+    - `terraform -chdir=terraform plan`
+29. Apply only after explicit user confirmation:
+    - `terraform -chdir=terraform apply`
+30. After apply, if `.env` exists and `update_env_hosts.sh` is present, run:
+    - `bash terraform/update_env_hosts.sh`
+31. Explain key outputs to user (for example server IP, hostname, and env snippet values).
+
+When requesting deploy/repository secrets, provide setup guidance for each secret:
+
+1. Set secrets in repository secrets storage (never in chat).
+2. For GitHub: Settings -> Secrets and variables -> Actions -> New repository secret.
+3. For GitLab: Settings -> CI/CD -> Variables -> Add variable.
+4. Required/optional secrets and how to get them:
+   - `DISCORD_WEBHOOK_URL`:
+     - Discord -> Server Settings -> Integrations -> Webhooks -> New Webhook -> choose channel -> copy webhook URL.
+   - `MAIN_HOST`:
+     - After Terraform apply: `terraform -chdir=terraform output -raw main_host_ip`.
+   - `SSH_PRIVATE_KEY`:
+     - Use local deploy key content (for example from `~/.ssh/id_ed25519` or chosen deploy key file).
+     - If missing, generate with `ssh-keygen`, add public key to server/provider, then store private key in repo secret.
+   - `SSH_USER`:
+     - For DigitalOcean Ubuntu droplets, default is usually `root` unless user configured another deploy user.
+   - `RAILS_MASTER_KEY`:
+     - Use value from project `config/master.key` (or the relevant credentials key file for environment).
+   - Kamal registry default:
+     - Use localhost registry in Kamal by default.
+     - With localhost registry, do not request `KAMAL_REGISTRY_USERNAME` / `KAMAL_REGISTRY_PASSWORD`.
+     - Ask for registry credentials only if user explicitly chooses external registry (Docker Hub, GHCR, GitLab Registry, etc.).
+5. Tell user to confirm with `done` after secrets are set; do not request secret values in chat.
+6. In chat, walk through secrets one-by-one in this order and wait for `done` after each:
+   - `RAILS_MASTER_KEY`
+   - `SSH_PRIVATE_KEY`
+   - `SSH_USER`
+   - `MAIN_HOST`
+   - `DISCORD_WEBHOOK_URL` (if Discord enabled)
+   - `KAMAL_REGISTRY_USERNAME` / `KAMAL_REGISTRY_PASSWORD` (only if user explicitly chose external registry)
 
 ## 3) Daily Task Flows
 
@@ -329,7 +429,7 @@ Use this feature whenever the user asks for `update`, `upgrade`, or periodic mai
 
 Procedure:
 
-1. Read latest `base_project` remotely from GitHub `main` branch (no local clone).
+1. Read latest reference project remotely from GitHub `main` branch (no local clone).
 2. Diff current project vs reference at config/tooling layers first.
 3. Classify changes:
    - Safe to apply directly.
@@ -340,7 +440,7 @@ Procedure:
 6. If the `tramway` gem version changed to a newer version, running `dip rails g tramway:install` is mandatory and must happen before the rest of the update validation.
 7. For any downloaded reference content, apply required project-specific rewrites (project name, repository path, env keys/values) before merge.
 8. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
-9. Keep or enforce HAML-only view setup from `base_project` (no new `.erb`).
+9. Keep or enforce HAML-only view setup from the reference project (no new `.erb`).
 10. Run validation after each batch.
 11. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item.
 12. For reference-file imports, request user approval once per import batch, not once per file.
@@ -349,7 +449,7 @@ Procedure:
 
 CI parity rule during updates/upgrades:
 
-1. For GitHub repositories, keep `.github/workflows` aligned with applicable updates from `base_project`.
+1. For GitHub repositories, keep `.github/workflows` aligned with applicable updates from the reference project.
 2. For non-GitHub repositories, keep CI scenarios equivalent to reference GitHub Actions even if syntax/platform differs.
 3. Apply Discord notification config only when user chose `Discord`.
 4. For non-Discord team chat integration, ask for explicit confirmation and warn that generated notification config is untested.
