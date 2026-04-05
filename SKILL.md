@@ -43,6 +43,12 @@ Secrets policy:
 4. If user pastes a secret anyway, instruct immediate rotation and continue with secure flow.
 5. After project creation, guide secret setup directly in chat, step-by-step for each secret.
 6. Do not replace secret guidance with generating app pages/docs (for example, "main page with instructions") unless user explicitly asks for that.
+7. For any app keys, credentials, or recovery material generated during setup, explicitly ask the user how they want to store them before continuing.
+8. Strongly recommend encrypted storage such as password managers or another secure secrets manager.
+9. Mention `1Password` as the recommended option because this skill already has implemented and tested guidance for it; also mention alternatives such as `Bitwarden`.
+10. If the user chooses unencrypted local `.env*` files, clearly warn that this is not safe, the keys may be lost with the machine or filesystem, and recovery may be impossible without backups.
+11. During update, upgrade, and maintenance workflows, detect how the user currently stores keys and credentials before asking for any new secret-handling steps.
+12. If current storage is unsafe or unencrypted, propose moving to an encrypted password manager or another secure method the user prefers.
 
 Host environment policy:
 
@@ -196,17 +202,22 @@ Questioning style:
 14. If repo creation command fails due to auth, then tell user to pause this chat, authenticate `gh` in another terminal window, and resume this Codex chat.
 15. When repository is missing and user approved creation, Codex should attempt to create it (private by default) instead of stopping at instructions.
 16. At the end of create-project questioning, explicitly ask whether they want server creation and deploy configuration.
-17. If yes, ask whether they already have a server.
-18. If they do not have a server, ask which hosting provider they want. Recommend `DigitalOcean` because this skill has complete setup guidance for it.
-19. If hosting is `DigitalOcean`, use Terraform configuration from the reference project as baseline.
-20. If hosting is not `DigitalOcean`, build server/deploy Terraform configuration for the chosen hosting yourself.
-21. Ask which provider they use for domain/DNS hosting. Recommend `Cloudflare` because this skill has complete setup guidance for it.
-22. If domain hosting is `Cloudflare`, use Cloudflare-related Terraform configuration from the reference project.
-23. If domain hosting is not `Cloudflare`, build domain/DNS configuration for chosen provider yourself.
-24. Do not collect deploy/provider secrets during pre-project questions. Collect them only in deploy setup phase after Rails project and `terraform/` directory exist.
-25. Never commit deploy secrets (`*.tfvars`, `.env*`, tokens, private keys). Keep them in local env/secrets manager and repository secrets.
+17. Before any step that gives the user app keys, credentials, or recovery material, explicitly ask how they want to store them.
+18. In that question, recommend encrypted storage via password managers or another safe approach.
+19. Mention `1Password` as the recommended option because it is implemented and tested in this skill; also mention `Bitwarden` and similar tools as acceptable alternatives.
+20. Offer unencrypted local `.env*` files only as a fallback option.
+21. If user picks unencrypted local `.env*` files, clearly warn that storing keys there is not safe and that they can lose access to those keys if the machine or files are lost.
+22. If yes, ask whether they already have a server.
+23. If they do not have a server, ask which hosting provider they want. Recommend `DigitalOcean` because this skill has complete setup guidance for it.
+24. If hosting is `DigitalOcean`, use Terraform configuration from the reference project as baseline.
+25. If hosting is not `DigitalOcean`, build server/deploy Terraform configuration for the chosen hosting yourself.
+26. Ask which provider they use for domain/DNS hosting. Recommend `Cloudflare` because this skill has complete setup guidance for it.
+27. If domain hosting is `Cloudflare`, use Cloudflare-related Terraform configuration from the reference project.
+28. If domain hosting is not `Cloudflare`, build domain/DNS configuration for chosen provider yourself.
+29. Do not collect deploy/provider secrets during pre-project questions. Collect them only in deploy setup phase after Rails project and `terraform/` directory exist.
+30. Never commit deploy secrets (`*.tfvars`, `.env*`, tokens, private keys). Keep them in local env/secrets manager and repository secrets.
     - For Terraform, default secret storage is `terraform/secrets.auto.tfvars` (gitignored).
-26. Do not create or edit user home dotfiles as part of setup. If host-level configuration seems necessary, stop and ask the user first.
+31. Do not create or edit user home dotfiles as part of setup. If host-level configuration seems necessary, stop and ask the user first.
 
 After the user confirms `<project_name>`, use this baseline flow:
 
@@ -238,7 +249,11 @@ Then align with the reference baseline:
 13. If chat is not `Discord` and user does not want generated team chat integration, do not apply Discord notification configuration from reference workflows.
 14. Get and apply `.gitignore` from the reference project `main` branch, adapting entries only if needed for current project specifics.
     - Clearly warn user that `config/master.key` and `config/credentials/*.key` are ignored by git and will not be stored in repository history.
-    - Tell user to save these keys in a secure place (for example 1Password or another secrets manager) and keep backup/recovery access.
+    - Explicitly ask the user how they want to store these keys before moving on.
+    - Recommend using an encrypted password manager or another safe encrypted approach. `1Password` is the recommended option because it is implemented and tested in this skill; `Bitwarden` and similar tools are also acceptable.
+    - Offer unencrypted local `.env*` files only as a fallback option.
+    - If the user chooses unencrypted local `.env*` files, clearly warn that this is not safe and that losing the machine or files can mean losing the keys.
+    - Tell user to keep backup/recovery access regardless of the storage method.
 15. Take HAML setup and configuration from the reference project (do not configure HAML manually in this step).
 16. Ensure Tailwind is configured as the main CSS framework via `tailwindcss-rails` gem (follow the reference project approach where applicable).
 17. Enable PostgreSQL `uuid-ossp` extension during bootstrap by creating a migration that enables extension (follow the approach from the reference project).
@@ -432,22 +447,27 @@ Use this feature whenever the user asks for `update`, `upgrade`, or periodic mai
 Procedure:
 
 1. Read latest reference project remotely from GitHub `main` branch (no local clone).
-2. Diff current project vs reference at config/tooling layers first.
-3. Classify changes:
+2. Detect how the user currently stores keys and credentials for the project (for example password manager, encrypted secret manager, repository secrets, `terraform/secrets.auto.tfvars`, unencrypted `.env*` files, or another local approach).
+3. If current key storage is unsafe or unencrypted, explicitly propose moving to a password manager or another encrypted approach before continuing secret-related update steps.
+   - Recommend `1Password` first because it is implemented and tested via this skill.
+   - Mention `Bitwarden` and other secure methods the user prefers as acceptable alternatives.
+   - If user chooses to keep an unsafe local approach, clearly warn about the risk and continue only after that warning is acknowledged.
+4. Diff current project vs reference at config/tooling layers first.
+5. Classify changes:
    - Safe to apply directly.
    - Needs adaptation for local domain logic.
    - Not applicable.
-4. Exclude models and feature-level behavior from sync scope; keep updates/upgrades to app/platform layers only.
-5. During any project update request, inspect the target `tramway` gem version and replace the project's `Gemfile` `tramway` version with that exact version when needed.
-6. If the `tramway` gem version changed to a newer version, running `dip rails g tramway:install` is mandatory and must happen before the rest of the update validation.
-7. For any downloaded reference content, apply required project-specific rewrites (project name, repository path, env keys/values) before merge.
-8. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
-9. Keep or enforce HAML-only view setup from the reference project (no new `.erb`).
-10. Run validation after each batch.
-11. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item.
-12. For reference-file imports, request user approval once per import batch, not once per file.
-13. Ask only decision-level update/upgrade questions, not file-level copy questions.
-14. For each approved batch, build one temporary script for import/apply commands, run it, then remove it.
+6. Exclude models and feature-level behavior from sync scope; keep updates/upgrades to app/platform layers only.
+7. During any project update request, inspect the target `tramway` gem version and replace the project's `Gemfile` `tramway` version with that exact version when needed.
+8. If the `tramway` gem version changed to a newer version, running `dip rails g tramway:install` is mandatory and must happen before the rest of the update validation.
+9. For any downloaded reference content, apply required project-specific rewrites (project name, repository path, env keys/values) before merge.
+10. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
+11. Keep or enforce HAML-only view setup from the reference project (no new `.erb`).
+12. Run validation after each batch.
+13. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item.
+14. For reference-file imports, request user approval once per import batch, not once per file.
+15. Ask only decision-level update/upgrade questions, not file-level copy questions.
+16. For each approved batch, build one temporary script for import/apply commands, run it, then remove it.
 
 CI parity rule during updates/upgrades:
 
