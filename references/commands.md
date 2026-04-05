@@ -4,6 +4,7 @@ Use `dip` for all Rails/Ruby project commands, except `rails new` during initial
 Inside a Rails project, all Bundler commands must be run via `dip`.
 Assume Ruby is already installed. If Rails is missing, run `gem install rails`.
 If `dip` is missing, offer installing it via `gem install dip`.
+If a task requires Terraform and `terraform` is missing, install it with `bash scripts/install_terraform.sh` before running Terraform commands.
 
 ## Environment bootstrap
 
@@ -116,6 +117,7 @@ Collect deploy/provider variables now (after project + `terraform/` directory ex
 Tooling checks required by the reference Terraform flow:
 
 ```bash
+if ! command -v terraform >/dev/null 2>&1; then bash scripts/install_terraform.sh; fi
 terraform -version
 # only when using DigitalOcean reference wait script:
 doctl version

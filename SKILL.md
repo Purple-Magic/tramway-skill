@@ -16,7 +16,8 @@ Command policy:
 4. If Rails is missing on host, run `gem install rails` before project creation.
 5. Inside a Rails project, run all Bundler commands via `dip` (for example, `dip bundle install`, `dip bundle add ...`, `dip bundle outdated`).
 6. If `dip` is missing, explicitly offer the user to install it with `gem install dip`.
-7. Do not suggest direct `bundle`, `bin/rails`, or `bin/rspec` commands for project operations.
+7. If a task requires Terraform and `terraform` is missing, install it with `bash scripts/install_terraform.sh` before running Terraform commands.
+8. Do not suggest direct `bundle`, `bin/rails`, or `bin/rspec` commands for project operations.
 
 View policy:
 
@@ -282,6 +283,7 @@ If user selected server/deploy setup, add this step after repository setup and b
     - If domain hosting is not `Cloudflare`, collect provider-specific DNS inputs for Terraform.
     - Ensure `terraform/secrets.auto.tfvars` is gitignored.
 27. Validate tooling availability before apply:
+    - `if ! command -v terraform >/dev/null 2>&1; then bash scripts/install_terraform.sh; fi`
     - `terraform -version`
     - `doctl version` only when using the DigitalOcean reference script (`wait_for_ssh.sh`)
     - `nc -h` or `command -v nc` only when using `wait_for_ssh.sh`
