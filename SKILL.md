@@ -1,6 +1,6 @@
 ---
 name: tramway-skill
-description: Manage Ruby on Rails projects end-to-end with reliable workflows for creating new apps, setup, development, debugging, testing, maintenance, updates/upgrades, and releases. Use when the request includes phrases like "create rails project", "new rails app", "update application", "upgrade from reference project", or when working in a Rails codebase (Gemfile, config/, app/, db/, spec/ or test/) and the task involves bootstrapping environments, running app/test jobs, triaging failing specs or production issues, adding/changing features safely, upgrading gems or Rails versions, reviewing migrations, or preparing deployments. Treat https://github.com/purple-magic/base_project as the canonical reference project and always check for applicable updates from it during update/upgrade tasks.
+description: Manage Ruby on Rails projects end-to-end with safe workflows for app creation, setup, debugging, testing, maintenance, updates/upgrades, and releases. Use when the user explicitly asks for Rails work, or when the current directory is already confirmed as a Rails app. Treat https://github.com/purple-magic/base_project as the canonical reference project and always check for applicable updates from it during update/upgrade tasks.
 ---
 
 # Tramway Skill
@@ -83,7 +83,7 @@ Rules:
 
 ## Workflow
 
-0. On skill start, check current directory context and announce capabilities.
+0. On skill start, run one minimal context probe and announce capabilities.
 1. Identify project shape and constraints.
 2. Bootstrap and verify the environment.
 3. Execute task-specific workflow (feature, bugfix, maintenance, update/upgrade, release).
@@ -93,6 +93,23 @@ Rules:
 ## 0) Start-of-Skill Context Check
 
 Before any other step, determine whether the current working directory is a Rails project.
+
+Spend the fewest possible tokens on this decision.
+
+Default rule:
+
+1. If the user explicitly asked to create a new Rails project, skip project detection and go straight to the create-project workflow.
+2. Otherwise, use exactly one cheap probe first:
+
+```bash
+test -f Gemfile -a -f config/application.rb
+```
+
+3. Treat success as "inside a Rails project".
+4. Treat failure as "not inside a Rails project" unless the user explicitly said they are in a Rails app and need help with it.
+5. Do not start with `rg --files`, `find`, or `ls -la` just to answer this yes/no question.
+6. Do not inspect parent directories unless the user explicitly asks for that behavior.
+7. Do not explain the probe to the user; only state the conclusion.
 
 Do not describe technical detection details to the user. Only state the conclusion.
 
@@ -115,11 +132,19 @@ If not inside a Rails project, tell the user you figured out you are not in a Ra
 
 ## 1) Identify Project Shape
 
+Run this step only after Rails-project detection already succeeded, or when the user explicitly asked for create-project work.
+
 Inspect before changing anything:
 
 ```bash
-rg --files | head -n 200
-ls -la
+test -f Gemfile && printf 'Gemfile\n'
+test -f Gemfile.lock && printf 'Gemfile.lock\n'
+test -f config/application.rb && printf 'config/application.rb\n'
+test -f config/database.yml && printf 'config/database.yml\n'
+test -d spec && printf 'spec/\n'
+test -d test && printf 'test/\n'
+test -f dip.yml && printf 'dip.yml\n'
+test -f docker-compose.yml && printf 'docker-compose.yml\n'
 ```
 
 Detect key rails signals:
