@@ -66,20 +66,21 @@ Rules:
 2. Pull only applicable updates; do not blindly overwrite app-specific code.
 3. Never copy domain models, business logic, or exact product functionality from the reference project.
 4. Reuse only application-level setup: framework configuration, infrastructure wiring, tooling, CI/CD, security defaults, and implementation approaches.
-5. Do not clone the reference project locally; read it remotely from GitHub.
-6. Do not ask user whether to use the reference project; use it by default and only notify user that it is being used.
-7. Always read/download reference project content from the `main` branch.
-8. Every downloaded file/snippet from the reference project must be checked for applicability to current project setup before applying.
-9. Adapt imported content to current project context (for example, rename reference-project-specific names, repository identifiers, and environment values to `<project_name>`/current repo values).
-10. Document what was adopted, skipped, and why.
-11. Never ask for approval file-by-file when importing from the reference project.
-12. Ask the user only decision-level inputs that matter (for example: git platform, team chat choice, deployment target, privacy, and integration preferences), not file names.
-13. Internally build the full candidate file list and adaptation plan without exposing file-by-file prompts to the user.
-14. Execute imports through a temporary script that contains all required commands, then remove the script after execution.
-15. Ensure repository is created/connected before configuring team chat integrations and related secrets.
-16. In user-facing messages, call it "reference project" (not `base_project`).
-17. If user asks what the reference project is, explain briefly and include this link: `https://github.com/purple-magic/base_project`.
-18. Never offer or request posting secrets in chat. Use local secret setup + confirmation-only flow.
+5. During updates/upgrades of an existing project, do not modify existing deployment configuration by default; touch deployment config only when the user explicitly asks for deployment-related changes.
+6. Do not clone the reference project locally; read it remotely from GitHub.
+7. Do not ask user whether to use the reference project; use it by default and only notify user that it is being used.
+8. Always read/download reference project content from the `main` branch.
+9. Every downloaded file/snippet from the reference project must be checked for applicability to current project setup before applying.
+10. Adapt imported content to current project context (for example, rename reference-project-specific names, repository identifiers, and environment values to `<project_name>`/current repo values).
+11. Document what was adopted, skipped, and why.
+12. Never ask for approval file-by-file when importing from the reference project.
+13. Ask the user only decision-level inputs that matter (for example: git platform, team chat choice, deployment target, privacy, and integration preferences), not file names.
+14. Internally build the full candidate file list and adaptation plan without exposing file-by-file prompts to the user.
+15. Execute imports through a temporary script that contains all required commands, then remove the script after execution.
+16. Ensure repository is created/connected before configuring team chat integrations and related secrets.
+17. In user-facing messages, call it "reference project" (not `base_project`).
+18. If user asks what the reference project is, explain briefly and include this link: `https://github.com/purple-magic/base_project`.
+19. Never offer or request posting secrets in chat. Use local secret setup + confirmation-only flow.
 
 ## Workflow
 
@@ -462,12 +463,13 @@ Procedure:
 8. If the `tramway` gem version changed to a newer version, running `dip rails g tramway:install` is mandatory and must happen before the rest of the update validation.
 9. For any downloaded reference content, apply required project-specific rewrites (project name, repository path, env keys/values) before merge.
 10. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
-11. Keep or enforce HAML-only view setup from the reference project (no new `.erb`).
-12. Run validation after each batch.
-13. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item.
-14. For reference-file imports, request user approval once per import batch, not once per file.
-15. Ask only decision-level update/upgrade questions, not file-level copy questions.
-16. For each approved batch, build one temporary script for import/apply commands, run it, then remove it.
+11. If the project already has deployment configuration, treat it as protected during update/upgrade work and leave it unchanged unless the user explicitly requested deployment updates.
+12. Keep or enforce HAML-only view setup from the reference project (no new `.erb`).
+13. Run validation after each batch.
+14. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item, including deployment-related items skipped by default.
+15. For reference-file imports, request user approval once per import batch, not once per file.
+16. Ask only decision-level update/upgrade questions, not file-level copy questions.
+17. For each approved batch, build one temporary script for import/apply commands, run it, then remove it.
 
 CI parity rule during updates/upgrades:
 

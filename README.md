@@ -1,5 +1,9 @@
 # Tramway Skill
 
+### Backlog
+
+- [ ] Decrease token usage on a startup
+
 `tramway-skill` is an AI skill for working with Ruby on Rails projects end to end.
 
 It is built around a simple idea: Rails is still one of the best stacks for shipping useful products, especially now that experienced engineers can use AI to remove routine friction and newcomers can build much more ambitious things with far less pain.

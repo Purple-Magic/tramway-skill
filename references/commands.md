@@ -234,6 +234,7 @@ curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/Gemf
 After downloading reference content:
 - Verify it is applicable to current project setup.
 - Rewrite project-specific values (project name, repository URL, CI env vars, service identifiers) before applying.
+- If the project already has deployment configuration, leave deployment-related files unchanged unless the user explicitly asked to update deployment setup.
 - Report what was updated and what was not updated, including reason for each non-updated item.
 
 ## Jobs and cache
