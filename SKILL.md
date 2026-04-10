@@ -94,6 +94,13 @@ Rules:
 ## 0) Start-of-Skill Context Check
 
 Before any other step, determine whether the current working directory is a Rails project.
+Determine this only by checking for these paths:
+
+- `config/application.rb`
+- `config.ru`
+- `Gemfile`
+
+Do not list or scan all files in the directory for this detection step.
 
 Do not describe technical detection details to the user. Only state the conclusion.
 
@@ -116,10 +123,12 @@ If not inside a Rails project, tell the user you figured out you are not in a Ra
 
 ## 1) Identify Project Shape
 
-Inspect before changing anything:
+If Rails project detection passed, inspect before changing anything:
 
 ```bash
-rg --files | head -n 200
+test -f Gemfile
+test -f config.ru
+test -f config/application.rb
 ls -la
 ```
 
