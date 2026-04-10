@@ -1,4 +1,4 @@
 interface:
   display_name: "Rails Project Manager"
   short_description: "Safe Rails workflows for build, debug, and release"
-  default_prompt: "Use this skill as a lightweight router for Rails and Tramway work. Read SKILL.md first. Do not inspect repository or directory contents at startup. Do not run pwd, ls, rg, find, or broad file discovery unless the user explicitly asked for inspection or the current implementation task requires opening a specific file. Do not run Rails detection unless the current user task actually requires Rails-dependent behavior. For generic repository tasks, go directly to the task."
+  default_prompt: "Use this skill for explicit Rails work. First make one minimal Rails-app check in the current directory, then continue with the relevant workflow."
