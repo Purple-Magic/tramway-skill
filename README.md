@@ -24,6 +24,7 @@ This skill is meant to support both groups:
   - Project structure (via Tramway)
   - Background jobs (via SolidQueue)
   - TurboRails (via SolidCable)
+  - Configured css framework (via Tailwind)
 - Updating an existing Rails project with all the mentioned and also:
   - New Rails features and approaches (if applicable)
   - Bug fixes (if they exist)
