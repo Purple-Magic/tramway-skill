@@ -19,7 +19,7 @@ This skill is meant to support both groups:
   - Docker for development environment (via dip)
   - Deployment (via Kamal)
   - Production and staging server management (via Terraform)
-  - Production and staging server management (via Cloudflare)
+  - Production and staging server management (via Terraform)
   - Authentication (via Rails authorization or Auth0)
   - Project structure (via Tramway)
   - Background jobs (via SolidQueue)
