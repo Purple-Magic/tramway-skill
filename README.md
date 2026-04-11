@@ -13,6 +13,19 @@ This skill is meant to support both groups:
 - Beginners who want a practical "YOLO mode" and need the AI to keep momentum while still following solid Rails conventions.
 - Experienced engineers who run many different projects and want to stay focused on product and architecture instead of repeating setup, maintenance, and release chores.
 
+## Base Features
+
+- Creating a new Rails project with configured:
+  - Docker for development environment (via dip)
+  - Deployment (via Kamal)
+  - Production and staging server management (via Terraform)
+  - Production and staging server management (via Cloudflare)
+  - Authentication (via Rails authorization or Auth0)
+  - Project structure (via Tramway)
+  - Background jobs (via SolidQueue)
+- Updating an existing Rails project with all the mentioned and also:
+  - New Rails approaches
+
 ## What It Does
 
 `tramway-skill` acts like an operational Rails playbook. It helps an AI agent handle common project work with opinionated defaults and a strong bias toward safe, verifiable changes.
