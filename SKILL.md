@@ -87,10 +87,10 @@ Rules:
     - Terraform configuration for creating `staging` and `production`
     - `Makefile` commands for infra/deploy management
     - CI configuration
-22. For `Implement deployment`, use the reference project files/configuration as the source whenever they are applicable to the current project.
-23. If a reference project file is not directly applicable, use the reference project configuration as the behavioral baseline and build the equivalent setup for the current hosting/git platform instead of inventing a different flow.
+22. For `Implement deployment`, use the same approach as the reference project and use the reference project files/configuration as the source whenever they are applicable to the current project.
+23. If a reference project file is not directly applicable, preserve the same deployment approach, behavior, naming conventions, workflow shape, and operator experience from the reference project, adapting only the parts required by the current hosting/git platform.
 24. For `Implement deployment`, treat partial deployment setup as incomplete until all four areas above are covered or explicitly skipped by the user.
-25. If the user asks for project updating/upgrading, always check the reference project for applicable updates to `Makefile`, deployment configuration, and Terraform configuration in addition to the usual app/tooling review.
+25. If the user asks for project updating/upgrading, always check the reference project for applicable updates to `AGENTS.md`, `Makefile`, deployment configuration, and Terraform configuration in addition to the usual app/tooling review.
 26. If the user asks to `update deployment`, treat that as an explicit request to apply all applicable deployment-related setup from the reference project, including deployment configuration, `Makefile`, and Terraform usage patterns.
 
 ## Workflow
@@ -386,20 +386,20 @@ Required scope:
    - `terraform/`
    - `Makefile`
    - CI config such as `.github/workflows/` or the equivalent for the current git platform
-2. Use the reference project as the primary source when applicable:
+2. Use the same deployment approach as the reference project. The reference project is the primary source:
    - Kamal: `config/deploy.yml`, `config/deploy.staging.yml`, `config/deploy.production.yml`
    - Terraform: files in `terraform/`
    - Management commands: `Makefile`
    - GitHub CI/deploy workflows: `.github/workflows/ci.yml`, `.github/workflows/deploy.yml`, `.github/workflows/deploy-production.yml`
 3. Ensure Kamal deployment exists for both `staging` and `production`.
 4. Ensure Terraform can create both `staging` and `production`.
-   - Prefer the reference project Terraform structure/workspace flow when applicable.
+   - Use the same Terraform structure/workspace flow as the reference project when applicable.
    - Keep environment-specific infra behavior aligned with the reference project.
 5. Ensure `Makefile` includes commands for managing both environments.
    - At minimum, cover create/apply, deploy/setup, logs, and destroy flows when those operations are part of the chosen hosting flow.
 6. Ensure CI is implemented.
-   - For GitHub, copy/adapt the reference project workflow structure when applicable.
-   - For non-GitHub platforms, keep scenario parity with the reference GitHub workflows, including CI and deploy gates.
+   - For GitHub, copy/adapt the reference project workflow structure.
+   - For non-GitHub platforms, preserve the same CI/deploy approach and gate structure as the reference project, adapted to the current platform syntax.
 7. Adapt all imported config to the current project:
    - Replace app/repository names, environment values, hostnames, provider identifiers, and secret names as needed.
 8. If the current project already has some deployment files, preserve applicable project-specific values and fill the missing pieces instead of resetting the deployment stack from scratch.
@@ -409,7 +409,7 @@ Required scope:
    - CI workflow validation where practical
 10. If `Makefile` was added or updated, tell the user how to use the available `make` commands in the final response.
 11. If `Makefile` was added or updated, also update the target project `README` with concise usage instructions for the deployment-management commands.
-12. In the final summary, explicitly report which deployment pieces came from the reference project directly and which ones had to be adapted or built by analogy.
+12. In the final summary, explicitly report which deployment pieces came from the reference project directly and which ones had to be adapted while preserving the same reference-project approach.
 
 ### Update deployment
 
@@ -564,13 +564,14 @@ Procedure:
 9. For any downloaded reference content, apply required project-specific rewrites (project name, repository path, env keys/values) before merge.
 10. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
 11. During project update/upgrade requests, always inspect the reference project for applicable changes to:
+   - `AGENTS.md`
    - `Makefile`
    - deployment configuration such as `config/deploy.yml`, `config/deploy.staging.yml`, `config/deploy.production.yml`
    - Terraform configuration in `terraform/`
-12. If those deployment-related updates are applicable, apply/adapt them as part of the project update instead of skipping them by default.
+12. If those `AGENTS.md` and deployment-related updates are applicable, apply/adapt them as part of the project update instead of skipping them by default.
 13. Keep or enforce HAML-only view setup from the reference project (no new `.erb`).
 14. Run validation after each batch.
-15. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item, including which `Makefile`, deployment, and Terraform updates were applied or skipped and why.
+15. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item, including whether `AGENTS.md`, `Makefile`, deployment, and Terraform updates were applied or skipped and why.
 16. For reference-file imports, request user approval once per import batch, not once per file.
 17. Ask only decision-level update/upgrade questions, not file-level copy questions.
 18. For each approved batch, build one temporary script for import/apply commands, run it, then remove it.
