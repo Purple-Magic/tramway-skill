@@ -299,7 +299,11 @@ If user selected server/deploy setup, add this step after repository setup and b
     - If domain hosting is `Cloudflare`, use/adapt Cloudflare Terraform config from the reference project.
     - If domain hosting is not `Cloudflare`, build Terraform domain/DNS configuration for selected provider yourself.
 25. Keep Terraform files in `terraform/` and ensure scripts are executable (`chmod +x terraform/*.sh`) when scripts are present.
-26. Collect deploy variables now (after project exists and `terraform/` directory is created):
+26. Default database secret handling must follow the reference project:
+    - Store deploy database values in Rails credentials, not as manually managed deployment env vars by default.
+    - This includes `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` or the equivalent database name/username/password values used by the current project structure.
+    - Prefer the reference project's `config/database.yml` and credentials layout when applicable.
+27. Collect deploy variables now (after project exists and `terraform/` directory is created):
     - If hosting is `DigitalOcean`, collect:
       - `do_token` (DigitalOcean API token)
         1. Open DigitalOcean Control Panel -> API -> Tokens/Keys.
@@ -318,20 +322,21 @@ If user selected server/deploy setup, add this step after repository setup and b
       - Put key into `terraform/secrets.auto.tfvars` and reply `done`.
     - If domain hosting is not `Cloudflare`, collect provider-specific DNS inputs for Terraform.
     - Ensure `terraform/secrets.auto.tfvars` is gitignored.
-27. Validate tooling availability before apply:
+    - Do not ask the user to create or set `MAIN_HOST` in 1Password before Terraform apply; Terraform should derive and sync it itself following the reference-project flow.
+28. Validate tooling availability before apply:
     - `if ! command -v terraform >/dev/null 2>&1; then bash scripts/install_terraform.sh; fi`
     - `terraform -version`
     - `doctl version` only when using the DigitalOcean reference script (`wait_for_ssh.sh`)
     - `nc -h` or `command -v nc` only when using `wait_for_ssh.sh`
-28. Initialize and validate Terraform:
+29. Initialize and validate Terraform:
     - `terraform -chdir=terraform init`
     - `terraform -chdir=terraform validate`
     - `terraform -chdir=terraform plan`
-29. Apply only after explicit user confirmation:
+30. Apply only after explicit user confirmation:
     - `terraform -chdir=terraform apply`
-30. After apply, if `.env` exists and `update_env_hosts.sh` is present, run:
+31. After apply, if `.env` exists and `update_env_hosts.sh` is present, run:
     - `bash terraform/update_env_hosts.sh`
-31. Explain key outputs to user (for example server IP, hostname, and env snippet values).
+32. Explain key outputs to user (for example server IP, hostname, and env snippet values).
 
 When requesting deploy/repository secrets, provide setup guidance for each secret:
 
@@ -341,8 +346,6 @@ When requesting deploy/repository secrets, provide setup guidance for each secre
 4. Required/optional secrets and how to get them:
    - `DISCORD_WEBHOOK_URL`:
      - Discord -> Server Settings -> Integrations -> Webhooks -> New Webhook -> choose channel -> copy webhook URL.
-   - `MAIN_HOST`:
-     - After Terraform apply: `terraform -chdir=terraform output -raw main_host_ip`.
    - `SSH_PRIVATE_KEY`:
      - Use local deploy key content (for example from `~/.ssh/id_ed25519` or chosen deploy key file).
      - If missing, generate with `ssh-keygen`, add public key to server/provider, then store private key in repo secret.
@@ -350,16 +353,21 @@ When requesting deploy/repository secrets, provide setup guidance for each secre
      - For DigitalOcean Ubuntu droplets, default is usually `root` unless user configured another deploy user.
    - `RAILS_MASTER_KEY`:
      - Use value from project `config/master.key` (or the relevant credentials key file for environment).
+   - Database deploy values:
+     - By default, keep `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` in Rails credentials following the reference-project approach.
+     - Do not ask the user to set those values as separate repository secrets unless the project explicitly uses a different deployment design.
    - Kamal registry default:
      - Use localhost registry in Kamal by default.
      - With localhost registry, do not request `KAMAL_REGISTRY_USERNAME` / `KAMAL_REGISTRY_PASSWORD`.
      - Ask for registry credentials only if user explicitly chooses external registry (Docker Hub, GHCR, GitLab Registry, etc.).
+   - `MAIN_HOST` handling:
+     - Do not ask the user to set `MAIN_HOST` in 1Password manually before Terraform apply.
+     - Terraform should derive and sync `MAIN_HOST` itself when following the reference-project flow.
 5. Tell user to confirm with `done` after secrets are set; do not request secret values in chat.
 6. In chat, walk through secrets one-by-one in this order and wait for `done` after each:
    - `RAILS_MASTER_KEY`
    - `SSH_PRIVATE_KEY`
    - `SSH_USER`
-   - `MAIN_HOST`
    - `DISCORD_WEBHOOK_URL` (if Discord enabled)
    - `KAMAL_REGISTRY_USERNAME` / `KAMAL_REGISTRY_PASSWORD` (only if user explicitly chose external registry)
 

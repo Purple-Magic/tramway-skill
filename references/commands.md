@@ -102,6 +102,8 @@ Domain/DNS branch:
 - If domain hosting is not `Cloudflare`, build Terraform DNS configuration yourself for selected provider.
 
 Collect deploy/provider variables now (after project + `terraform/` directory exist):
+- Keep deploy database values in Rails credentials by default, following the reference project.
+  - Store `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` there unless the current project explicitly uses a different deploy design.
 - If hosting is `DigitalOcean`, collect: `do_token`, `ssh_fingerprint`, `region`, `size`, `app_name`.
   - For `ssh_fingerprint`, default to the system default SSH key; ask custom only on explicit request.
   - If default key is missing in DigitalOcean, add it in DigitalOcean -> API -> Tokens/Keys -> SSH Keys and use its fingerprint.
@@ -113,6 +115,7 @@ Collect deploy/provider variables now (after project + `terraform/` directory ex
   - Put key into `terraform/secrets.auto.tfvars` and reply `done` without posting secret value in chat.
 - If domain hosting is not `Cloudflare`, collect provider-specific DNS Terraform inputs.
 - Store all Terraform variables/secrets in `terraform/secrets.auto.tfvars` and keep it gitignored.
+- Do not ask the user to create or fill `MAIN_HOST` in 1Password before Terraform apply; Terraform derives and syncs it itself in the reference-project flow.
 
 Tooling checks required by the reference Terraform flow:
 
@@ -153,20 +156,20 @@ Repository secrets setup guide (never in chat):
   - GitLab: Settings -> CI/CD -> Variables -> Add variable.
 - Secret-by-secret source:
   - `DISCORD_WEBHOOK_URL`: Discord -> Server Settings -> Integrations -> Webhooks -> New Webhook -> copy URL.
-  - `MAIN_HOST`: `terraform -chdir=terraform output -raw main_host_ip` (after apply).
   - `SSH_PRIVATE_KEY`: content of local deploy private key file (for example `~/.ssh/id_ed25519`); generate with `ssh-keygen` if needed.
   - `SSH_USER`: `root` by default on DigitalOcean Ubuntu unless custom deploy user is configured.
   - `RAILS_MASTER_KEY`: project `config/master.key` (or relevant environment credentials key).
+  - Database deploy values: keep `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` in Rails credentials by default, following the reference project.
   - Kamal registry default: localhost registry.
     - Do not require `KAMAL_REGISTRY_USERNAME` / `KAMAL_REGISTRY_PASSWORD` for localhost registry.
     - Request registry credentials only if user explicitly chooses external registry.
+  - `MAIN_HOST`: do not ask user to set it manually in 1Password before Terraform apply; Terraform syncs it itself.
 - Ask user to reply `done` after secrets are set, without posting secret values.
 - After project creation, guide secret setup in chat one-by-one (wait for `done` after each), not by creating in-app instruction pages.
 - Recommended order:
   - `RAILS_MASTER_KEY`
   - `SSH_PRIVATE_KEY`
   - `SSH_USER`
-  - `MAIN_HOST`
   - `DISCORD_WEBHOOK_URL` (if Discord enabled)
   - `KAMAL_REGISTRY_USERNAME` / `KAMAL_REGISTRY_PASSWORD` (only if user explicitly chose external registry)
 
