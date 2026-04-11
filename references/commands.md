@@ -234,7 +234,9 @@ curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/Gemf
 After downloading reference content:
 - Verify it is applicable to current project setup.
 - Rewrite project-specific values (project name, repository URL, CI env vars, service identifiers) before applying.
-- If the project already has deployment configuration, leave deployment-related files unchanged unless the user explicitly asked to update deployment setup.
+- For project update/upgrade requests, always inspect the reference project for applicable updates to `Makefile`, deployment configuration, and Terraform configuration.
+- If those `Makefile`, deployment, or Terraform updates are applicable, update/adapt them instead of skipping them by default.
+- For `update deployment` requests, apply all applicable deployment-related setup from the reference project, including `Makefile`, Terraform configuration, and Terraform usage/helper-script patterns.
 - Report what was updated and what was not updated, including reason for each non-updated item.
 
 ## Jobs and cache

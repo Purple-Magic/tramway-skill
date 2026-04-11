@@ -29,6 +29,8 @@ It is designed for tasks such as:
 - Pulling applicable improvements from a reference project
 - Preparing CI, deployment, and release workflows
 
+For deployment work, the skill is also expected to explain any implemented `Makefile` commands to the user and add matching usage instructions to the target project's `README` when a deployment-management `Makefile` is introduced or updated.
+
 ## Philosophy
 
 The skill is opinionated on purpose.
