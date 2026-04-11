@@ -24,11 +24,12 @@
 2. Do not ask whether to use the reference project; apply it by default and notify user.
 3. Diff current project with reference, starting from `config/`, `Gemfile*`, CI, and tooling files.
 4. If the user asked for project updating/upgrading, explicitly inspect the reference project for applicable updates to:
+   - `.gitignore`
    - `AGENTS.md`
    - `Makefile`
    - deployment configuration
    - Terraform configuration
-5. Apply/adapt those `AGENTS.md`, `Makefile`, deployment, and Terraform updates when they are applicable to the current project.
+5. Apply/adapt those `.gitignore`, `AGENTS.md`, `Makefile`, deployment, and Terraform updates when they are applicable to the current project.
 6. If the user asked to `update deployment`, apply all applicable deployment-related setup from the reference project, including:
    - `Makefile`
    - deployment configuration
@@ -60,7 +61,7 @@
 15. Apply changes in small thematic batches.
 16. Preserve HAML-only views and avoid introducing new `.erb` files.
 17. Run `dip rails db:prepare`, boot check, and tests after each batch.
-18. Summarize applied/skipped updates with reasons for every skipped item, including `AGENTS.md`, `Makefile`, deployment, and Terraform decisions.
+18. Summarize applied/skipped updates with reasons for every skipped item, including `.gitignore`, `AGENTS.md`, `Makefile`, deployment, and Terraform decisions.
 
 ## Migration Safety
 

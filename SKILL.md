@@ -90,7 +90,7 @@ Rules:
 22. For `Implement deployment`, use the same approach as the reference project and use the reference project files/configuration as the source whenever they are applicable to the current project.
 23. If a reference project file is not directly applicable, preserve the same deployment approach, behavior, naming conventions, workflow shape, and operator experience from the reference project, adapting only the parts required by the current hosting/git platform.
 24. For `Implement deployment`, treat partial deployment setup as incomplete until all four areas above are covered or explicitly skipped by the user.
-25. If the user asks for project updating/upgrading, always check the reference project for applicable updates to `AGENTS.md`, `Makefile`, deployment configuration, and Terraform configuration in addition to the usual app/tooling review.
+25. If the user asks for project updating/upgrading, always check the reference project for applicable updates to `.gitignore`, `AGENTS.md`, `Makefile`, deployment configuration, and Terraform configuration in addition to the usual app/tooling review.
 26. If the user asks to `update deployment`, treat that as an explicit request to apply all applicable deployment-related setup from the reference project, including deployment configuration, `Makefile`, and Terraform usage patterns.
 
 ## Workflow
@@ -564,14 +564,15 @@ Procedure:
 9. For any downloaded reference content, apply required project-specific rewrites (project name, repository path, env keys/values) before merge.
 10. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
 11. During project update/upgrade requests, always inspect the reference project for applicable changes to:
+   - `.gitignore`
    - `AGENTS.md`
    - `Makefile`
    - deployment configuration such as `config/deploy.yml`, `config/deploy.staging.yml`, `config/deploy.production.yml`
    - Terraform configuration in `terraform/`
-12. If those `AGENTS.md` and deployment-related updates are applicable, apply/adapt them as part of the project update instead of skipping them by default.
+12. If those `.gitignore`, `AGENTS.md`, and deployment-related updates are applicable, apply/adapt them as part of the project update instead of skipping them by default.
 13. Keep or enforce HAML-only view setup from the reference project (no new `.erb`).
 14. Run validation after each batch.
-15. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item, including whether `AGENTS.md`, `Makefile`, deployment, and Terraform updates were applied or skipped and why.
+15. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item, including whether `.gitignore`, `AGENTS.md`, `Makefile`, deployment, and Terraform updates were applied or skipped and why.
 16. For reference-file imports, request user approval once per import batch, not once per file.
 17. Ask only decision-level update/upgrade questions, not file-level copy questions.
 18. For each approved batch, build one temporary script for import/apply commands, run it, then remove it.
