@@ -16,7 +16,7 @@ This skill is meant to support both groups:
 ## Base Features
 
 - Creating a new Rails project with configured:
-  - Docker for development environment (via dip)
+  - Docker for development (via dip)
   - Deployment (via Kamal)
   - Production and staging server management (via Terraform)
   - Production and staging server management (via Terraform)
