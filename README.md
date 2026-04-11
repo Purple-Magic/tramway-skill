@@ -23,8 +23,10 @@ This skill is meant to support both groups:
   - Authentication (via Rails authorization or Auth0)
   - Project structure (via Tramway)
   - Background jobs (via SolidQueue)
+  - TurboRails (via SolidCable)
 - Updating an existing Rails project with all the mentioned and also:
-  - New Rails approaches
+  - New Rails features and approaches (if applicable)
+  - Bug fixes (if they exist)
 
 ## What It Does
 
