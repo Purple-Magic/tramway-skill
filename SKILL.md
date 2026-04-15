@@ -303,7 +303,10 @@ If user selected server/deploy setup, add this step after repository setup and b
     - Store deploy database values in Rails credentials, not as manually managed deployment env vars by default.
     - This includes `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` or the equivalent database name/username/password values used by the current project structure.
     - Prefer the reference project's `config/database.yml` and credentials layout when applicable.
-27. Collect deploy variables now (after project exists and `terraform/` directory is created):
+27. If deployment includes Auth0, store Auth0 application secrets in Rails credentials following the same approach and credentials structure used by the reference project.
+    - Do not treat Auth0 client secrets as plain deploy env vars by default if the reference-project flow keeps them in Rails credentials.
+    - Adapt only tenant/domain/client identifiers and environment-specific values needed for the current project.
+28. Collect deploy variables now (after project exists and `terraform/` directory is created):
     - If hosting is `DigitalOcean`, collect:
       - `do_token` (DigitalOcean API token)
         1. Open DigitalOcean Control Panel -> API -> Tokens/Keys.
@@ -323,20 +326,20 @@ If user selected server/deploy setup, add this step after repository setup and b
     - If domain hosting is not `Cloudflare`, collect provider-specific DNS inputs for Terraform.
     - Ensure `terraform/secrets.auto.tfvars` is gitignored.
     - Do not ask the user to create or set `MAIN_HOST` in 1Password before Terraform apply; Terraform should derive and sync it itself following the reference-project flow.
-28. Validate tooling availability before apply:
+29. Validate tooling availability before apply:
     - `if ! command -v terraform >/dev/null 2>&1; then bash scripts/install_terraform.sh; fi`
     - `terraform -version`
     - `doctl version` only when using the DigitalOcean reference script (`wait_for_ssh.sh`)
     - `nc -h` or `command -v nc` only when using `wait_for_ssh.sh`
-29. Initialize and validate Terraform:
+30. Initialize and validate Terraform:
     - `terraform -chdir=terraform init`
     - `terraform -chdir=terraform validate`
     - `terraform -chdir=terraform plan`
-30. Apply only after explicit user confirmation:
+31. Apply only after explicit user confirmation:
     - `terraform -chdir=terraform apply`
-31. After apply, if `.env` exists and `update_env_hosts.sh` is present, run:
+32. After apply, if `.env` exists and `update_env_hosts.sh` is present, run:
     - `bash terraform/update_env_hosts.sh`
-32. Explain key outputs to user (for example server IP, hostname, and env snippet values).
+33. Explain key outputs to user (for example server IP, hostname, and env snippet values).
 
 When requesting deploy/repository secrets, provide setup guidance for each secret:
 
@@ -356,6 +359,9 @@ When requesting deploy/repository secrets, provide setup guidance for each secre
    - Database deploy values:
      - By default, keep `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` in Rails credentials following the reference-project approach.
      - Do not ask the user to set those values as separate repository secrets unless the project explicitly uses a different deployment design.
+   - Auth0 deploy values:
+     - If the deployment uses Auth0, store Auth0 secrets in Rails credentials following the same reference-project approach.
+     - Do not ask the user to store Auth0 client secrets as separate repository secrets unless the reference-project design for that integration explicitly requires it.
    - Kamal registry default:
      - Use localhost registry in Kamal by default.
      - With localhost registry, do not request `KAMAL_REGISTRY_USERNAME` / `KAMAL_REGISTRY_PASSWORD`.
@@ -402,6 +408,7 @@ Required scope:
    - For non-GitHub platforms, preserve the same CI/deploy approach and gate structure as the reference project, adapted to the current platform syntax.
 7. Adapt all imported config to the current project:
    - Replace app/repository names, environment values, hostnames, provider identifiers, and secret names as needed.
+   - If the deployment uses Auth0, keep Auth0 secrets in Rails credentials using the same reference-project approach instead of moving them to plain deploy env vars by default.
 8. If the current project already has some deployment files, preserve applicable project-specific values and fill the missing pieces instead of resetting the deployment stack from scratch.
 9. Verify the resulting setup with the strongest checks available for the current project, for example:
    - `terraform -chdir=terraform validate`
