@@ -6,6 +6,24 @@
 
 `tramway-skill` is an AI skill for working with Ruby on Rails projects end to end.
 
+## Installation
+
+Install it through Codex's standard `skill-installer` flow from this GitHub path:
+
+`https://github.com/purple-magic/tramway-skill/tree/main/skills/tramway-skill`
+
+The skill now lives under `skills/tramway-skill/`, so Codex can install it as a normal GitHub-hosted skill instead of reading it from an arbitrary local path.
+
+If you are using the low-level installer script directly, the matching repo path is:
+
+```bash
+python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --repo purple-magic/tramway-skill \
+  --path skills/tramway-skill
+```
+
+After installation, restart Codex.
+
 It is built around a simple idea: Rails is still one of the best stacks for shipping useful products, especially now that experienced engineers can use AI to remove routine friction and newcomers can build much more ambitious things with far less pain.
 
 This skill is meant to support both groups:
