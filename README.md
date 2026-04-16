@@ -54,6 +54,15 @@ This skill is meant to support both groups:
 - Updating an existing Rails project with all the mentioned and also:
   - New Rails features and approaches (if applicable)
   - Bug fixes (if they exist)
+- Authorization
+  - Auth0 integration recipe    
+- Documentation instructions
+- Integrations instructions
+- Testing instructions
+- Tramway instructions
+- UI instructions
+- Recipes
+  - `Copy feature`
 
 ## What It Does
 
