@@ -14,6 +14,14 @@ Install it through Codex's standard `skill-installer` flow from this GitHub path
 
 The skill now lives under `skills/tramway-skill/`, so Codex can install it as a normal GitHub-hosted skill instead of reading it from an arbitrary local path.
 
+If you want to install it through the Codex CLI itself, start Codex and ask it to use the `skill-installer` skill with this GitHub path:
+
+```bash
+codex "Use the skill-installer skill to install https://github.com/purple-magic/tramway-skill/tree/main/skills/tramway-skill"
+```
+
+You can also paste the same instruction into an existing interactive Codex session.
+
 If you are using the low-level installer script directly, the matching repo path is:
 
 ```bash
