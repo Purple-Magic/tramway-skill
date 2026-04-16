@@ -1,9 +1,5 @@
 # Tramway Skill
 
-### Backlog
-
-- [ ] Decrease token usage on a startup
-
 `tramway-skill` is an AI skill for working with Ruby on Rails projects end to end.
 
 ## Installation
