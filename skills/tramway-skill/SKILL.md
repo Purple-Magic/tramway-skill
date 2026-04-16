@@ -56,6 +56,28 @@ Host environment policy:
 2. This includes files such as `.bashrc`, `.zshrc`, `.psqlrc`, `.irbrc`, and similar shell/editor/database client config files.
 3. Prefer project-local configuration and explicit commands over persistent host-level changes.
 
+## Focused Guidance Files
+
+This skill includes focused guidance under `agents/`. Keep the main workflow in this file, then load only the matching guidance files for the active task.
+
+Load files only when needed:
+
+- `agents/rails.md` for Rails conventions, migrations, models, routes, seeds, configuration, services, and deployment command shape.
+- `agents/testing.md` when adding or changing specs, factories, feature coverage, or Tramway entity page tests.
+- `agents/ui.md` when changing Haml views, ViewComponents, Tailwind, page layout, buttons, tables, flashes, or form markup.
+- `agents/tramway.md` when the task touches Tramway entities, forms, decorators, components, CRUD defaults, or Tramway-specific controller/view patterns.
+- `agents/integrations.md` when the task touches third-party services, service objects, background jobs, controller orchestration, or external APIs.
+- `agents/documentation.md` when the task changes a user-visible feature or workflow that should be reflected in `docs/users/`.
+- `agents/recipes.md` when the user asks for a usual implementation pattern or the task clearly matches an existing feature recipe. After opening the index, load only the specific recipe file that matches the feature.
+
+Usage rules:
+
+1. Do not load every `agents/*.md` file by default.
+2. Combine only the smallest relevant set for the current task.
+3. Treat these files as scenario-specific rules that refine this skill, not as blanket instructions for unrelated work.
+4. When two files overlap, prefer the more specific file for the active surface area and keep the rest of the workflow from this `SKILL.md`.
+5. If a recurring feature pattern is missing, add a focused recipe under `agents/recipes/` and link it from `agents/recipes.md`.
+
 ## Canonical Reference Project
 
 Use `https://github.com/purple-magic/base_project` as the main reference for baseline project structure and configuration.
@@ -383,6 +405,8 @@ When requesting deploy/repository secrets, provide setup guidance for each secre
 
 Treat a request like `Implement deployment` as a full deployment-systems task, not a narrow single-file change.
 
+Load `agents/rails.md` for deployment command and configuration conventions. Also load `agents/integrations.md` if the deployment work touches third-party providers, background delivery, or external service setup.
+
 Required scope:
 
 1. Inspect current project for existing deploy pieces before editing:
@@ -422,6 +446,8 @@ Required scope:
 
 Treat a request like `update deployment` as a deployment-sync task against the reference project.
 
+Load `agents/rails.md` for deployment command and configuration conventions. Also load `agents/integrations.md` if the update touches third-party providers or external service wiring.
+
 Required scope:
 
 1. Inspect the current deployment-related files before editing:
@@ -454,6 +480,15 @@ Required scope:
 
 ### Feature work
 
+Load the smallest matching set from `agents/` before implementation:
+
+- `agents/testing.md` for spec conventions and coverage shape
+- `agents/ui.md` for views/components/forms/layout work
+- `agents/tramway.md` for Tramway entities/forms/decorators/default CRUD flows
+- `agents/integrations.md` for services/jobs/external APIs
+- `agents/documentation.md` when the feature is user-visible
+- `agents/recipes.md` plus one matching recipe when the feature matches an existing implementation pattern
+
 1. Reproduce or define acceptance criteria.
 2. Add or update RSpec tests first for the feature.
 3. Skip model specs unless user explicitly requests them.
@@ -464,6 +499,8 @@ Required scope:
 
 ### Bugfix work
 
+Load the same focused `agents/` files as feature work, but only for the surfaces touched by the bug. Add `agents/documentation.md` only if the bugfix changes visible behavior or user workflow documentation.
+
 1. Reproduce with failing test or script.
 2. Add regression test.
 3. Implement fix with smallest blast radius.
@@ -471,6 +508,8 @@ Required scope:
 5. Document root cause in PR notes.
 
 ### Refactor work
+
+Load only the `agents/` files that match the code surface being refactored so the refactor preserves the established patterns for that layer.
 
 1. Lock behavior with tests.
 2. Refactor in small commits.
