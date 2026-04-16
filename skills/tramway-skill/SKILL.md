@@ -56,6 +56,28 @@ Host environment policy:
 2. This includes files such as `.bashrc`, `.zshrc`, `.psqlrc`, `.irbrc`, and similar shell/editor/database client config files.
 3. Prefer project-local configuration and explicit commands over persistent host-level changes.
 
+## Focused Guidance Files
+
+This skill includes focused guidance under `agents/`. Keep the main workflow in this file, then load only the matching guidance files for the active task.
+
+Load files only when needed:
+
+- `agents/rails.md` for Rails conventions, migrations, models, routes, seeds, configuration, services, and deployment command shape.
+- `agents/testing.md` when adding or changing specs, factories, feature coverage, or Tramway entity page tests.
+- `agents/ui.md` when changing Haml views, ViewComponents, Tailwind, page layout, buttons, tables, flashes, or form markup.
+- `agents/tramway.md` when the task touches Tramway entities, forms, decorators, components, CRUD defaults, or Tramway-specific controller/view patterns.
+- `agents/integrations.md` when the task touches third-party services, service objects, background jobs, controller orchestration, or external APIs.
+- `agents/documentation.md` when the task changes a user-visible feature or workflow that should be reflected in `docs/users/`.
+- `agents/recipes.md` when the user asks for a usual implementation pattern or the task clearly matches an existing feature recipe. After opening the index, load only the specific recipe file that matches the feature.
+
+Usage rules:
+
+1. Do not load every `agents/*.md` file by default.
+2. Combine only the smallest relevant set for the current task.
+3. Treat these files as scenario-specific rules that refine this skill, not as blanket instructions for unrelated work.
+4. When two files overlap, prefer the more specific file for the active surface area and keep the rest of the workflow from this `SKILL.md`.
+5. If a recurring feature pattern is missing, add a focused recipe under `agents/recipes/` and link it from `agents/recipes.md`.
+
 ## Canonical Reference Project
 
 Use `https://github.com/purple-magic/base_project` as the main reference for baseline project structure and configuration.
@@ -87,10 +109,10 @@ Rules:
     - Terraform configuration for creating `staging` and `production`
     - `Makefile` commands for infra/deploy management
     - CI configuration
-22. For `Implement deployment`, use the reference project files/configuration as the source whenever they are applicable to the current project.
-23. If a reference project file is not directly applicable, use the reference project configuration as the behavioral baseline and build the equivalent setup for the current hosting/git platform instead of inventing a different flow.
+22. For `Implement deployment`, use the same approach as the reference project and use the reference project files/configuration as the source whenever they are applicable to the current project.
+23. If a reference project file is not directly applicable, preserve the same deployment approach, behavior, naming conventions, workflow shape, and operator experience from the reference project, adapting only the parts required by the current hosting/git platform.
 24. For `Implement deployment`, treat partial deployment setup as incomplete until all four areas above are covered or explicitly skipped by the user.
-25. If the user asks for project updating/upgrading, always check the reference project for applicable updates to `Makefile`, deployment configuration, and Terraform configuration in addition to the usual app/tooling review.
+25. If the user asks for project updating/upgrading, always check the reference project for applicable updates to `.gitignore`, `AGENTS.md`, `Makefile`, deployment configuration, and Terraform configuration in addition to the usual app/tooling review.
 26. If the user asks to `update deployment`, treat that as an explicit request to apply all applicable deployment-related setup from the reference project, including deployment configuration, `Makefile`, and Terraform usage patterns.
 
 ## Workflow
@@ -299,7 +321,14 @@ If user selected server/deploy setup, add this step after repository setup and b
     - If domain hosting is `Cloudflare`, use/adapt Cloudflare Terraform config from the reference project.
     - If domain hosting is not `Cloudflare`, build Terraform domain/DNS configuration for selected provider yourself.
 25. Keep Terraform files in `terraform/` and ensure scripts are executable (`chmod +x terraform/*.sh`) when scripts are present.
-26. Collect deploy variables now (after project exists and `terraform/` directory is created):
+26. Default database secret handling must follow the reference project:
+    - Store deploy database values in Rails credentials, not as manually managed deployment env vars by default.
+    - This includes `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` or the equivalent database name/username/password values used by the current project structure.
+    - Prefer the reference project's `config/database.yml` and credentials layout when applicable.
+27. If deployment includes Auth0, store Auth0 application secrets in Rails credentials following the same approach and credentials structure used by the reference project.
+    - Do not treat Auth0 client secrets as plain deploy env vars by default if the reference-project flow keeps them in Rails credentials.
+    - Adapt only tenant/domain/client identifiers and environment-specific values needed for the current project.
+28. Collect deploy variables now (after project exists and `terraform/` directory is created):
     - If hosting is `DigitalOcean`, collect:
       - `do_token` (DigitalOcean API token)
         1. Open DigitalOcean Control Panel -> API -> Tokens/Keys.
@@ -318,20 +347,21 @@ If user selected server/deploy setup, add this step after repository setup and b
       - Put key into `terraform/secrets.auto.tfvars` and reply `done`.
     - If domain hosting is not `Cloudflare`, collect provider-specific DNS inputs for Terraform.
     - Ensure `terraform/secrets.auto.tfvars` is gitignored.
-27. Validate tooling availability before apply:
+    - Do not ask the user to create or set `MAIN_HOST` in 1Password before Terraform apply; Terraform should derive and sync it itself following the reference-project flow.
+29. Validate tooling availability before apply:
     - `if ! command -v terraform >/dev/null 2>&1; then bash scripts/install_terraform.sh; fi`
     - `terraform -version`
     - `doctl version` only when using the DigitalOcean reference script (`wait_for_ssh.sh`)
     - `nc -h` or `command -v nc` only when using `wait_for_ssh.sh`
-28. Initialize and validate Terraform:
+30. Initialize and validate Terraform:
     - `terraform -chdir=terraform init`
     - `terraform -chdir=terraform validate`
     - `terraform -chdir=terraform plan`
-29. Apply only after explicit user confirmation:
+31. Apply only after explicit user confirmation:
     - `terraform -chdir=terraform apply`
-30. After apply, if `.env` exists and `update_env_hosts.sh` is present, run:
+32. After apply, if `.env` exists and `update_env_hosts.sh` is present, run:
     - `bash terraform/update_env_hosts.sh`
-31. Explain key outputs to user (for example server IP, hostname, and env snippet values).
+33. Explain key outputs to user (for example server IP, hostname, and env snippet values).
 
 When requesting deploy/repository secrets, provide setup guidance for each secret:
 
@@ -341,8 +371,6 @@ When requesting deploy/repository secrets, provide setup guidance for each secre
 4. Required/optional secrets and how to get them:
    - `DISCORD_WEBHOOK_URL`:
      - Discord -> Server Settings -> Integrations -> Webhooks -> New Webhook -> choose channel -> copy webhook URL.
-   - `MAIN_HOST`:
-     - After Terraform apply: `terraform -chdir=terraform output -raw main_host_ip`.
    - `SSH_PRIVATE_KEY`:
      - Use local deploy key content (for example from `~/.ssh/id_ed25519` or chosen deploy key file).
      - If missing, generate with `ssh-keygen`, add public key to server/provider, then store private key in repo secret.
@@ -350,16 +378,24 @@ When requesting deploy/repository secrets, provide setup guidance for each secre
      - For DigitalOcean Ubuntu droplets, default is usually `root` unless user configured another deploy user.
    - `RAILS_MASTER_KEY`:
      - Use value from project `config/master.key` (or the relevant credentials key file for environment).
+   - Database deploy values:
+     - By default, keep `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` in Rails credentials following the reference-project approach.
+     - Do not ask the user to set those values as separate repository secrets unless the project explicitly uses a different deployment design.
+   - Auth0 deploy values:
+     - If the deployment uses Auth0, store Auth0 secrets in Rails credentials following the same reference-project approach.
+     - Do not ask the user to store Auth0 client secrets as separate repository secrets unless the reference-project design for that integration explicitly requires it.
    - Kamal registry default:
      - Use localhost registry in Kamal by default.
      - With localhost registry, do not request `KAMAL_REGISTRY_USERNAME` / `KAMAL_REGISTRY_PASSWORD`.
      - Ask for registry credentials only if user explicitly chooses external registry (Docker Hub, GHCR, GitLab Registry, etc.).
+   - `MAIN_HOST` handling:
+     - Do not ask the user to set `MAIN_HOST` in 1Password manually before Terraform apply.
+     - Terraform should derive and sync `MAIN_HOST` itself when following the reference-project flow.
 5. Tell user to confirm with `done` after secrets are set; do not request secret values in chat.
 6. In chat, walk through secrets one-by-one in this order and wait for `done` after each:
    - `RAILS_MASTER_KEY`
    - `SSH_PRIVATE_KEY`
    - `SSH_USER`
-   - `MAIN_HOST`
    - `DISCORD_WEBHOOK_URL` (if Discord enabled)
    - `KAMAL_REGISTRY_USERNAME` / `KAMAL_REGISTRY_PASSWORD` (only if user explicitly chose external registry)
 
@@ -368,6 +404,8 @@ When requesting deploy/repository secrets, provide setup guidance for each secre
 ### Implement deployment
 
 Treat a request like `Implement deployment` as a full deployment-systems task, not a narrow single-file change.
+
+Load `agents/rails.md` for deployment command and configuration conventions. Also load `agents/integrations.md` if the deployment work touches third-party providers, background delivery, or external service setup.
 
 Required scope:
 
@@ -378,22 +416,23 @@ Required scope:
    - `terraform/`
    - `Makefile`
    - CI config such as `.github/workflows/` or the equivalent for the current git platform
-2. Use the reference project as the primary source when applicable:
+2. Use the same deployment approach as the reference project. The reference project is the primary source:
    - Kamal: `config/deploy.yml`, `config/deploy.staging.yml`, `config/deploy.production.yml`
    - Terraform: files in `terraform/`
    - Management commands: `Makefile`
    - GitHub CI/deploy workflows: `.github/workflows/ci.yml`, `.github/workflows/deploy.yml`, `.github/workflows/deploy-production.yml`
 3. Ensure Kamal deployment exists for both `staging` and `production`.
 4. Ensure Terraform can create both `staging` and `production`.
-   - Prefer the reference project Terraform structure/workspace flow when applicable.
+   - Use the same Terraform structure/workspace flow as the reference project when applicable.
    - Keep environment-specific infra behavior aligned with the reference project.
 5. Ensure `Makefile` includes commands for managing both environments.
    - At minimum, cover create/apply, deploy/setup, logs, and destroy flows when those operations are part of the chosen hosting flow.
 6. Ensure CI is implemented.
-   - For GitHub, copy/adapt the reference project workflow structure when applicable.
-   - For non-GitHub platforms, keep scenario parity with the reference GitHub workflows, including CI and deploy gates.
+   - For GitHub, copy/adapt the reference project workflow structure.
+   - For non-GitHub platforms, preserve the same CI/deploy approach and gate structure as the reference project, adapted to the current platform syntax.
 7. Adapt all imported config to the current project:
    - Replace app/repository names, environment values, hostnames, provider identifiers, and secret names as needed.
+   - If the deployment uses Auth0, keep Auth0 secrets in Rails credentials using the same reference-project approach instead of moving them to plain deploy env vars by default.
 8. If the current project already has some deployment files, preserve applicable project-specific values and fill the missing pieces instead of resetting the deployment stack from scratch.
 9. Verify the resulting setup with the strongest checks available for the current project, for example:
    - `terraform -chdir=terraform validate`
@@ -401,11 +440,13 @@ Required scope:
    - CI workflow validation where practical
 10. If `Makefile` was added or updated, tell the user how to use the available `make` commands in the final response.
 11. If `Makefile` was added or updated, also update the target project `README` with concise usage instructions for the deployment-management commands.
-12. In the final summary, explicitly report which deployment pieces came from the reference project directly and which ones had to be adapted or built by analogy.
+12. In the final summary, explicitly report which deployment pieces came from the reference project directly and which ones had to be adapted while preserving the same reference-project approach.
 
 ### Update deployment
 
 Treat a request like `update deployment` as a deployment-sync task against the reference project.
+
+Load `agents/rails.md` for deployment command and configuration conventions. Also load `agents/integrations.md` if the update touches third-party providers or external service wiring.
 
 Required scope:
 
@@ -439,6 +480,15 @@ Required scope:
 
 ### Feature work
 
+Load the smallest matching set from `agents/` before implementation:
+
+- `agents/testing.md` for spec conventions and coverage shape
+- `agents/ui.md` for views/components/forms/layout work
+- `agents/tramway.md` for Tramway entities/forms/decorators/default CRUD flows
+- `agents/integrations.md` for services/jobs/external APIs
+- `agents/documentation.md` when the feature is user-visible
+- `agents/recipes.md` plus one matching recipe when the feature matches an existing implementation pattern
+
 1. Reproduce or define acceptance criteria.
 2. Add or update RSpec tests first for the feature.
 3. Skip model specs unless user explicitly requests them.
@@ -449,6 +499,8 @@ Required scope:
 
 ### Bugfix work
 
+Load the same focused `agents/` files as feature work, but only for the surfaces touched by the bug. Add `agents/documentation.md` only if the bugfix changes visible behavior or user workflow documentation.
+
 1. Reproduce with failing test or script.
 2. Add regression test.
 3. Implement fix with smallest blast radius.
@@ -456,6 +508,8 @@ Required scope:
 5. Document root cause in PR notes.
 
 ### Refactor work
+
+Load only the `agents/` files that match the code surface being refactored so the refactor preserves the established patterns for that layer.
 
 1. Lock behavior with tests.
 2. Refactor in small commits.
@@ -556,13 +610,15 @@ Procedure:
 9. For any downloaded reference content, apply required project-specific rewrites (project name, repository path, env keys/values) before merge.
 10. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
 11. During project update/upgrade requests, always inspect the reference project for applicable changes to:
+   - `.gitignore`
+   - `AGENTS.md`
    - `Makefile`
    - deployment configuration such as `config/deploy.yml`, `config/deploy.staging.yml`, `config/deploy.production.yml`
    - Terraform configuration in `terraform/`
-12. If those deployment-related updates are applicable, apply/adapt them as part of the project update instead of skipping them by default.
+12. If those `.gitignore`, `AGENTS.md`, and deployment-related updates are applicable, apply/adapt them as part of the project update instead of skipping them by default.
 13. Keep or enforce HAML-only view setup from the reference project (no new `.erb`).
 14. Run validation after each batch.
-15. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item, including which `Makefile`, deployment, and Terraform updates were applied or skipped and why.
+15. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item, including whether `.gitignore`, `AGENTS.md`, `Makefile`, deployment, and Terraform updates were applied or skipped and why.
 16. For reference-file imports, request user approval once per import batch, not once per file.
 17. Ask only decision-level update/upgrade questions, not file-level copy questions.
 18. For each approved batch, build one temporary script for import/apply commands, run it, then remove it.
