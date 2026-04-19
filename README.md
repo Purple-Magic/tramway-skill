@@ -50,6 +50,9 @@ This skill is meant to support both groups:
 - Updating an existing Rails project with all the mentioned and also:
   - New Rails features and approaches (if applicable)
   - Bug fixes (if they exist)
+- Secrets management
+  - 1Password integration instructions for Terraform
+  - Rails credentials instructions
 - Authorization
   - Auth0 integration recipe    
 - Documentation instructions
