@@ -7,6 +7,7 @@ Do not open every recipe by default. Open only the recipe that matches the reque
 ## Available Recipes
 
 - For copy or duplicate flows, open [agents/recipes/copy-feature.md](/home/pavel/projects/tramway-skill/skills/tramway-skill/agents/recipes/copy-feature.md).
+- For lazy loading older messages in `tramway_chat`, open [agents/recipes/tramway-chat-lazy-loading.md](/home/pavel/projects/tramway-skill/skills/tramway-skill/agents/recipes/tramway-chat-lazy-loading.md).
 
 ## How To Use Recipes
 
