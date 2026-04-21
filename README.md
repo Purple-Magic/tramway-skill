@@ -62,7 +62,7 @@ This skill is meant to support both groups:
 - UI instructions
 - Recipes
   - Copy Feature
-  - Chat Messages Lazy Loading
+  - Lazy Loading for Tramway Chat
     
 
 ## What It Does
