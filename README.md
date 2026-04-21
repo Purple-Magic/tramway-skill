@@ -61,7 +61,9 @@ This skill is meant to support both groups:
 - Tramway instructions
 - UI instructions
 - Recipes
-  - `Copy feature`
+  - Copy Feature
+  - Chat Messages Lazy Loading
+    
 
 ## What It Does
 
