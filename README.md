@@ -47,6 +47,7 @@ This skill is meant to support both groups:
   - Background jobs (via SolidQueue)
   - TurboRails (via SolidCable)
   - Configured css framework (via Tailwind)
+  - Configured dump and restore feature
 - Updating an existing Rails project with all the mentioned and also:
   - New Rails features and approaches (if applicable)
   - Bug fixes (if they exist)
