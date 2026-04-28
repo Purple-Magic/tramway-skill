@@ -5,6 +5,7 @@ Inside a Rails project, all Bundler commands must be run via `dip`.
 Assume Ruby is already installed. If Rails is missing, run `gem install rails`.
 If `dip` is missing, offer installing it via `gem install dip`.
 If a task requires Terraform and `terraform` is missing, install it with `bash scripts/install_terraform.sh` before running Terraform commands.
+For database dump/restore implementation, preserve the reference-project `./dump <environment>` workflow. A direct `docker` volume reset is allowed only inside the imported/adapted `script/dump/restore` flow when needed to match the reference local restore behavior.
 
 ## Environment bootstrap
 
@@ -210,6 +211,47 @@ dip rails db:rollback STEP=1
 dip rails db:seed
 dip rails dbconsole
 ```
+
+## Database dump/restore from deployed environment
+
+Use this when the user asks to implement dump/restore, dump a deployed database into local development, or add `./dump ENVIRONMENT` behavior.
+
+Read these files remotely from the reference project `main` branch and adapt them:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/dump
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/script/dump/prepare_secrets.rb
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/script/dump/restore
+```
+
+Required workflow:
+- Top-level executable command must be `./dump <environment>`.
+- `dump` calls `ruby script/dump/prepare_secrets.rb "$environment"`.
+- Secrets come from environment variables first, then Terraform output/Rails credentials following the reference project.
+- Remote dump is created through `kamal app exec -d "$environment"` with `pg_dump --format=custom --encoding=UTF8 --no-owner`.
+- Dump is downloaded with `scp` and restored locally with `pg_restore --clean --if-exists --no-owner`.
+- Restore overwrites the local development database and then recreates/migrates the local test database as in the reference flow.
+- Tell the user that dumping, downloading, and restoring a full deployed database can be very heavy for large databases.
+- Ask which high-row-count tables the user wants to exclude from dumped data before writing/adapting `dump`.
+- Copy the reference script's `EXCLUDED_TABLES=(...)` approach. Put selected tables in that static list and keep the command shape as `./dump <environment>`.
+- Each excluded table must become `--exclude-table-data=<table>` for `pg_dump`, so table schemas are restored but row data is skipped.
+
+Adapt project-specific values:
+- Kamal storage volume/path, replacing `base_project_storage`.
+- Local development database name, replacing `base_project_development`.
+- Static `EXCLUDED_TABLES` list based on current schema and the user's answer.
+- Deploy SSH user if current deployment does not use `root@$MAIN_HOST`.
+
+Validation without live dump:
+
+```bash
+bash -n dump
+ruby -c script/dump/prepare_secrets.rb
+ruby -c script/dump/restore
+test -x dump
+```
+
+Do not run `./dump <environment>` unless the user explicitly confirms they want to overwrite local development data.
 
 ## Code health
 

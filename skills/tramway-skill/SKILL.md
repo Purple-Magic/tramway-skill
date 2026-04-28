@@ -1,6 +1,6 @@
 ---
 name: tramway-skill
-description: Manage Ruby on Rails projects end-to-end with reliable workflows for creating new apps, setup, development, debugging, testing, maintenance, updates/upgrades, and releases. Use when the request includes phrases like "create rails project", "new rails app", "update application", "upgrade from reference project", or when working in a Rails codebase (Gemfile, config/, app/, db/, spec/ or test/) and the task involves bootstrapping environments, running app/test jobs, triaging failing specs or production issues, adding/changing features safely, upgrading gems or Rails versions, reviewing migrations, or preparing deployments. Treat https://github.com/purple-magic/base_project as the canonical reference project and always check for applicable updates from it during update/upgrade tasks.
+description: Manage Ruby on Rails projects end-to-end with reliable workflows for creating new apps, setup, development, debugging, testing, maintenance, updates/upgrades, releases, deployment, and database dump/restore tooling. Use when the request includes phrases like "create rails project", "new rails app", "update application", "upgrade from reference project", "implement deployment", "implement dump", "dump database", or "restore database", or when working in a Rails codebase (Gemfile, config/, app/, db/, spec/ or test/) and the task involves bootstrapping environments, running app/test jobs, triaging failing specs or production issues, adding/changing features safely, upgrading gems or Rails versions, reviewing migrations, preparing deployments, or syncing a deployed database into local development. Treat https://github.com/purple-magic/base_project as the canonical reference project and always check for applicable updates from it during update/upgrade tasks.
 ---
 
 # Tramway Skill
@@ -11,13 +11,14 @@ At every stage, the user can skip any proposed step; respect skips, note risks b
 Command policy:
 
 1. Assume Ruby is already installed on the host system.
-2. Run Rails/Ruby project commands through `dip`.
+2. Run Rails/Ruby project commands through `dip`. Do not use `docker` or `docker-compose` directly for project operations. Use `dip` as the main interface for all project commands.
 3. Exception: use direct `rails new ...` only when creating a brand-new Rails project (before `dip` setup exists).
 4. If Rails is missing on host, run `gem install rails` before project creation.
 5. Inside a Rails project, run all Bundler commands via `dip` (for example, `dip bundle install`, `dip bundle add ...`, `dip bundle outdated`).
 6. If `dip` is missing, explicitly offer the user to install it with `gem install dip`.
 7. If a task requires Terraform and `terraform` is missing, install it with `bash scripts/install_terraform.sh` before running Terraform commands.
-8. Do not suggest direct `bundle`, `bin/rails`, or `bin/rspec` commands for project operations.
+8. Scoped exception: when implementing the reference-project database dump/restore feature, preserve the reference script behavior. A direct `docker` volume reset is allowed only inside the imported/adapted `script/dump/restore` flow if needed to match the reference local restore behavior.
+9. Do not suggest direct `bundle`, `bin/rails`, or `bin/rspec` commands for project operations.
 
 View policy:
 
@@ -114,6 +115,37 @@ Rules:
 24. For `Implement deployment`, treat partial deployment setup as incomplete until all four areas above are covered or explicitly skipped by the user.
 25. If the user asks for project updating/upgrading, always check the reference project for applicable updates to `.gitignore`, `AGENTS.md`, `Makefile`, deployment configuration, and Terraform configuration in addition to the usual app/tooling review.
 26. If the user asks to `update deployment`, treat that as an explicit request to apply all applicable deployment-related setup from the reference project, including deployment configuration, `Makefile`, and Terraform usage patterns.
+27. If the user asks to `Implement dump`, `implement dump and restore`, `dump database to local environment`, `dump database`, or equivalent, treat that as an explicit request to add the reference-project database dump/restore workflow. Use the same operator experience as the reference project: the user runs `./dump ENVIRONMENT` and the remote database is dumped, downloaded, and restored into the local development database.
+28. For database dump/restore implementation, read these reference project files remotely from GitHub `main` and adapt them to the current project:
+    - `dump`
+    - `script/dump/prepare_secrets.rb`
+    - `script/dump/restore`
+    - `config/database.yml` only as needed to determine local/remote database naming and credential shape.
+29. Preserve the reference dump/restore approach unless a project-specific difference makes direct copy unsafe:
+    - Top-level executable command is `./dump <environment>`.
+    - Secrets are prepared by `ruby script/dump/prepare_secrets.rb "$ENVIRONMENT"`.
+    - `MAIN_HOST` can come from Terraform output `main_host_ip` or environment variable.
+    - Database host/user/password/name default to Rails credentials using the same paths as the reference project when applicable.
+    - Remote dump is created with `kamal app exec -d "$ENVIRONMENT"` and `pg_dump --format=custom --encoding=UTF8 --no-owner`.
+    - Remote dump is downloaded with `scp`.
+    - Local restore uses `pg_restore --clean --if-exists --no-owner` into the development database.
+    - The local test database is recreated/migrated after restore, matching the reference flow.
+30. Warn the user that dumping, downloading, and restoring a full deployed database can be very heavy for large databases. Ask which high-row-count tables they want to exclude before implementing or updating the dump script:
+    - Copy the reference project's existing `EXCLUDED_TABLES=(...)` approach in `dump`.
+    - Put the user's chosen tables into that static excluded-table list, adapting the reference defaults only as needed for the current schema.
+    - Pass each excluded table to `pg_dump` as `--exclude-table-data=<table>` so table schemas are restored but their rows are skipped.
+    - Keep the command shape as `./dump <environment>`; do not add table names as command-line arguments unless the reference project changes to that approach.
+31. Adapt only project-specific values:
+    - app name and Docker volume/storage path, for example replace `base_project_storage` with the current Kamal storage volume name;
+    - local development database name, for example replace `base_project_development` with the current project's development database;
+    - default excluded table list, keeping reference exclusions when matching tables exist and removing or changing only when the current schema requires it;
+    - deploy user/host handling only when the current deployment is not `root@$MAIN_HOST`.
+32. Do not ask the user to paste database credentials. Use Rails credentials, Terraform output, local environment variables, or confirmed local secret storage following the secrets policy.
+33. Validate dump/restore setup without requiring a live production dump unless the user explicitly wants to run it:
+    - syntax-check `dump` with `bash -n dump`;
+    - syntax-check Ruby scripts with `ruby -c script/dump/prepare_secrets.rb` and `ruby -c script/dump/restore`;
+    - verify scripts are executable where needed;
+    - verify `./dump` prints usage or exits predictably when no environment is provided.
 
 ## Workflow
 
@@ -477,6 +509,59 @@ Required scope:
    - deployment items updated directly from the reference project
    - deployment items adapted from the reference project
    - deployment items not applied, with reason
+
+### Implement database dump/restore
+
+Treat a request like `Implement dump`, `implement dump and restore`, or `dump database to local environment` as an operations-tooling task based on the reference project.
+
+Load `agents/rails.md` for database and deployment command conventions. Also load `agents/integrations.md` if the current dump/restore flow depends on external providers or deployment secrets.
+
+Required scope:
+
+1. Inspect current project before editing:
+   - `config/database.yml`
+   - `config/deploy.yml`
+   - `config/deploy.<environment>.yml`
+   - `terraform/`
+   - `dip.yml`
+   - existing `dump` or `script/dump/`
+2. Read the reference project files remotely from GitHub `main`:
+   - `dump`
+   - `script/dump/prepare_secrets.rb`
+   - `script/dump/restore`
+3. Implement the same user workflow: `./dump ENVIRONMENT`.
+   - Do not replace it with a Make task, Rails task, README-only instructions, or manual multi-command procedure.
+   - The command should dump the selected deployed environment and restore it into local development.
+   - Tell the user this can be very heavy for a large database because it dumps, downloads, and restores the deployed data.
+   - Ask which high-row-count tables the user wants to exclude from dumped data. Excluded tables keep their schema but skip row data.
+4. Copy/adapt the reference scripts instead of inventing a different design.
+   - Keep `prepare_secrets.rb` responsible for resolving `MAIN_HOST`, `DB_HOST`, `POSTGRES_DB`, `POSTGRES_PASSWORD`, and `POSTGRES_USER`.
+   - Keep Terraform output and Rails credentials as the default data sources when they match the current deployment design.
+   - Keep environment variables as overrides.
+   - Keep the reference `dump` script's static `EXCLUDED_TABLES=(...)` pattern. Put the user's chosen excluded tables there, together with applicable reference defaults.
+5. Adapt hardcoded reference values to the current project:
+   - Kamal app/storage volume path used for the remote dump file.
+   - Local development database name used by `pg_restore`.
+   - Any deploy SSH user that differs from the reference project's `root`.
+   - Default excluded tables, based on current schema.
+6. Preserve the destructive local-restore behavior visibly and intentionally.
+   - The restore replaces the local development database.
+   - Do not run `./dump ENVIRONMENT` for validation unless the user explicitly confirms they want to overwrite local data.
+7. Keep secrets out of chat and source control.
+   - Do not request database passwords in chat.
+   - Do not create committed files containing database credentials.
+8. Validate the implementation locally:
+   - `bash -n dump`
+   - `ruby -c script/dump/prepare_secrets.rb`
+   - `ruby -c script/dump/restore`
+   - `test -x dump`
+   - run no-live-network checks only unless the user confirms an actual dump.
+9. In the final summary, explicitly tell the user:
+   - the command to run: `./dump <environment>`;
+   - which large tables are excluded from row-data dumping;
+   - that it overwrites the local development database;
+   - which reference files were copied/adapted;
+   - which values were adapted for the current project.
 
 ### Feature work
 
