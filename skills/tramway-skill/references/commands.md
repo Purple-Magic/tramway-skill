@@ -227,7 +227,11 @@ curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/scri
 Required workflow:
 - Top-level executable command must be `./dump <environment>`.
 - `dump` calls `ruby script/dump/prepare_secrets.rb "$environment"`.
-- Secrets come from environment variables first, then Terraform output/Rails credentials following the reference project.
+- Before adapting `prepare_secrets.rb`, inspect how the current project's Kamal setup gets secrets.
+- Check `config/deploy*.yml` `env.clear`, `env.secret`, accessories, builder/registry secrets, `.kamal/secrets*`, `config/secrets*`, `bin/kamal`, and any scripts those files call.
+- Secrets must come from the same source Kamal already uses in the current project: Rails credentials, `.kamal/secrets`, 1Password/`op`, dotenv, repository/env variables, or another project-local secret command.
+- Use Rails credentials paths from the reference project only when the current Kamal setup already uses Rails credentials for those values.
+- Environment variables may remain explicit overrides, matching the reference flow.
 - Remote dump is created through `kamal app exec -d "$environment"` with `pg_dump --format=custom --encoding=UTF8 --no-owner`.
 - Dump is downloaded with `scp` and restored locally with `pg_restore --clean --if-exists --no-owner`.
 - Restore overwrites the local development database and then recreates/migrates the local test database as in the reference flow.
@@ -241,6 +245,7 @@ Adapt project-specific values:
 - Local development database name, replacing `base_project_development`.
 - Static `EXCLUDED_TABLES` list based on current schema and the user's answer.
 - Deploy SSH user if current deployment does not use `root@$MAIN_HOST`.
+- Secret lookup inside `script/dump/prepare_secrets.rb`, matching the current project's existing Kamal secret source instead of introducing a second source.
 
 Validation without live dump:
 

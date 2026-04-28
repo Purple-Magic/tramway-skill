@@ -13,7 +13,7 @@ Load this file when the task touches pages, views, components, Tailwind, Haml ma
 
 - Use Tramway Navbar for navigation. Include at least Login and Logout links when relevant.
 - Use Tramway Flash for notifications.
-- Use Tramway Table for tabular data.
+- Use `tramway_table` for tabular data whenever a table is needed.
 - Use `tramway_row href:` for row links instead of placing a link inside a table cell.
 - Keep `preview: true` on rows unless the request explicitly needs it disabled.
 - Use Tramway Button for buttons and always specify `color:` or `type:`.

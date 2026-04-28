@@ -125,7 +125,8 @@ Rules:
     - Top-level executable command is `./dump <environment>`.
     - Secrets are prepared by `ruby script/dump/prepare_secrets.rb "$ENVIRONMENT"`.
     - `MAIN_HOST` can come from Terraform output `main_host_ip` or environment variable.
-    - Database host/user/password/name default to Rails credentials using the same paths as the reference project when applicable.
+    - Before adapting `prepare_secrets.rb`, inspect how the current project's Kamal deployment already gets secrets and use that same source for database host/user/password/name.
+    - Use Rails credentials paths from the reference project only when the current Kamal setup already uses Rails credentials for those values.
     - Remote dump is created with `kamal app exec -d "$ENVIRONMENT"` and `pg_dump --format=custom --encoding=UTF8 --no-owner`.
     - Remote dump is downloaded with `scp`.
     - Local restore uses `pg_restore --clean --if-exists --no-owner` into the development database.
@@ -140,7 +141,7 @@ Rules:
     - local development database name, for example replace `base_project_development` with the current project's development database;
     - default excluded table list, keeping reference exclusions when matching tables exist and removing or changing only when the current schema requires it;
     - deploy user/host handling only when the current deployment is not `root@$MAIN_HOST`.
-32. Do not ask the user to paste database credentials. Use Rails credentials, Terraform output, local environment variables, or confirmed local secret storage following the secrets policy.
+32. Do not ask the user to paste database credentials. Use the existing project-defined Kamal secret source, Terraform output, local environment variables, or confirmed local secret storage following the secrets policy.
 33. Validate dump/restore setup without requiring a live production dump unless the user explicitly wants to run it:
     - syntax-check `dump` with `bash -n dump`;
     - syntax-check Ruby scripts with `ruby -c script/dump/prepare_secrets.rb` and `ruby -c script/dump/restore`;
@@ -522,6 +523,10 @@ Required scope:
    - `config/database.yml`
    - `config/deploy.yml`
    - `config/deploy.<environment>.yml`
+   - `.kamal/secrets*`
+   - `config/secrets*`
+   - `bin/kamal`
+   - scripts referenced by Kamal secret hooks or deploy configuration
    - `terraform/`
    - `dip.yml`
    - existing `dump` or `script/dump/`
@@ -536,7 +541,11 @@ Required scope:
    - Ask which high-row-count tables the user wants to exclude from dumped data. Excluded tables keep their schema but skip row data.
 4. Copy/adapt the reference scripts instead of inventing a different design.
    - Keep `prepare_secrets.rb` responsible for resolving `MAIN_HOST`, `DB_HOST`, `POSTGRES_DB`, `POSTGRES_PASSWORD`, and `POSTGRES_USER`.
-   - Keep Terraform output and Rails credentials as the default data sources when they match the current deployment design.
+   - Before implementing secret lookup, determine how Kamal already obtains these values in the current project.
+   - Inspect `config/deploy*.yml` `env.clear`, `env.secret`, accessories, builder/registry secrets, `.kamal/secrets*`, `config/secrets*`, `bin/kamal`, and any scripts those files call.
+   - Adapt `prepare_secrets.rb` to read database secrets through the same mechanism Kamal already uses: Rails credentials, `.kamal/secrets`, 1Password/`op`, dotenv, repository/env variables, or another project-local secret command.
+   - Do not introduce a second secret source just for dump/restore.
+   - Keep Terraform output for host discovery when the current deployment uses Terraform for host discovery.
    - Keep environment variables as overrides.
    - Keep the reference `dump` script's static `EXCLUDED_TABLES=(...)` pattern. Put the user's chosen excluded tables there, together with applicable reference defaults.
 5. Adapt hardcoded reference values to the current project:
@@ -559,6 +568,7 @@ Required scope:
 9. In the final summary, explicitly tell the user:
    - the command to run: `./dump <environment>`;
    - which large tables are excluded from row-data dumping;
+   - how the dump script gets secrets and how that matches the existing Kamal setup;
    - that it overwrites the local development database;
    - which reference files were copied/adapted;
    - which values were adapted for the current project.
