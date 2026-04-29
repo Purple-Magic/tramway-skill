@@ -60,10 +60,10 @@ def set_form
 end
 ```
 
-2. Controller calls a form object with the source record and a class `Projects::Events::CopyForm`. This class should be like this:
+2. Controller calls a form object with the source record and a class `Projects::CopyForm`. This class should be like this:
 
 ```ruby
-class Projects::Events::CopyForm < Tramway::BaseForm
+class Projects::CopyForm < Tramway::BaseForm
   properties :parent_id # this is the id of the record being copied, used for service lookup but not persisted on the new record
 
   fields # the same collection of fields as the default create unless explicitly adjusted for uniqueness or domain rules
