@@ -80,3 +80,7 @@ class BaseService
   end
 end
 ```
+
+## Models
+
+- Do not create models, in case the database table for the task is not needed.
