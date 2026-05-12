@@ -33,6 +33,7 @@
 6. If the user asked to `update deployment`, apply all applicable deployment-related setup from the reference project, including:
    - `Makefile`
    - deployment configuration
+   - `.kamal/secrets`, when applicable; it must not contain shell `if` statements
    - Terraform configuration
    - Terraform helper/usage scripts and patterns
 7. Confirm repository service (GitHub, GitLab, etc.) and apply CI rules:

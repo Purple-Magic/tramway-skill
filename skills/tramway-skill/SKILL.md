@@ -117,8 +117,9 @@ Rules:
 24. For `Implement deployment`, treat partial deployment setup as incomplete until all four areas above are covered or explicitly skipped by the user.
 25. If the user asks for project updating/upgrading, always check the reference project for applicable updates to `.gitignore`, `AGENTS.md`, `Makefile`, deployment configuration, and Terraform configuration in addition to the usual app/tooling review.
 26. If the user asks to `update deployment`, treat that as an explicit request to apply all applicable deployment-related setup from the reference project, including deployment configuration, `Makefile`, and Terraform usage patterns.
-27. If the user asks to `Implement dump`, `implement dump and restore`, `dump database to local environment`, `dump database`, or equivalent, treat that as an explicit request to add the reference-project database dump/restore workflow. Use the same operator experience as the reference project: the user runs `./dump ENVIRONMENT` and the remote database is dumped, downloaded, and restored into the local development database.
-28. For database dump/restore implementation, read these reference project files remotely from GitHub `main` and adapt them to the current project:
+27. When creating or updating Kamal deployment configuration, `.kamal/secrets` must not contain shell `if` statements. Keep conditional secret resolution in project scripts or external secret tooling, and keep `.kamal/secrets` as a simple declarative secret-loading file.
+28. If the user asks to `Implement dump`, `implement dump and restore`, `dump database to local environment`, `dump database`, or equivalent, treat that as an explicit request to add the reference-project database dump/restore workflow. Use the same operator experience as the reference project: the user runs `./dump ENVIRONMENT` and the remote database is dumped, downloaded, and restored into the local development database.
+29. For database dump/restore implementation, read these reference project files remotely from GitHub `main` and adapt them to the current project:
     - `dump`
     - `script/dump/prepare_secrets.rb`
     - `script/dump/restore`
@@ -461,6 +462,7 @@ Required scope:
    - `config/deploy.yml`
    - `config/deploy.staging.yml`
    - `config/deploy.production.yml`
+   - `.kamal/secrets`
    - `terraform/`
    - `Makefile`
    - CI config such as `.github/workflows/` or the equivalent for the current git platform
@@ -470,6 +472,8 @@ Required scope:
    - Management commands: `Makefile`
    - GitHub CI/deploy workflows: `.github/workflows/ci.yml`, `.github/workflows/deploy.yml`, `.github/workflows/deploy-production.yml`
 3. Ensure Kamal deployment exists for both `staging` and `production`.
+   - If creating or updating `.kamal/secrets`, ensure it does not contain shell `if` statements.
+   - Put any conditional secret lookup in a project script or the external secret manager command, then call that simple command from `.kamal/secrets` if needed.
 4. Ensure Terraform can create both `staging` and `production`.
    - Use the same Terraform structure/workspace flow as the reference project when applicable.
    - Keep environment-specific infra behavior aligned with the reference project.
@@ -502,6 +506,7 @@ Required scope:
    - `config/deploy.yml`
    - `config/deploy.staging.yml`
    - `config/deploy.production.yml`
+   - `.kamal/secrets`
    - `terraform/`
    - `Makefile`
    - CI deploy workflows/config
@@ -512,6 +517,7 @@ Required scope:
    - Terraform configuration updates
    - Terraform usage patterns and helper scripts
    - deployment configuration updates
+   - `.kamal/secrets` updates, when applicable, with no shell `if` statements
 5. If some reference project deployment file is not directly applicable, preserve the reference-project behavior and adapt it to the current hosting/provider/platform instead of skipping it without explanation.
 6. Keep project-specific identifiers adapted correctly:
    - app name

@@ -169,6 +169,8 @@ Important safety notes:
 - Do not commit secrets (`*.tfvars`, `.env*`, tokens, private keys, state secrets).
 - Keep Terraform credentials in local environment/secrets manager and CI/repository secrets.
 - For Terraform local secret storage, default to `terraform/secrets.auto.tfvars` (gitignored).
+- When creating or updating Kamal deployment configuration, `.kamal/secrets` must not contain shell `if` statements.
+- Keep conditional secret resolution in project scripts or external secret tooling, and keep `.kamal/secrets` as a simple declarative secret-loading file.
 
 Repository secrets setup guide (never in chat):
 - Where to set:
