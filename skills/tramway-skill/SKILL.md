@@ -8,6 +8,12 @@ description: Manage Ruby on Rails projects end-to-end with reliable workflows fo
 Use this skill as an operational playbook. Prefer small, safe, verifiable changes over big-bang edits.
 At every stage, the user can skip any proposed step; respect skips, note risks briefly, and continue with the remaining workflow.
 
+Version policy:
+
+1. The skill version is stored in `VERSION` at the root of this skill directory.
+2. If the user asks for the `tramway-skill` version, read and report that `VERSION` value.
+3. If the skill directory path is unclear, first try `~/.codex/skills/tramway-skill/VERSION`, then any repository-local `skills/tramway-skill/VERSION`.
+
 Command policy:
 
 1. Assume Ruby is already installed on the host system.

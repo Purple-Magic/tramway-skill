@@ -61,6 +61,7 @@ tailwind.config.js
   - For `create` - create feature recipe
   - For `update` - update feature recipe
   - etc.
+- When a task asks to add creation of a model/resource, a `new` page, a `create` action, or wording like "Event creation", load `agents/recipes/create-feature.md` before implementation.
 - Configure CRUD through Tramway Entities in `config/initializers/tramway.rb`.
 - Do not implement CRUD by hand with custom Rails controllers, routes, views, strong params, or plain Rails forms.
 - Do not add a custom `create`, `update`, or `destroy` action for a resource when Tramway Entity pages can handle the operation.
