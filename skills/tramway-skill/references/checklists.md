@@ -53,6 +53,7 @@
     - Preserve `.dockerdev/compose.yml` `x-*` extension blocks exactly unless the user explicitly asks to change them.
     - Keep `.dockerdev/` files project-local and do not edit host-level dotfiles.
     - Use `dip` only for containers and services. Do not use direct `docker`/`docker-compose` commands or host-installed PostgreSQL, Redis, Node/Yarn, or other project services.
+    - If `dip` fails because required ports are occupied or container names already exist, pause and ask the user to free the resources, or explain the project-local `.dockerdev`/`dip.yml` changes needed and wait for confirmation.
 11. Mark each reference change as:
    - Applicable as-is
    - Applicable with adaptation

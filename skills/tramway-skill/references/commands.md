@@ -4,6 +4,7 @@ Use `dip` for all Rails/Ruby project commands, except `rails new` during initial
 Inside a Rails project, all Bundler commands must be run via `dip`.
 Development services must run in containers through `dip`. Do not use host-installed PostgreSQL, Redis, Node/Yarn, or other project services for Rails project operations unless the user explicitly asks for a non-container setup.
 Do not run or suggest direct `docker` or `docker-compose` commands for project operations; any Docker Compose files are implementation details consumed through `dip`.
+If `dip` reports that a required port is already in use or a container cannot be created because a name is already used, pause the task. Ask the user to free the needed resources, or explain the project-local configuration changes needed to use different ports/container names and wait for confirmation before changing them.
 Assume Ruby is already installed. If Rails is missing, run `gem install rails`.
 If `dip` is missing, offer installing it via `gem install dip`.
 If a task requires Terraform and `terraform` is missing, install it with `bash scripts/install_terraform.sh` before running Terraform commands.
@@ -70,6 +71,7 @@ Development environment setup:
 - Use the reference container setup as the default development environment.
 - Use `dip` for all interaction with containers and services. Do not call `docker` or `docker-compose` directly.
 - Do not use host-installed PostgreSQL, Redis, Node/Yarn, or other project services for Rails project operations unless the user explicitly asks for a non-container setup.
+- If `dip provision`, `dip up`, or another `dip` command fails because ports are occupied or container names already exist, stop and ask the user to free those resources, or describe the project-local `.dockerdev`/`dip.yml` changes needed to avoid the conflict. Do not change ports/container names or remove existing containers without confirmation.
 - Preserve `.dockerdev/compose.yml` `x-*` extension blocks exactly unless the user explicitly asks to change them.
 
 HAML setup:

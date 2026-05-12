@@ -19,7 +19,8 @@ Command policy:
 7. Development services must run in containers through `dip`. Do not use host-installed PostgreSQL, Redis, Node/Yarn, or other project services for Rails project operations unless the user explicitly asks for a non-container setup.
 8. If a task requires Terraform and `terraform` is missing, install it with `bash scripts/install_terraform.sh` before running Terraform commands.
 9. Scoped exception: when implementing the reference-project database dump/restore feature, preserve the reference script behavior. A direct `docker` volume reset is allowed only inside the imported/adapted `script/dump/restore` flow if needed to match the reference local restore behavior.
-10. Do not suggest direct `bundle`, `bin/rails`, `bin/rspec`, `docker`, or `docker-compose` commands for project operations.
+10. If `dip` reports that a required port is already in use or a container cannot be created because a name is already used, pause the task. Ask the user to free the needed resources, or explain the project-local configuration changes needed to use different ports/container names and wait for confirmation before changing them.
+11. Do not suggest direct `bundle`, `bin/rails`, `bin/rspec`, `docker`, or `docker-compose` commands for project operations.
 
 View policy:
 
@@ -349,6 +350,7 @@ Then align with the reference baseline:
     - Keep `.dockerdev/` files project-local. Do not create or edit host-level dotfiles such as `~/.bashrc` or `~/.psqlrc`.
     - Do not replace the reference container setup with host-installed services. PostgreSQL, Redis, Node/Yarn, and other project services must be accessed through the `dip` container workflow.
     - Do not run or suggest direct `docker` or `docker-compose` commands. The Docker Compose file is an implementation detail consumed through `dip`.
+    - If `dip provision`, `dip up`, or another `dip` command fails because ports are occupied or container names already exist, stop and ask the user to free those resources, or describe the project-local `.dockerdev`/`dip.yml` changes needed to avoid the conflict. Do not change ports/container names or remove existing containers without confirmation.
     - When importing `.dockerdev/compose.yml`, do not modify `x-*` extension blocks/services configuration. Preserve them exactly as provided by the reference file unless the user explicitly asks to change them.
 21. Verify app boot and tests using `dip`.
 22. After bootstrap is complete, commit and push created code to the configured repository (unless user explicitly skips push).
