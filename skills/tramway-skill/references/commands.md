@@ -1,14 +1,17 @@
 # Rails Command Cookbook
 
-Use `dip` for all Rails/Ruby project commands, except `rails new` during initial project creation.
-Inside a Rails project, all Bundler commands must be run via `dip`.
-Development services must run in containers through `dip`. Do not use host-installed PostgreSQL, Redis, Node/Yarn, or other project services for Rails project operations unless the user explicitly asks for a non-container setup.
+Use `dip` only in the local development environment. Never use or suggest `dip` for production, staging, or CI commands, scripts, jobs, deploy hooks, or operational runbooks.
+In local development, use `dip` for Rails/Ruby project commands, except `rails new` during initial project creation.
+Inside a Rails project in local development, all Bundler commands must be run via `dip`.
+Development services must run in containers through `dip`. Do not use host-installed PostgreSQL, Redis, Node/Yarn, or other project services for local Rails project operations unless the user explicitly asks for a non-container setup.
 Do not run or suggest direct `docker` or `docker-compose` commands for project operations; any Docker Compose files are implementation details consumed through `dip`.
 If `dip` reports that a required port is already in use or a container cannot be created because a name is already used, pause the task. Ask the user to free the needed resources, or explain the project-local configuration changes needed to use different ports/container names and wait for confirmation before changing them.
 Assume Ruby is already installed. If Rails is missing, run `gem install rails`.
-If `dip` is missing, offer installing it via `gem install dip`.
+If `dip` is missing in local development, offer installing it via `gem install dip`.
 If a task requires Terraform and `terraform` is missing, install it with `bash scripts/install_terraform.sh` before running Terraform commands.
 For database dump/restore implementation, preserve the reference-project `./dump <environment>` workflow. A direct `docker` volume reset is allowed only inside the imported/adapted `script/dump/restore` flow when needed to match the reference local restore behavior.
+
+For production, staging, and CI, use the environment's native command runner and service definitions. Examples include CI workflow steps such as `bundle exec rspec` after the job has installed gems, or deploy-platform commands documented by the chosen hosting/deployment tool. Do not add `dip` to CI images, deploy scripts, staging consoles, or production maintenance procedures.
 
 ## Environment bootstrap
 
@@ -69,8 +72,9 @@ Development environment setup:
 - Import the full `.dockerdev/` folder from the reference project: `.bashrc`, `.psqlrc`, `Aptfile`, `Dockerfile`, `README.md`, and `compose.yml`.
 - Keep `.dockerdev/` files project-local; do not create or edit host-level dotfiles.
 - Use the reference container setup as the default development environment.
-- Use `dip` for all interaction with containers and services. Do not call `docker` or `docker-compose` directly.
+- Use `dip` for all local development interaction with containers and services. Do not call `docker` or `docker-compose` directly.
 - Do not use host-installed PostgreSQL, Redis, Node/Yarn, or other project services for Rails project operations unless the user explicitly asks for a non-container setup.
+- Never use `dip` in production, staging, or CI. Those environments must use their native command runner, service configuration, and deployment workflow.
 - If `dip provision`, `dip up`, or another `dip` command fails because ports are occupied or container names already exist, stop and ask the user to free those resources, or describe the project-local `.dockerdev`/`dip.yml` changes needed to avoid the conflict. Do not change ports/container names or remove existing containers without confirmation.
 - Preserve `.dockerdev/compose.yml` `x-*` extension blocks exactly unless the user explicitly asks to change them.
 
@@ -195,7 +199,7 @@ Repository secrets setup guide (never in chat):
   - `DISCORD_WEBHOOK_URL` (if Discord enabled)
   - `KAMAL_REGISTRY_USERNAME` / `KAMAL_REGISTRY_PASSWORD` (only if user explicitly chose external registry)
 
-## App lifecycle
+## Local App Lifecycle
 
 ```bash
 dip up
@@ -204,18 +208,19 @@ dip rails console
 dip rails runner 'puts Rails.version'
 ```
 
-## Testing
+## Local Testing
 
 Default policy:
 - Use RSpec for feature generation unless user explicitly asks for another framework.
 - Do not generate model tests unless user explicitly requests model tests.
+- Use these `dip` commands only in local development. In CI, use CI-native test commands and services.
 
 ```bash
 dip rspec
 dip rspec path/to/spec.rb:42
 ```
 
-## Lint and security
+## Local Lint and Security
 
 ```bash
 dip rubocop
@@ -223,7 +228,7 @@ dip brakeman -q
 dip bundle audit check --update
 ```
 
-## Database
+## Local Database
 
 ```bash
 dip rails db:prepare

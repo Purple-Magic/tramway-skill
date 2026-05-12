@@ -11,16 +11,17 @@ At every stage, the user can skip any proposed step; respect skips, note risks b
 Command policy:
 
 1. Assume Ruby is already installed on the host system.
-2. Run Rails/Ruby project commands through `dip`. Do not use `docker` or `docker-compose` directly for project operations. Use `dip` as the main interface for all project commands.
-3. Exception: use direct `rails new ...` only when creating a brand-new Rails project (before `dip` setup exists).
-4. If Rails is missing on host, run `gem install rails` before project creation.
-5. Inside a Rails project, run all Bundler commands via `dip` (for example, `dip bundle install`, `dip bundle add ...`, `dip bundle outdated`).
-6. If `dip` is missing, explicitly offer the user to install it with `gem install dip`.
-7. Development services must run in containers through `dip`. Do not use host-installed PostgreSQL, Redis, Node/Yarn, or other project services for Rails project operations unless the user explicitly asks for a non-container setup.
-8. If a task requires Terraform and `terraform` is missing, install it with `bash scripts/install_terraform.sh` before running Terraform commands.
-9. Scoped exception: when implementing the reference-project database dump/restore feature, preserve the reference script behavior. A direct `docker` volume reset is allowed only inside the imported/adapted `script/dump/restore` flow if needed to match the reference local restore behavior.
-10. If `dip` reports that a required port is already in use or a container cannot be created because a name is already used, pause the task. Ask the user to free the needed resources, or explain the project-local configuration changes needed to use different ports/container names and wait for confirmation before changing them.
-11. Do not suggest direct `bundle`, `bin/rails`, `bin/rspec`, `docker`, or `docker-compose` commands for project operations.
+2. Use `dip` only in the local development environment. Never use or suggest `dip` for production, staging, or CI commands, scripts, jobs, deploy hooks, or operational runbooks.
+3. In local development, run Rails/Ruby project commands through `dip`. Do not use `docker` or `docker-compose` directly for project operations. Use `dip` as the main interface for project commands.
+4. Exception: use direct `rails new ...` only when creating a brand-new Rails project (before `dip` setup exists).
+5. If Rails is missing on host, run `gem install rails` before project creation.
+6. Inside a Rails project in local development, run all Bundler commands via `dip` (for example, `dip bundle install`, `dip bundle add ...`, `dip bundle outdated`).
+7. If `dip` is missing in local development, explicitly offer the user to install it with `gem install dip`.
+8. Local development services must run in containers through `dip`. Do not use host-installed PostgreSQL, Redis, Node/Yarn, or other project services for Rails project operations unless the user explicitly asks for a non-container setup.
+9. If a task requires Terraform and `terraform` is missing, install it with `bash scripts/install_terraform.sh` before running Terraform commands.
+10. Scoped exception: when implementing the reference-project database dump/restore feature, preserve the reference script behavior. A direct `docker` volume reset is allowed only inside the imported/adapted `script/dump/restore` flow if needed to match the reference local restore behavior.
+11. If `dip` reports that a required port is already in use or a container cannot be created because a name is already used, pause the task. Ask the user to free the needed resources, or explain the project-local configuration changes needed to use different ports/container names and wait for confirmation before changing them.
+12. Do not suggest direct `bundle`, `bin/rails`, `bin/rspec`, `docker`, or `docker-compose` commands for local development project operations.
 
 View policy:
 
@@ -36,7 +37,7 @@ Testing policy:
 2. Switch to another test framework only when user explicitly asks for it.
 3. Do not create model tests by default.
 4. Create model tests only when user explicitly asks for model tests.
-5. Run RSpec tests via `dip rspec` (not direct `rspec`/`bin/rspec`).
+5. In local development, run RSpec tests via `dip rspec` (not direct `rspec`/`bin/rspec`). In CI, use CI-native test commands and services; do not use `dip`.
 
 Secrets policy:
 
@@ -209,7 +210,7 @@ Detect key rails signals:
 - Test stack: `spec/`, `test/`, CI config
 - Tooling: `dip.yml`, `dip*`, `Procfile*`, `docker-compose*`
 
-Choose execution path from project tooling. Use `dip` as the default command runner.
+Choose execution path from project tooling. Use `dip` as the default command runner only for local development. For production, staging, and CI, use the environment's native commands and service definitions; do not use `dip`.
 
 ## 2) Bootstrap Safely
 
@@ -236,7 +237,7 @@ dip rails zeitwerk:check
 
 If setup fails, capture exact command, error, and missing dependency before attempting fixes.
 
-If `dip` is not available, ask user whether to install it and use:
+If `dip` is not available in local development, ask user whether to install it and use:
 
 ```bash
 gem install dip
@@ -349,11 +350,12 @@ Then align with the reference baseline:
 20. Configure the development environment from the reference project:
     - Import the full `.dockerdev/` folder content from the reference project, currently `.bashrc`, `.psqlrc`, `Aptfile`, `Dockerfile`, `README.md`, and `compose.yml`.
     - Keep `.dockerdev/` files project-local. Do not create or edit host-level dotfiles such as `~/.bashrc` or `~/.psqlrc`.
-    - Do not replace the reference container setup with host-installed services. PostgreSQL, Redis, Node/Yarn, and other project services must be accessed through the `dip` container workflow.
+    - Do not replace the reference local development container setup with host-installed services. PostgreSQL, Redis, Node/Yarn, and other project services must be accessed through the `dip` container workflow in local development.
+    - Never use `dip` in production, staging, or CI. Those environments must use their native command runner, service configuration, and deployment workflow.
     - Do not run or suggest direct `docker` or `docker-compose` commands. The Docker Compose file is an implementation detail consumed through `dip`.
     - If `dip provision`, `dip up`, or another `dip` command fails because ports are occupied or container names already exist, stop and ask the user to free those resources, or describe the project-local `.dockerdev`/`dip.yml` changes needed to avoid the conflict. Do not change ports/container names or remove existing containers without confirmation.
     - When importing `.dockerdev/compose.yml`, do not modify `x-*` extension blocks/services configuration. Preserve them exactly as provided by the reference file unless the user explicitly asks to change them.
-21. Verify app boot and tests using `dip`.
+21. Verify app boot and tests using `dip` in local development. For CI validation, use CI-native commands and service definitions; do not use `dip`.
 22. After bootstrap is complete, commit and push created code to the configured repository (unless user explicitly skips push).
 23. After bootstrap is complete, tell user how to run server with both options and explain tradeoffs:
     - `dip rails s`: runs server with ability to interact with the container in the same terminal (for example, breakpoints), but shows logs only from Rails container.
@@ -691,7 +693,7 @@ For each bump:
 3. Run full suite when stable.
 4. Record deprecations and follow-ups.
 5. If the bumped dependency is the `tramway` gem, get the target `tramway` version first and replace the version in the project's `Gemfile` explicitly instead of leaving it implicit.
-6. If the `tramway` gem version was upgraded, it is mandatory to run `dip rails g tramway:install` right after the bundle update step before broader validation.
+6. If the `tramway` gem version was upgraded, it is mandatory to run `dip rails g tramway:install` in local development right after the bundle update step before broader validation.
 
 Use:
 
@@ -722,7 +724,7 @@ Procedure:
    - Not applicable.
 6. Exclude models and feature-level behavior from sync scope; keep updates/upgrades to app/platform layers only.
 7. During any project update request, inspect the target `tramway` gem version and replace the project's `Gemfile` `tramway` version with that exact version when needed.
-8. If the `tramway` gem version changed to a newer version, running `dip rails g tramway:install` is mandatory and must happen before the rest of the update validation.
+8. If the `tramway` gem version changed to a newer version, running `dip rails g tramway:install` in local development is mandatory and must happen before the rest of the update validation.
 9. For any downloaded reference content, apply required project-specific rewrites (project name, repository path, env keys/values) before merge.
 10. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
 11. During project update/upgrade requests, always inspect the reference project for applicable changes to:

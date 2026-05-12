@@ -13,7 +13,7 @@
 
 1. Read release notes and breaking changes.
 2. Upgrade smallest unit (patch -> minor -> major).
-3. Run `dip rails zeitwerk:check`, targeted tests, then full suite.
+3. In local development, run `dip rails zeitwerk:check`, targeted tests, then full suite. In CI, use CI-native commands and services; do not use `dip`.
 4. Address deprecations and autoloading warnings.
 5. Validate asset pipeline / JS / CSS integration.
 6. Record follow-up cleanup tasks.
@@ -53,7 +53,8 @@
     - Import `.dockerdev/.bashrc`, `.dockerdev/.psqlrc`, `.dockerdev/Aptfile`, `.dockerdev/Dockerfile`, `.dockerdev/README.md`, and `.dockerdev/compose.yml`.
     - Preserve `.dockerdev/compose.yml` `x-*` extension blocks exactly unless the user explicitly asks to change them.
     - Keep `.dockerdev/` files project-local and do not edit host-level dotfiles.
-    - Use `dip` only for containers and services. Do not use direct `docker`/`docker-compose` commands or host-installed PostgreSQL, Redis, Node/Yarn, or other project services.
+    - Use `dip` only for local development containers and services. Do not use direct `docker`/`docker-compose` commands or host-installed PostgreSQL, Redis, Node/Yarn, or other project services.
+    - Never use `dip` in production, staging, or CI. Those environments must use their native command runner, service configuration, and deployment workflow.
     - If `dip` fails because required ports are occupied or container names already exist, pause and ask the user to free the resources, or explain the project-local `.dockerdev`/`dip.yml` changes needed and wait for confirmation.
 11. Mark each reference change as:
    - Applicable as-is
@@ -66,7 +67,7 @@
 14. Exclude models, business logic, and feature-specific behavior from sync scope.
 15. Apply changes in small thematic batches.
 16. Preserve HAML-only views and avoid introducing new `.erb` files.
-17. Run `dip rails db:prepare`, boot check, and tests after each batch.
+17. In local development, run `dip rails db:prepare`, boot check, and tests after each batch. In CI, use CI-native commands and services; do not use `dip`.
 18. Summarize applied/skipped updates with reasons for every skipped item, including `.gitignore`, `AGENTS.md`, `Makefile`, deployment, and Terraform decisions.
 
 ## Migration Safety
@@ -75,7 +76,7 @@
 2. Prefer additive changes first; avoid destructive change in same deploy.
 3. Add indexes concurrently where supported.
 4. Split data backfills from schema migration when large.
-5. Test migrate, rollback, migrate locally/CI.
+5. Test migrate, rollback, migrate locally and in CI. Use `dip` only locally; use CI-native commands and services in CI.
 6. Define rollback plan before release.
 
 ## Release Readiness
