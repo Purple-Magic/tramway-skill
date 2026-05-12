@@ -48,7 +48,11 @@
    - Use private visibility by default.
    - Check whether provided repository URL/name exists.
    - If missing, ask user whether to create repository.
-10. Before running `dip provision`, fetch `dip.yml` and `config/database.yml` from reference project remotely.
+10. Before running `dip provision`, fetch `dip.yml`, `config/database.yml`, and the full `.dockerdev/` folder from the reference project remotely.
+    - Import `.dockerdev/.bashrc`, `.dockerdev/.psqlrc`, `.dockerdev/Aptfile`, `.dockerdev/Dockerfile`, `.dockerdev/README.md`, and `.dockerdev/compose.yml`.
+    - Preserve `.dockerdev/compose.yml` `x-*` extension blocks exactly unless the user explicitly asks to change them.
+    - Keep `.dockerdev/` files project-local and do not edit host-level dotfiles.
+    - Use `dip` only for containers and services. Do not use direct `docker`/`docker-compose` commands or host-installed PostgreSQL, Redis, Node/Yarn, or other project services.
 11. Mark each reference change as:
    - Applicable as-is
    - Applicable with adaptation

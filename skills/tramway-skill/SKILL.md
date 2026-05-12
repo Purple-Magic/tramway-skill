@@ -16,9 +16,10 @@ Command policy:
 4. If Rails is missing on host, run `gem install rails` before project creation.
 5. Inside a Rails project, run all Bundler commands via `dip` (for example, `dip bundle install`, `dip bundle add ...`, `dip bundle outdated`).
 6. If `dip` is missing, explicitly offer the user to install it with `gem install dip`.
-7. If a task requires Terraform and `terraform` is missing, install it with `bash scripts/install_terraform.sh` before running Terraform commands.
-8. Scoped exception: when implementing the reference-project database dump/restore feature, preserve the reference script behavior. A direct `docker` volume reset is allowed only inside the imported/adapted `script/dump/restore` flow if needed to match the reference local restore behavior.
-9. Do not suggest direct `bundle`, `bin/rails`, or `bin/rspec` commands for project operations.
+7. Development services must run in containers through `dip`. Do not use host-installed PostgreSQL, Redis, Node/Yarn, or other project services for Rails project operations unless the user explicitly asks for a non-container setup.
+8. If a task requires Terraform and `terraform` is missing, install it with `bash scripts/install_terraform.sh` before running Terraform commands.
+9. Scoped exception: when implementing the reference-project database dump/restore feature, preserve the reference script behavior. A direct `docker` volume reset is allowed only inside the imported/adapted `script/dump/restore` flow if needed to match the reference local restore behavior.
+10. Do not suggest direct `bundle`, `bin/rails`, `bin/rspec`, `docker`, or `docker-compose` commands for project operations.
 
 View policy:
 
@@ -303,6 +304,13 @@ rails new <project_name> -d postgresql
 cd <project_name>
 if ! command -v dip >/dev/null 2>&1; then gem install dip; fi
 curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/dip.yml -o dip.yml
+mkdir -p .dockerdev
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/.bashrc -o .dockerdev/.bashrc
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/.psqlrc -o .dockerdev/.psqlrc
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/Aptfile -o .dockerdev/Aptfile
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/Dockerfile -o .dockerdev/Dockerfile
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/README.md -o .dockerdev/README.md
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/compose.yml -o .dockerdev/compose.yml
 mkdir -p config
 curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/config/database.yml -o config/database.yml
 dip provision
@@ -336,8 +344,13 @@ Then align with the reference baseline:
     - Tell user this supports security-minded public IDs: expose UUID-based record IDs publicly instead of sequential integer IDs, because incrementable IDs can leak approximate dataset size and make unauthorized record enumeration easier.
 18. Ensure view layer is HAML-only (`app/views/**/*.haml`).
 19. Ensure imported reference content is adapted to current project naming/settings.
-20. When importing `.dockerdev/compose.yml` from the reference project, do not modify `x-*` extension blocks/services configuration. Preserve them exactly as provided by the reference file unless the user explicitly asks to change them.
-21. Verify app boot and tests.
+20. Configure the development environment from the reference project:
+    - Import the full `.dockerdev/` folder content from the reference project, currently `.bashrc`, `.psqlrc`, `Aptfile`, `Dockerfile`, `README.md`, and `compose.yml`.
+    - Keep `.dockerdev/` files project-local. Do not create or edit host-level dotfiles such as `~/.bashrc` or `~/.psqlrc`.
+    - Do not replace the reference container setup with host-installed services. PostgreSQL, Redis, Node/Yarn, and other project services must be accessed through the `dip` container workflow.
+    - Do not run or suggest direct `docker` or `docker-compose` commands. The Docker Compose file is an implementation detail consumed through `dip`.
+    - When importing `.dockerdev/compose.yml`, do not modify `x-*` extension blocks/services configuration. Preserve them exactly as provided by the reference file unless the user explicitly asks to change them.
+21. Verify app boot and tests using `dip`.
 22. After bootstrap is complete, commit and push created code to the configured repository (unless user explicitly skips push).
 23. After bootstrap is complete, tell user how to run server with both options and explain tradeoffs:
     - `dip rails s`: runs server with ability to interact with the container in the same terminal (for example, breakpoints), but shows logs only from Rails container.

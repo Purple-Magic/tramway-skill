@@ -2,6 +2,8 @@
 
 Use `dip` for all Rails/Ruby project commands, except `rails new` during initial project creation.
 Inside a Rails project, all Bundler commands must be run via `dip`.
+Development services must run in containers through `dip`. Do not use host-installed PostgreSQL, Redis, Node/Yarn, or other project services for Rails project operations unless the user explicitly asks for a non-container setup.
+Do not run or suggest direct `docker` or `docker-compose` commands for project operations; any Docker Compose files are implementation details consumed through `dip`.
 Assume Ruby is already installed. If Rails is missing, run `gem install rails`.
 If `dip` is missing, offer installing it via `gem install dip`.
 If a task requires Terraform and `terraform` is missing, install it with `bash scripts/install_terraform.sh` before running Terraform commands.
@@ -50,10 +52,25 @@ rails new <project_name> -d postgresql
 cd <project_name>
 if ! command -v dip >/dev/null 2>&1; then gem install dip; fi
 curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/dip.yml -o dip.yml
+mkdir -p .dockerdev
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/.bashrc -o .dockerdev/.bashrc
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/.psqlrc -o .dockerdev/.psqlrc
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/Aptfile -o .dockerdev/Aptfile
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/Dockerfile -o .dockerdev/Dockerfile
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/README.md -o .dockerdev/README.md
+curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/compose.yml -o .dockerdev/compose.yml
 mkdir -p config
 curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/config/database.yml -o config/database.yml
 dip provision
 ```
+
+Development environment setup:
+- Import the full `.dockerdev/` folder from the reference project: `.bashrc`, `.psqlrc`, `Aptfile`, `Dockerfile`, `README.md`, and `compose.yml`.
+- Keep `.dockerdev/` files project-local; do not create or edit host-level dotfiles.
+- Use the reference container setup as the default development environment.
+- Use `dip` for all interaction with containers and services. Do not call `docker` or `docker-compose` directly.
+- Do not use host-installed PostgreSQL, Redis, Node/Yarn, or other project services for Rails project operations unless the user explicitly asks for a non-container setup.
+- Preserve `.dockerdev/compose.yml` `x-*` extension blocks exactly unless the user explicitly asks to change them.
 
 HAML setup:
 - Take HAML gem/configuration from the reference project.
