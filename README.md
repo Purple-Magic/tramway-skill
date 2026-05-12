@@ -64,6 +64,7 @@ This skill is meant to support both groups:
 - Recipes
   - Copy Feature
   - Lazy Loading for Tramway Chat
+  - Create Feature without Tramway Entity
     
 
 ## What It Does
