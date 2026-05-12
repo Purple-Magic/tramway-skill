@@ -69,7 +69,7 @@ Load files only when needed:
 - `agents/rails.md` for Rails conventions, migrations, models, routes, seeds, configuration, services, and deployment command shape.
 - `agents/testing.md` when adding or changing specs, factories, feature coverage, or Tramway entity page tests.
 - `agents/ui.md` when changing Haml views, ViewComponents, Tailwind, page layout, buttons, tables, flashes, or form markup.
-- `agents/tramway.md` when the task touches Tramway entities, forms, decorators, components, CRUD defaults, or Tramway-specific controller/view patterns.
+- `agents/tramway.md` is mandatory when the task touches CRUD, create/update forms, decorators, entities, components, or Tramway-specific controller/view patterns.
 - `agents/integrations.md` when the task touches third-party services, service objects, background jobs, controller orchestration, or external APIs.
 - `agents/documentation.md` when the task changes a user-visible feature or workflow that should be reflected in `docs/users/`.
 - `agents/recipes.md` when the user asks for a usual implementation pattern or the task clearly matches an existing feature recipe. After opening the index, load only the specific recipe file that matches the feature.
@@ -602,7 +602,7 @@ Load the smallest matching set from `agents/` before implementation:
 
 - `agents/testing.md` for spec conventions and coverage shape
 - `agents/ui.md` for views/components/forms/layout work
-- `agents/tramway.md` for Tramway entities/forms/decorators/default CRUD flows
+- `agents/tramway.md` is mandatory for any CRUD flow, including `index`, `show`, `new`, `edit`, `create`, `update`, and `destroy`
 - `agents/integrations.md` for services/jobs/external APIs
 - `agents/documentation.md` when the feature is user-visible
 - `agents/recipes.md` plus one matching recipe when the feature matches an existing implementation pattern

@@ -8,6 +8,7 @@ Load this file when the task is about duplicating an existing record or creating
 
 ## Preferred Approach
 
+- Standard CRUD create must still use Tramway Entity create pages, Tramway Forms, and Tramway Decorators. Use this recipe only for an additional copy/duplicate behavior.
 - Keep the original record unchanged.
 - Create a new record with copied attributes.
 - Exclude attributes that must stay unique or system-owned, such as `uuid`, timestamps, state-machine fields, or external sync identifiers.
@@ -40,7 +41,7 @@ Load this file when the task is about duplicating an existing record or creating
 ## Suggested Flow
 
 Example flow for copying a `Project` record:
-1. User clicks `Copy` on index or show page. It calls `create` action with `params[:event] = 'copy'`. This action must be like this:
+1. User clicks `Copy` on index or show page. Reuse the Tramway-backed create surface where possible. Add a custom `create` action only for this copy event when Tramway cannot express the event dispatch by configuration/form selection alone, and only after preserving the normal Tramway create flow.
 
 ```ruby
 def create

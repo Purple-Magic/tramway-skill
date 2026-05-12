@@ -57,9 +57,16 @@ tailwind.config.js
 
 ## Entities And CRUD
 
-- If CRUD or default actions like `index`, `show`, `create`, `update`, or `destroy` are requested, use Tramway Entities by default unless custom behavior is required.
-- Configure entities in `config/initializers/tramway.rb`.
-- Do not manually create controllers, views, and routes for CRUD if Tramway Entities can handle the feature.
+- CRUD must be implemented through Tramway. This applies to `index`, `show`, `new`, `edit`, `create`, `update`, and `destroy`. If default Tramway CRUD is not applicable for a specific action, use the matching custom-flow recipe only after explicit user approval:
+  - For `create` - create feature recipe
+  - For `update` - update feature recipe
+  - etc.
+- Configure CRUD through Tramway Entities in `config/initializers/tramway.rb`.
+- Do not implement CRUD by hand with custom Rails controllers, routes, views, strong params, or plain Rails forms.
+- Do not add a custom `create`, `update`, or `destroy` action for a resource when Tramway Entity pages can handle the operation.
+- If a CRUD request appears to need custom behavior, first implement the standard CRUD surface with Tramway Entities, Tramway Forms, and Tramway Decorators, then add only the smallest custom extension needed around that surface.
+- Do not decide on your own to bypass Tramway for CRUD. If Tramway cannot express a required CRUD behavior, stop before implementing that part, explain the limitation, and ask the user for explicit approval to bypass Tramway.
+- A non-Tramway CRUD implementation is allowed only after explicit user approval for that specific bypass. When taking this approved exception, state in the final response why Tramway could not be used and which files intentionally bypass Tramway.
 - If a namespace is requested, configure it in the entity definition.
 - If an admin panel is requested, prefer the same entity configuration with `namespace: :admin`.
 - If the app has web authentication, set `config.application_controller = 'ApplicationController'`.
@@ -115,6 +122,7 @@ end
 
 ## Forms
 
+- Create and update flows must use Tramway Forms. Do not build CRUD create/update flows without a `Tramway::BaseForm` subclass.
 - Use Tramway Form pattern when `create` or `update` pages are configured for an entity.
 - Visible fields are configured with `fields`.
 - Each field should map to a Tramway form helper, or use a hash with `type:` plus helper options.
@@ -174,6 +182,7 @@ end
 
 ## Decorators
 
+- CRUD pages must use Tramway decorators for presented data.
 - Always use decorated objects in views.
 - Always instantiate decorators with `tramway_decorate`.
 - In Tramway decorators, use `delegate_attributes` instead of `delegate ... to: :object`.
