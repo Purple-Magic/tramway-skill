@@ -18,6 +18,8 @@ Version rules:
 - Bump `MINOR` for new workflows, recipes, scripts, or materially expanded behavior.
 - Bump `MAJOR` for breaking instruction changes or behavior reversals.
 - Never leave `skills/tramway-skill/VERSION` unchanged after modifying this repository.
+- If the skill welcome/default prompt displays a version, keep it synchronized with `skills/tramway-skill/VERSION`.
+- Maintain `skills/tramway-skill/CHANGELOG.md` for every version bump. Add a new entry for the new version and summarize what the user asked to change.
 - When the user asks which version they are using, answer from `skills/tramway-skill/VERSION` in the active skill copy.
 
 Then run these commands from the repo root:
