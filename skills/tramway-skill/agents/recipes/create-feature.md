@@ -65,13 +65,15 @@ end
 Use this approach only when the default Tramway CRUD implementation is not applicable.
 Use it only after explaining why default Tramway CRUD is not applicable and receiving explicit user approval.
 
+- When implementing this approach, also load [Set Form Recipe](./set-form.md).
+
 Example for adding create support to `Participant`:
+
+The controller example assumes Set Form Recipe has added `before_action :set_form`.
 
 ```ruby
 # app/controllers/participants_controller.rb
 class ParticipantsController < ApplicationController
-  before_action :set_form
-
   def new
     @participant = @form.new(Participant.new)
   end
@@ -84,31 +86,6 @@ class ParticipantsController < ApplicationController
     else
       render :new
     end 
-  end
-
-  private
-
-  def set_form
-    @form = ParticipantForm.form_name(params[:event])
-  end
-end
-```
-
-```ruby
-# app/forms/participant_form.rb
-class ParticipantForm < Tramway::BaseForm
-  class << self
-    def available_forms = [
-      "create"
-    ]
-
-    def form_name(event)
-      unless event.in?(available_forms)
-        raise "Unknown event for new action: #{event}"
-      end
-
-      "Participants::#{event.camelize}Form".constantize
-    end
   end
 end
 ```
