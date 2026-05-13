@@ -79,6 +79,7 @@ Load files only when needed:
 - `agents/integrations.md` when the task touches third-party services, service objects, background jobs, controller orchestration, or external APIs.
 - `agents/documentation.md` when the task changes a user-visible feature or workflow that should be reflected in `docs/users/`.
 - `agents/recipes.md` when the user asks for a usual implementation pattern or the task clearly matches an existing feature recipe. After opening the index, load only the specific recipe file that matches the feature.
+- For button requests that change a record's business state, including wording like "make a button on `<resource>#show` that calls `<event_or_method>` for the object", load `agents/recipes.md` and then `agents/recipes/state-change-recipe.md` before designing routes or controller actions.
 
 Usage rules:
 
@@ -612,6 +613,7 @@ Load the smallest matching set from `agents/` before implementation:
 - `agents/integrations.md` for services/jobs/external APIs
 - `agents/documentation.md` when the feature is user-visible
 - `agents/recipes.md` plus one matching recipe when the feature matches an existing implementation pattern
+- `agents/recipes/state-change-recipe.md` when the user asks for a button that calls a record method or event and the purpose is to move that record through a business state, even if the user does not use the word "state"
 
 1. Reproduce or define acceptance criteria.
 2. Add or update RSpec tests first for the feature.

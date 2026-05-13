@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.5
+
+- Strengthened state-change recipe routing so show-page buttons that call state-transition methods load the recipe before route or controller design.
+
+## 1.5.4
+
+- Clarified that the state-change recipe applies to button actions that imply a business state transition by calling a record method.
+
 ## 1.5.3
 
 - Reverted the expanded state-change recipe trigger for record-page buttons that call object methods.

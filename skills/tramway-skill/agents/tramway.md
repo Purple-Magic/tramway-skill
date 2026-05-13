@@ -371,6 +371,8 @@ Instead of symbolic status handling.
 ## State Management On Existing Entities
 
 - If a model already has Tramway entity `index` and `show` pages and the request is about explicit state management, do not add a new controller.
+- Treat a request like "make a button on `<resource>#show` that calls `<event_or_method>` for the object" as state management when the method/event advances the record through a business state.
+- For that shape, load `agents/recipes/state-change-recipe.md` before deciding whether to add routes or controller actions.
 - Add a component for the state buttons.
 - Render it via `show_header_content` for the show page and an actions column for the index page.
 
