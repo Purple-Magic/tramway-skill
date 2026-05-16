@@ -12,7 +12,7 @@ Version policy:
 
 1. The skill version is stored in `VERSION` at the root of this skill directory.
 2. If the user asks for the `tramway-skill` version, read and report that `VERSION` value.
-3. If the skill directory path is unclear, first try `~/.codex/skills/tramway-skill/VERSION`, then any repository-local `skills/tramway-skill/VERSION`.
+3. If the skill directory path is unclear, try `~/.claude/skills/tramway-skill/VERSION` or `~/.codex/skills/tramway-skill/VERSION`, then any repository-local `skills/tramway-skill/VERSION`.
 
 Command policy:
 

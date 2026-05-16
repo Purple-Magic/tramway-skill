@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.1
+
+- Made the after-task sync instruction explicit in `CLAUDE.md` instead of relying on implicit inheritance from `AGENTS.md`.
+
+## 1.6.0
+
+- Added `CLAUDE.md` for Claude Code support; it delegates to `AGENTS.md` and overrides only the sync command to install to `~/.claude/skills/tramway-skill/`.
+- Updated version policy in `SKILL.md` to reference both Claude Code and Codex install paths.
+
 ## 1.5.5
 
 - Strengthened state-change recipe routing so show-page buttons that call state-transition methods load the recipe before route or controller design.
