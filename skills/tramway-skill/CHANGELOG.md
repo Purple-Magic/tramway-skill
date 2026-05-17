@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.2
+
+- Added table of contents to `README.md`.
+- Added Claude Code installation instructions to `README.md`.
+
 ## 1.6.1
 
 - Made the after-task sync instruction explicit in `CLAUDE.md` instead of relying on implicit inheritance from `AGENTS.md`.

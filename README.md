@@ -2,7 +2,21 @@
 
 `tramway-skill` is an AI skill for working with Ruby on Rails projects end to end.
 
+## Table of Contents
+
+- [Installation](#installation)
+  - [Codex](#codex)
+  - [Claude Code](#claude-code)
+- [Base Features](#base-features)
+- [What It Does](#what-it-does)
+- [Philosophy](#philosophy)
+- [Core Opinions](#core-opinions)
+- [Who This Is For](#who-this-is-for)
+- [Project Goal](#project-goal)
+
 ## Installation
+
+### Codex
 
 Install it through Codex's standard `skill-installer` flow from this GitHub path:
 
@@ -27,6 +41,17 @@ python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-githu
 ```
 
 After installation, restart Codex.
+
+### Claude Code
+
+Copy the skill into Claude Code's skills directory:
+
+```bash
+rm -rf ~/.claude/skills/tramway-skill
+cp -R ./skills/tramway-skill ~/.claude/skills/tramway-skill
+```
+
+After installation, restart Claude Code.
 
 It is built around a simple idea: Rails is still one of the best stacks for shipping useful products, especially now that experienced engineers can use AI to remove routine friction and newcomers can build much more ambitious things with far less pain.
 
