@@ -204,6 +204,15 @@ end
 - Inherit components from `Tramway::BaseComponent`.
 - Use `tramway_decorate` and `tramway_form`; do not instantiate decorator or form classes directly.
 - Prefer ViewComponents for repeatable UI.
+- Render components with the `component` helper, not with `render ComponentClass.new(...)`.
+
+```haml
+-# Correct
+= component 'exercises/choose_exercise', word: @choose_word
+
+-# Wrong
+= render Exercises::ChooseExerciseComponent.new(word: @choose_word)
+```
 - Use `tramway_title` for the main page title.
 
 Examples:
