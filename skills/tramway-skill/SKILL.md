@@ -8,6 +8,26 @@ description: Manage Ruby on Rails projects end-to-end with reliable workflows fo
 Use this skill as an operational playbook. Prefer small, safe, verifiable changes over big-bang edits.
 At every stage, the user can skip any proposed step; respect skips, note risks briefly, and continue with the remaining workflow.
 
+## Runtime and File Loading
+
+This skill runs in two environments. Behavior differs for file loading:
+
+**Codex** — `agents/*.md` files are loaded natively by the Codex agents system. The "load `agents/X.md`" instructions work without extra steps.
+
+**Claude Code** — `agents/*.md` files are NOT auto-loaded. Whenever this document says "load `agents/X.md`", you MUST use the Read tool to read that file before continuing. Use the following path:
+
+```
+~/.claude/skills/tramway-skill/agents/X.md
+```
+
+If that path does not resolve, fall back to a project-local path:
+
+```
+skills/tramway-skill/agents/X.md
+```
+
+Do NOT skip loading agents files. They contain mandatory rules for the active surface area. If a file cannot be read, report the error to the user instead of silently continuing.
+
 Version policy:
 
 1. The skill version is stored in `VERSION` at the root of this skill directory.

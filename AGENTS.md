@@ -4,6 +4,19 @@
 
 These instructions apply to the entire `tramway-skill` repository.
 
+## Cross-Platform Requirement
+
+This skill must work correctly in both **Codex** and **Claude Code**. Every change to `SKILL.md`, `agents/*.md`, and `references/*.md` must preserve compatibility for both environments:
+
+- **Codex**: `agents/*.md` files are loaded natively by the Codex agents system.
+- **Claude Code**: `agents/*.md` files are not auto-loaded. Claude must read them explicitly using its file-reading tool. Instructions in `SKILL.md` that say "load `agents/X.md`" must be written so Claude knows to use the Read tool with path `~/.claude/skills/tramway-skill/agents/X.md`.
+
+When writing or updating instructions:
+1. Use platform-neutral language where possible.
+2. If an instruction is platform-specific, label it with **Codex** or **Claude Code**.
+3. Verify that file-loading instructions are actionable for both runtimes.
+4. Never remove explicit file-path guidance from `SKILL.md`; it is required for Claude Code to function correctly.
+
 ## End-of-Task Skill Sync
 
 At the end of every task that changes this repository, update `skills/tramway-skill/VERSION` before validation and sync.

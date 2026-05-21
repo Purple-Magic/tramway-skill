@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.0
+
+- Added cross-platform requirement sections to `AGENTS.md` and `CLAUDE.md` stating that the skill must work in both Codex and Claude Code, with notes on the key file-loading difference between the two runtimes.
+- Added "Runtime and File Loading" section to `SKILL.md` explaining that in Claude Code, `agents/*.md` files must be read explicitly via the Read tool (with the `~/.claude/skills/tramway-skill/agents/` path), since they are not auto-loaded as they are in Codex. This is the primary fix for Claude ignoring agents-file instructions.
+
 ## 1.6.2
 
 - Added table of contents to `README.md`.
