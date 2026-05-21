@@ -51,10 +51,26 @@ Flash example:
 - If dynamic classes are introduced, update the safelist instead of rewriting the config structure.
 - Add imports to `app/assets/tailwind/application.css`.
 - Avoid inline `<style>` blocks.
-- For Tailwind classes with arbitrary values in Haml, pass them through hash syntax.
 
-Example:
+### MANDATORY: Arbitrary Values In Haml
+
+**ALWAYS use `content_tag` with a hash when any Tailwind class contains square brackets (arbitrary values like `w-[42rem]`, `top-[10px]`, `bg-[#fff]`, etc.).**
+
+Square brackets are Haml attribute syntax. Writing them inline will produce broken markup or a parse error. This rule has NO exceptions.
+
+Correct:
 
 ```haml
 = content_tag :div, 'Example', { class: 'w-[42rem] bg-slate-100/80' }
+= content_tag :span, text, { class: 'top-[10px] left-[4px] text-[#333]' }
 ```
+
+Wrong — NEVER write arbitrary Tailwind values inline in Haml:
+
+```haml
+-# BROKEN — square brackets break Haml parsing
+.w-[42rem].bg-slate-100 Example
+%span.top-[10px] #{text}
+```
+
+Apply this to every tag you write, including ViewComponent templates.
