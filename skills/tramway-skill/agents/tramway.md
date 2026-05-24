@@ -28,7 +28,9 @@ Tramway extends Rails with:
 https://raw.githubusercontent.com/Purple-Magic/tramway/refs/heads/main/README.md
 ```
 
-Do not rely on memory or prior knowledge of the Tramway API for these cases — always fetch the README first. Use gem source inspection only when the README does not answer the question.
+Do not rely on memory or prior knowledge of the Tramway API for these cases — always fetch the README first.
+
+**NEVER read installed gem source files** (e.g. files under `/usr/local/bundle/gems/tramway-*/`, `$(bundle show tramway)/`, or any gem path) to understand how Tramway works. Gem source inspection is prohibited. If the README does not answer the question, ask the user — do not fall back to reading gem files.
 
 ## Quick Start Workflow
 
