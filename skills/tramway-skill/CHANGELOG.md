@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.8.5
+
+- Added Tramway feature lookup guidance: read the upstream Tramway README before inspecting installed gem source code for feature usage.
+
+## 1.8.4
+
+- Clarified mandatory navbar guidance: use `tramway_navbar` instead of raw `<nav>`, link groups styled as navbars, or custom navbar components for standard navigation.
+
+## 1.8.3
+
+- Clarified mandatory button guidance: use `tramway_button` instead of `button_to`, button-styled links, or raw `<button>` markup.
+
+## 1.8.2
+
+- Updated the new Rails project recipe to create or update project-root `AGENTS.md` and `CLAUDE.md` so future Codex and Claude Code sessions use `tramway-skill` by default.
+
+## 1.8.1
+
+- Made button guidance explicit: use `tramway_button` for every button unless an existing Tramway component API requires another Tramway Button invocation form.
+
 ## 1.8.0
 
 - Moved the new Rails project workflow into a dedicated recipe.

@@ -19,6 +19,14 @@ Tramway extends Rails with:
 - ViewComponents for reusable UI
 - Tailwind safelist utilities for dynamic classes
 
+Before searching installed Tramway gem source code to understand how a Tramway feature should be used, read the upstream Tramway README first:
+
+```text
+https://raw.githubusercontent.com/Purple-Magic/tramway/refs/heads/main/README.md
+```
+
+Use gem source inspection only when the README does not answer the feature-usage question.
+
 ## Quick Start Workflow
 
 Prefer installing Tramway defaults before hand-rolling setup:
@@ -228,12 +236,12 @@ tramway_title text: 'Title'
 
 ## UI Primitives
 
-- Use Tramway Navbar for navigation.
+- Use `tramway_navbar` for every navbar or primary navigation block unless the existing Tramway component API explicitly requires another Tramway Navbar invocation form. Do not use raw `<nav>` markup, do not use `<div>`/link groups styled as navbars, and do not build custom navbar components for standard navigation.
 - Put basic authentication links such as Login and Logout in the navbar when applicable.
 - Use Tramway Flash for notifications.
 - Use Tramway Table for tabular data.
 - Keep `preview: true` as the default for `tramway_row` unless preview is explicitly unwanted.
-- Use Tramway Button for buttons.
+- Use `tramway_button` for every button unless the existing Tramway component API explicitly requires another Tramway Button invocation form. Do not use `button_to`, do not use `<a>`/link markup with button classes, and do not use raw `<button>` markup for buttons.
 - Always set a button color via `color:` or `type:`.
 - `color:` accepts direct colors like `red`, `yellow`, and `blue`.
 - `type:` accepts lantern colors like `will`, `hope`, and `rage`.

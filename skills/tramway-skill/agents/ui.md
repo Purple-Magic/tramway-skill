@@ -21,12 +21,12 @@ Load this file when the task touches pages, views, components, Tailwind, Haml ma
 
 ## Tramway UI Helpers
 
-- Use Tramway Navbar for navigation. Include at least Login and Logout links when relevant.
+- Use `tramway_navbar` for every navbar or primary navigation block unless the existing Tramway component API explicitly requires another Tramway Navbar invocation form. Do not use raw `<nav>` markup, do not use `<div>`/link groups styled as navbars, and do not build custom navbar components for standard navigation. Include at least Login and Logout links when relevant.
 - Use Tramway Flash for notifications.
 - Use `tramway_table` for tabular data whenever a table is needed.
 - Use `tramway_row href:` for row links instead of placing a link inside a table cell.
 - Keep `preview: true` on rows unless the request explicitly needs it disabled.
-- Use Tramway Button for buttons and always specify `color:` or `type:`.
+- Use `tramway_button` for every button unless the existing Tramway component API explicitly requires another Tramway Button invocation form. Do not use `button_to`, do not use `<a>`/link markup with button classes, and do not use raw `<button>` markup for buttons. Always specify `color:` or `type:`.
 - Use `tramway_title` for the main page title.
 - Use `tramway_container` for page containers.
 - Use `tramway_main_container` in layouts instead of custom wrapper divs when a standard container is needed.
@@ -53,6 +53,25 @@ Flash example:
 - Add imports to `app/assets/tailwind/application.css`.
 - Avoid inline `<style>` blocks.
 
+### MANDATORY: Dot Notation For Classes
+
+**ALWAYS use Haml dot notation (`.class1.class2.class3`) for elements with only plain CSS/Tailwind classes. NEVER use `%div{ class: 'class1 class2 class3' }` hash syntax when all classes are plain (no square brackets).**
+
+Correct:
+
+```haml
+.flex.items-center.gap-4
+  %span.text-sm.font-medium Hello
+```
+
+Wrong — NEVER use hash syntax for plain classes:
+
+```haml
+-# BAD
+%div{ class: 'flex items-center gap-4' }
+  %span{ class: 'text-sm font-medium' } Hello
+```
+
 ### MANDATORY: Arbitrary Values In Haml
 
 **ALWAYS use `content_tag` with a hash when any Tailwind class contains square brackets (arbitrary values like `w-[42rem]`, `top-[10px]`, `bg-[#fff]`, etc.).**
@@ -74,4 +93,11 @@ Wrong — NEVER write arbitrary Tailwind values inline in Haml:
 %span.top-[10px] #{text}
 ```
 
-Apply this to every tag you write, including ViewComponent templates.
+When an element has a mix of plain classes and arbitrary-value classes, use `content_tag` for the whole element:
+
+```haml
+-# All classes go into content_tag when any one of them has square brackets
+= content_tag :div, 'Example', { class: 'flex items-center w-[42rem] bg-slate-100' }
+```
+
+Apply both rules to every tag you write, including ViewComponent templates.

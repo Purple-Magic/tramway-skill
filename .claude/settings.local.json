@@ -3,7 +3,8 @@
     "allow": [
       "Bash(mkdir -p ~/.claude/skills)",
       "Bash(rm -rf ~/.claude/skills/tramway-skill)",
-      "Bash(cp -R /home/pavel/projects/tramway-skill/skills/tramway-skill ~/.claude/skills/tramway-skill)"
+      "Bash(cp -R /home/pavel/projects/tramway-skill/skills/tramway-skill ~/.claude/skills/tramway-skill)",
+      "Bash(cp -R ./skills/tramway-skill ~/.claude/skills/tramway-skill)"
     ]
   }
 }

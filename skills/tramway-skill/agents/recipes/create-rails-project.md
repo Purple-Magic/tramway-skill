@@ -99,15 +99,42 @@ Then run `save-rails-secrets-1password.md`:
 10. If chat is not `Discord`, ask whether they want generated team chat integration and warn it is untested.
 11. Apply `.gitignore` from the reference project, adapting only when needed.
 12. Clearly warn that `config/master.key` and `config/credentials/*.key` are ignored by git and must be securely stored.
-13. Take HAML setup from the reference project.
-14. Ensure Tailwind uses `tailwindcss-rails`.
-15. Enable PostgreSQL `uuid-ossp` via migration, following the reference project approach.
-16. Tell the user UUID public IDs avoid exposing sequential record counts and reduce easy record enumeration.
-17. Ensure view layer is HAML-only.
-18. Import full `.dockerdev/` content from the reference project and keep it project-local.
-19. Do not modify `.dockerdev/compose.yml` `x-*` extension blocks unless explicitly asked.
-20. Use `dip` for local development. Never use `dip` in production, staging, or CI.
-21. If `dip` commands fail because ports or container names are occupied, pause and ask the user to free resources or approve project-local changes.
+13. Create or update project-root `AGENTS.md` and `CLAUDE.md` so future Codex and Claude Code sessions use `tramway-skill` by default for the created project.
+14. Take HAML setup from the reference project.
+15. Ensure Tailwind uses `tailwindcss-rails`.
+16. Enable PostgreSQL `uuid-ossp` via migration, following the reference project approach.
+17. Tell the user UUID public IDs avoid exposing sequential record counts and reduce easy record enumeration.
+18. Ensure view layer is HAML-only.
+19. Import full `.dockerdev/` content from the reference project and keep it project-local.
+20. Do not modify `.dockerdev/compose.yml` `x-*` extension blocks unless explicitly asked.
+21. Use `dip` for local development. Never use `dip` in production, staging, or CI.
+22. If `dip` commands fail because ports or container names are occupied, pause and ask the user to free resources or approve project-local changes.
+
+## Project Agent Files
+
+During creation, create or update both project-root files:
+
+- `AGENTS.md`
+- `CLAUDE.md`
+
+These files must make `tramway-skill` the default project workflow for future agent sessions.
+
+Required `AGENTS.md` behavior:
+
+1. State that the project is a Rails app managed with `tramway-skill`.
+2. Instruct Codex to use `tramway-skill` by default for Rails setup, feature work, bugfixes, updates/upgrades, deployment, database dump/restore, and maintenance.
+3. Tell Codex to follow this project's local instructions first, then load the focused `tramway-skill` guidance files required by the task.
+4. Include a short reminder not to bypass Tramway CRUD/forms/components unless the skill allows it and the user approves the exception.
+
+Required `CLAUDE.md` behavior:
+
+1. State that Claude Code must use `tramway-skill` by default for the same project workflows.
+2. Include explicit Claude Code file-loading guidance:
+   - Read `~/.claude/skills/tramway-skill/SKILL.md` before Rails project work.
+   - When that skill says to load `agents/X.md` or `agents/recipes/X.md`, use the Read tool with `~/.claude/skills/tramway-skill/agents/X.md` or `~/.claude/skills/tramway-skill/agents/recipes/X.md`.
+   - If the home skill path is unavailable, fall back to repository-local `skills/tramway-skill/...` only when that path exists.
+3. If `AGENTS.md` already contains project-specific rules, preserve them and add the `tramway-skill` default instruction rather than replacing the file wholesale.
+4. If `CLAUDE.md` already contains project-specific rules, preserve them and add the Claude Code `tramway-skill` loading instructions rather than replacing the file wholesale.
 
 ## Completion
 
