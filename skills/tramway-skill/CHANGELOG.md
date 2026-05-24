@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.0
+
+- Moved the new Rails project workflow into a dedicated recipe.
+- Moved deployment implementation/update workflows into a dedicated recipe.
+- Added a dedicated recipe for saving `config/master.key`, Rails credentials keys, staging/production secrets, and deployment secrets in 1Password or another secure store.
+- Updated create, update, and deployment routing so mandatory `config/master.key` backup warnings and 1Password guidance are used whenever relevant.
+
 ## 1.7.0
 
 - Added cross-platform requirement sections to `AGENTS.md` and `CLAUDE.md` stating that the skill must work in both Codex and Claude Code, with notes on the key file-loading difference between the two runtimes.

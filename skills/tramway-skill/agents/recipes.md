@@ -6,6 +6,9 @@ Do not open every recipe by default. Open only the recipe that matches the reque
 
 ## Available Recipes
 
+- For creating a new Rails project, open [agents/recipes/create-rails-project.md](/home/pavel/projects/tramway-skill/skills/tramway-skill/agents/recipes/create-rails-project.md).
+- For implementing or updating deployment, open [agents/recipes/deployment-recipe.md](/home/pavel/projects/tramway-skill/skills/tramway-skill/agents/recipes/deployment-recipe.md).
+- For saving `config/master.key`, Rails credentials keys, staging/production secrets, or deployment secrets in 1Password or another secure store, open [agents/recipes/save-rails-secrets-1password.md](/home/pavel/projects/tramway-skill/skills/tramway-skill/agents/recipes/save-rails-secrets-1password.md).
 - For standard CRUD create flows, open [agents/recipes/create-feature.md](/home/pavel/projects/tramway-skill/skills/tramway-skill/agents/recipes/create-feature.md).
 - For copy or duplicate flows, open [agents/recipes/copy-feature.md](/home/pavel/projects/tramway-skill/skills/tramway-skill/agents/recipes/copy-feature.md).
 - For lazy loading older messages in `tramway_chat`, open [agents/recipes/tramway-chat-lazy-loading.md](/home/pavel/projects/tramway-skill/skills/tramway-skill/agents/recipes/tramway-chat-lazy-loading.md).

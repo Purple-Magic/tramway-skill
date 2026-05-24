@@ -99,6 +99,9 @@ Load files only when needed:
 - `agents/integrations.md` when the task touches third-party services, service objects, background jobs, controller orchestration, or external APIs.
 - `agents/documentation.md` when the task changes a user-visible feature or workflow that should be reflected in `docs/users/`.
 - `agents/recipes.md` when the user asks for a usual implementation pattern or the task clearly matches an existing feature recipe. After opening the index, load only the specific recipe file that matches the feature.
+- `agents/recipes/create-rails-project.md` when the user asks to create a new Rails project. **Claude Code**: Read `~/.claude/skills/tramway-skill/agents/recipes/create-rails-project.md`; if unavailable, read `skills/tramway-skill/agents/recipes/create-rails-project.md`.
+- `agents/recipes/deployment-recipe.md` when the user asks to implement deployment, update deployment, or add deployment during new-project setup. **Claude Code**: Read `~/.claude/skills/tramway-skill/agents/recipes/deployment-recipe.md`; if unavailable, read `skills/tramway-skill/agents/recipes/deployment-recipe.md`.
+- `agents/recipes/save-rails-secrets-1password.md` when the user asks how to save `config/master.key`, Rails credentials keys, staging/production secrets, or deployment secrets, and whenever create/update/deployment work introduces or touches those secrets. **Claude Code**: Read `~/.claude/skills/tramway-skill/agents/recipes/save-rails-secrets-1password.md`; if unavailable, read `skills/tramway-skill/agents/recipes/save-rails-secrets-1password.md`.
 - For button requests that change a record's business state, including wording like "make a button on `<resource>#show` that calls `<event_or_method>` for the object", load `agents/recipes.md` and then `agents/recipes/state-change-recipe.md` before designing routes or controller actions.
 
 Usage rules:
@@ -272,210 +275,11 @@ gem install dip
 
 ## 2.1) Create New Rails Project
 
-When asked to `create rails project`, do this first:
+When asked to create a new Rails project, load `agents/recipes/create-rails-project.md` and follow it as the authoritative workflow.
 
-Questioning style:
+That recipe includes the required repository, reference-project import, local `dip` setup, HAML/Tailwind baseline, deployment handoff, and mandatory `config/master.key` storage guidance.
 
-1. Ask setup questions one-by-one in separate messages.
-2. Do not send all setup questions in one message.
-3. Do not ask whether to use the reference project; notify that it will be used by default.
-4. During bootstrap import from the reference project, do not ask about each file separately.
-5. Ask only about project-level decisions that matter; do not ask the user which files to copy.
-6. Collect full planned import list internally (files to download, applicability notes, planned adaptations) without asking file-by-file questions.
-7. Build a temporary script with all download/apply commands, run it, and delete it right after execution.
-8. Accept either `yes` (apply all) or user-requested changes to the high-level plan.
-9. When asking about team chat, briefly explain value: shared visibility for CI status, deploy events, failures, and release updates helps the team react faster and stay aligned.
-10. User may skip any setup step or integration; accept skip, record what was skipped, and continue.
-11. User-facing question messages must be plain text only in the user's language. Never include tool-call payloads, JSON, code fences, internal command logs, metadata, or text from another language unless the user asked for that language.
-12. When asking a question, do not execute unrelated actions in the same message; wait for user answer first.
-
-1. Explicitly ask for the project name before running any command.
-2. Tell the user: "Choose a simple name. Try to avoid `-` character besides you want explicitly. Renaming a Rails project later is possible but usually difficult and time-consuming."
-3. Explicitly ask which git service they use (GitHub, GitLab, etc.).
-4. Explicitly ask which team chat they want to connect. Supported chats: `Discord`.
-5. Explicitly ask where they want to store the repository (GitHub recommended; GitLab, etc. also supported).
-6. Ask for either remote URL or organization name to create the repository.
-7. Make repository private by default unless user explicitly asks for public.
-8. Do not ask about app type (standard vs API-only); create a standard Rails app by default.
-9. After user provides repository URL or name, check whether it already exists on the selected service.
-   - For GitHub, always run `scripts/check_github_repo_exists.sh <owner/repo>` for this check.
-10. If repository does not exist, ask user explicitly whether they want to create it.
-11. Before creating a GitHub repository, check `gh` availability and authentication:
-    - Run `command -v gh` to verify GitHub CLI is installed.
-    - Run `gh auth status` to verify it is authenticated.
-    - If auth check fails, run `env -u GH_TOKEN -u GITHUB_TOKEN gh auth status` to rule out stale env-token override.
-12. If `gh` is missing, tell user to pause this chat, install GitHub CLI for their OS, and authenticate `gh` in another terminal window.
-13. If both auth checks fail, ask user to run `gh auth status` in their terminal. If user confirms it works there, continue and attempt repo creation anyway.
-14. If repo creation command fails due to auth, then tell user to pause this chat, authenticate `gh` in another terminal window, and resume this Codex chat.
-15. When repository is missing and user approved creation, Codex should attempt to create it (private by default) instead of stopping at instructions.
-16. At the end of create-project questioning, explicitly ask whether they want server creation and deploy configuration.
-17. Before any step that gives the user app keys, credentials, or recovery material, explicitly ask how they want to store them.
-18. In that question, recommend encrypted storage via password managers or another safe approach.
-19. Mention `1Password` as the recommended option because it is implemented and tested in this skill; also mention `Bitwarden` and similar tools as acceptable alternatives.
-20. Offer unencrypted local `.env*` files only as a fallback option.
-21. If user picks unencrypted local `.env*` files, clearly warn that storing keys there is not safe and that they can lose access to those keys if the machine or files are lost.
-22. If yes, ask whether they already have a server.
-23. If they do not have a server, ask which hosting provider they want. Recommend `DigitalOcean` because this skill has complete setup guidance for it.
-24. If hosting is `DigitalOcean`, use Terraform configuration from the reference project as baseline.
-25. If hosting is not `DigitalOcean`, build server/deploy Terraform configuration for the chosen hosting yourself.
-26. Ask which provider they use for domain/DNS hosting. Recommend `Cloudflare` because this skill has complete setup guidance for it.
-27. If domain hosting is `Cloudflare`, use Cloudflare-related Terraform configuration from the reference project.
-28. If domain hosting is not `Cloudflare`, build domain/DNS configuration for chosen provider yourself.
-29. Do not collect deploy/provider secrets during pre-project questions. Collect them only in deploy setup phase after Rails project and `terraform/` directory exist.
-30. Never commit deploy secrets (`*.tfvars`, `.env*`, tokens, private keys). Keep them in local env/secrets manager and repository secrets.
-    - For Terraform, default secret storage is `terraform/secrets.auto.tfvars` (gitignored).
-31. Do not create or edit user home dotfiles as part of setup. If host-level configuration seems necessary, stop and ask the user first.
-
-After the user confirms `<project_name>`, use this baseline flow:
-
-```bash
-if ! command -v rails >/dev/null 2>&1; then gem install rails; fi
-rails new <project_name> -d postgresql
-cd <project_name>
-if ! command -v dip >/dev/null 2>&1; then gem install dip; fi
-curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/dip.yml -o dip.yml
-mkdir -p .dockerdev
-curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/.bashrc -o .dockerdev/.bashrc
-curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/.psqlrc -o .dockerdev/.psqlrc
-curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/Aptfile -o .dockerdev/Aptfile
-curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/Dockerfile -o .dockerdev/Dockerfile
-curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/README.md -o .dockerdev/README.md
-curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/.dockerdev/compose.yml -o .dockerdev/compose.yml
-mkdir -p config
-curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/config/database.yml -o config/database.yml
-dip provision
-```
-
-Then align with the reference baseline:
-
-1. Compare generated files against the reference project.
-2. Apply applicable config differences (CI, lint, security, deployment defaults).
-3. If service is GitHub, copy/adapt GitHub Actions workflows from the reference project `.github/workflows/`.
-4. If service is not GitHub, create CI for the chosen service with the same scenarios covered by reference GitHub Actions (for example: lint, test, security checks, build/deploy gates).
-5. Create or connect repository using provided remote URL or organization, private by default.
-6. If repository was missing and user confirmed creation, Codex should run repository creation command (`gh repo create ... --private`) unless user asked for public.
-7. Prepare one consolidated bootstrap-import plan at decision level (scope, integrations, risks) and ask once for approval (`yes`) or changes.
-8. Build a temporary bootstrap script with all required file downloads/adaptations/commands.
-9. Run the script and then delete it.
-10. If chat is `Discord`, copy/adapt Discord CI/deploy/team-update notification configuration from reference GitHub workflows.
-11. If chat is `Discord`, ask user to set `DISCORD_WEBHOOK_URL` in repository secrets only after repository exists; do not ask user to paste webhook URL in chat.
-12. If chat is not `Discord` (for example Telegram), ask whether they still want team chat integration for CI/deploy updates and clearly warn: configuration will be fully generated and not tested.
-13. If chat is not `Discord` and user does not want generated team chat integration, do not apply Discord notification configuration from reference workflows.
-14. Get and apply `.gitignore` from the reference project `main` branch, adapting entries only if needed for current project specifics.
-    - Clearly warn user that `config/master.key` and `config/credentials/*.key` are ignored by git and will not be stored in repository history.
-    - Explicitly ask the user how they want to store these keys before moving on.
-    - Recommend using an encrypted password manager or another safe encrypted approach. `1Password` is the recommended option because it is implemented and tested in this skill; `Bitwarden` and similar tools are also acceptable.
-    - Offer unencrypted local `.env*` files only as a fallback option.
-    - If the user chooses unencrypted local `.env*` files, clearly warn that this is not safe and that losing the machine or files can mean losing the keys.
-    - Tell user to keep backup/recovery access regardless of the storage method.
-15. Take HAML setup and configuration from the reference project (do not configure HAML manually in this step).
-16. Ensure Tailwind is configured as the main CSS framework via `tailwindcss-rails` gem (follow the reference project approach where applicable).
-17. Enable PostgreSQL `uuid-ossp` extension during bootstrap by creating a migration that enables extension (follow the approach from the reference project).
-    - Tell user this supports security-minded public IDs: expose UUID-based record IDs publicly instead of sequential integer IDs, because incrementable IDs can leak approximate dataset size and make unauthorized record enumeration easier.
-18. Ensure view layer is HAML-only (`app/views/**/*.haml`).
-19. Ensure imported reference content is adapted to current project naming/settings.
-20. Configure the development environment from the reference project:
-    - Import the full `.dockerdev/` folder content from the reference project, currently `.bashrc`, `.psqlrc`, `Aptfile`, `Dockerfile`, `README.md`, and `compose.yml`.
-    - Keep `.dockerdev/` files project-local. Do not create or edit host-level dotfiles such as `~/.bashrc` or `~/.psqlrc`.
-    - Do not replace the reference local development container setup with host-installed services. PostgreSQL, Redis, Node/Yarn, and other project services must be accessed through the `dip` container workflow in local development.
-    - Never use `dip` in production, staging, or CI. Those environments must use their native command runner, service configuration, and deployment workflow.
-    - Do not run or suggest direct `docker` or `docker-compose` commands. The Docker Compose file is an implementation detail consumed through `dip`.
-    - If `dip provision`, `dip up`, or another `dip` command fails because ports are occupied or container names already exist, stop and ask the user to free those resources, or describe the project-local `.dockerdev`/`dip.yml` changes needed to avoid the conflict. Do not change ports/container names or remove existing containers without confirmation.
-    - When importing `.dockerdev/compose.yml`, do not modify `x-*` extension blocks/services configuration. Preserve them exactly as provided by the reference file unless the user explicitly asks to change them.
-21. Verify app boot and tests using `dip` in local development. For CI validation, use CI-native commands and service definitions; do not use `dip`.
-22. After bootstrap is complete, commit and push created code to the configured repository (unless user explicitly skips push).
-23. After bootstrap is complete, tell user how to run server with both options and explain tradeoffs:
-    - `dip rails s`: runs server with ability to interact with the container in the same terminal (for example, breakpoints), but shows logs only from Rails container.
-    - `dip up web`: shows logs from all containers, but does not allow connecting to the running container in the same terminal.
-
-If user selected server/deploy setup, add this step after repository setup and before final bootstrap verification:
-
-23. Configure server/deploy Terraform:
-    - If hosting is `DigitalOcean`, import and adapt reference Terraform files:
-      - `terraform/main.tf`, `terraform/variables.tf`, `terraform/update_env_hosts.sh`, `terraform/wait_for_ssh.sh`
-      - Replace hardcoded reference-project identifiers (droplet name, DNS record/subdomain, default app name) with current project values.
-    - If hosting is not `DigitalOcean`, build Terraform server/deploy configuration for selected hosting yourself.
-24. Configure domain/DNS Terraform:
-    - If domain hosting is `Cloudflare`, use/adapt Cloudflare Terraform config from the reference project.
-    - If domain hosting is not `Cloudflare`, build Terraform domain/DNS configuration for selected provider yourself.
-25. Keep Terraform files in `terraform/` and ensure scripts are executable (`chmod +x terraform/*.sh`) when scripts are present.
-26. Default database secret handling must follow the reference project:
-    - Store deploy database values in Rails credentials, not as manually managed deployment env vars by default.
-    - This includes `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` or the equivalent database name/username/password values used by the current project structure.
-    - Prefer the reference project's `config/database.yml` and credentials layout when applicable.
-27. If deployment includes Auth0, store Auth0 application secrets in Rails credentials following the same approach and credentials structure used by the reference project.
-    - Do not treat Auth0 client secrets as plain deploy env vars by default if the reference-project flow keeps them in Rails credentials.
-    - Adapt only tenant/domain/client identifiers and environment-specific values needed for the current project.
-28. Collect deploy variables now (after project exists and `terraform/` directory is created):
-    - If hosting is `DigitalOcean`, collect:
-      - `do_token` (DigitalOcean API token)
-        1. Open DigitalOcean Control Panel -> API -> Tokens/Keys.
-        2. In "Personal access tokens", click "Generate New Token".
-        3. Give token a name, select appropriate scope (write for infra create/update), and create token.
-        4. Put token into `terraform/secrets.auto.tfvars` and reply `done`.
-      - `ssh_fingerprint`:
-        - By default, use the system default SSH public key and its DigitalOcean fingerprint (do not ask user for custom key first).
-        - Ask for custom SSH key/fingerprint only if user explicitly wants non-default key.
-        - If default key is not registered in DigitalOcean, guide user to add it in DigitalOcean -> API -> Tokens/Keys -> SSH Keys, then use its fingerprint.
-      - `region`, `size`, `app_name` (with reference defaults unless user changes)
-    - If hosting is not `DigitalOcean`, collect provider-specific infra inputs for Terraform.
-    - If domain hosting is `Cloudflare`, collect:
-      - `domain`, `cloudflare_email`, `cloudflare_api_key`
-      - Cloudflare Dashboard -> My Profile -> API Tokens -> Global API Key -> View
-      - Put key into `terraform/secrets.auto.tfvars` and reply `done`.
-    - If domain hosting is not `Cloudflare`, collect provider-specific DNS inputs for Terraform.
-    - Ensure `terraform/secrets.auto.tfvars` is gitignored.
-    - Do not ask the user to create or set `MAIN_HOST` in 1Password before Terraform apply; Terraform should derive and sync it itself following the reference-project flow.
-29. Validate tooling availability before apply:
-    - `if ! command -v terraform >/dev/null 2>&1; then bash scripts/install_terraform.sh; fi`
-    - `terraform -version`
-    - `doctl version` only when using the DigitalOcean reference script (`wait_for_ssh.sh`)
-    - `nc -h` or `command -v nc` only when using `wait_for_ssh.sh`
-30. Initialize and validate Terraform:
-    - `terraform -chdir=terraform init`
-    - `terraform -chdir=terraform validate`
-    - `terraform -chdir=terraform plan`
-31. Apply only after explicit user confirmation:
-    - `terraform -chdir=terraform apply`
-32. After apply, if `.env` exists and `update_env_hosts.sh` is present, run:
-    - `bash terraform/update_env_hosts.sh`
-33. Explain key outputs to user (for example server IP, hostname, and env snippet values).
-
-When requesting deploy/repository secrets, provide setup guidance for each secret:
-
-1. Set secrets in repository secrets storage (never in chat).
-2. For GitHub: Settings -> Secrets and variables -> Actions -> New repository secret.
-3. For GitLab: Settings -> CI/CD -> Variables -> Add variable.
-4. Required/optional secrets and how to get them:
-   - `DISCORD_WEBHOOK_URL`:
-     - Discord -> Server Settings -> Integrations -> Webhooks -> New Webhook -> choose channel -> copy webhook URL.
-   - `SSH_PRIVATE_KEY`:
-     - Use local deploy key content (for example from `~/.ssh/id_ed25519` or chosen deploy key file).
-     - If missing, generate with `ssh-keygen`, add public key to server/provider, then store private key in repo secret.
-   - `SSH_USER`:
-     - For DigitalOcean Ubuntu droplets, default is usually `root` unless user configured another deploy user.
-   - `RAILS_MASTER_KEY`:
-     - Use value from project `config/master.key` (or the relevant credentials key file for environment).
-   - Database deploy values:
-     - By default, keep `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` in Rails credentials following the reference-project approach.
-     - Do not ask the user to set those values as separate repository secrets unless the project explicitly uses a different deployment design.
-   - Auth0 deploy values:
-     - If the deployment uses Auth0, store Auth0 secrets in Rails credentials following the same reference-project approach.
-     - Do not ask the user to store Auth0 client secrets as separate repository secrets unless the reference-project design for that integration explicitly requires it.
-   - Kamal registry default:
-     - Use localhost registry in Kamal by default.
-     - With localhost registry, do not request `KAMAL_REGISTRY_USERNAME` / `KAMAL_REGISTRY_PASSWORD`.
-     - Ask for registry credentials only if user explicitly chooses external registry (Docker Hub, GHCR, GitLab Registry, etc.).
-   - `MAIN_HOST` handling:
-     - Do not ask the user to set `MAIN_HOST` in 1Password manually before Terraform apply.
-     - Terraform should derive and sync `MAIN_HOST` itself when following the reference-project flow.
-5. Tell user to confirm with `done` after secrets are set; do not request secret values in chat.
-6. In chat, walk through secrets one-by-one in this order and wait for `done` after each:
-   - `RAILS_MASTER_KEY`
-   - `SSH_PRIVATE_KEY`
-   - `SSH_USER`
-   - `DISCORD_WEBHOOK_URL` (if Discord enabled)
-   - `KAMAL_REGISTRY_USERNAME` / `KAMAL_REGISTRY_PASSWORD` (only if user explicitly chose external registry)
+If the new project setup creates, reads, rotates, or references `config/master.key` or `config/credentials/*.key`, also load `agents/recipes/save-rails-secrets-1password.md` and run that recipe before continuing past the secret-handling step.
 
 ## 3) Daily Task Flows
 
@@ -483,83 +287,13 @@ When requesting deploy/repository secrets, provide setup guidance for each secre
 
 Treat a request like `Implement deployment` as a full deployment-systems task, not a narrow single-file change.
 
-Load `agents/rails.md` for deployment command and configuration conventions. Also load `agents/integrations.md` if the deployment work touches third-party providers, background delivery, or external service setup.
-
-Required scope:
-
-1. Inspect current project for existing deploy pieces before editing:
-   - `config/deploy.yml`
-   - `config/deploy.staging.yml`
-   - `config/deploy.production.yml`
-   - `.kamal/secrets`
-   - `terraform/`
-   - `Makefile`
-   - CI config such as `.github/workflows/` or the equivalent for the current git platform
-2. Use the same deployment approach as the reference project. The reference project is the primary source:
-   - Kamal: `config/deploy.yml`, `config/deploy.staging.yml`, `config/deploy.production.yml`
-   - Terraform: files in `terraform/`
-   - Management commands: `Makefile`
-   - GitHub CI/deploy workflows: `.github/workflows/ci.yml`, `.github/workflows/deploy.yml`, `.github/workflows/deploy-production.yml`
-3. Ensure Kamal deployment exists for both `staging` and `production`.
-   - If creating or updating `.kamal/secrets`, ensure it does not contain shell `if` statements.
-   - Put any conditional secret lookup in a project script or the external secret manager command, then call that simple command from `.kamal/secrets` if needed.
-4. Ensure Terraform can create both `staging` and `production`.
-   - Use the same Terraform structure/workspace flow as the reference project when applicable.
-   - Keep environment-specific infra behavior aligned with the reference project.
-5. Ensure `Makefile` includes commands for managing both environments.
-   - At minimum, cover create/apply, deploy/setup, logs, and destroy flows when those operations are part of the chosen hosting flow.
-6. Ensure CI is implemented.
-   - For GitHub, copy/adapt the reference project workflow structure.
-   - For non-GitHub platforms, preserve the same CI/deploy approach and gate structure as the reference project, adapted to the current platform syntax.
-7. Adapt all imported config to the current project:
-   - Replace app/repository names, environment values, hostnames, provider identifiers, and secret names as needed.
-   - If the deployment uses Auth0, keep Auth0 secrets in Rails credentials using the same reference-project approach instead of moving them to plain deploy env vars by default.
-8. If the current project already has some deployment files, preserve applicable project-specific values and fill the missing pieces instead of resetting the deployment stack from scratch.
-9. Verify the resulting setup with the strongest checks available for the current project, for example:
-   - `terraform -chdir=terraform validate`
-   - syntax/consistency checks on Kamal config
-   - CI workflow validation where practical
-10. If `Makefile` was added or updated, tell the user how to use the available `make` commands in the final response.
-11. If `Makefile` was added or updated, also update the target project `README` with concise usage instructions for the deployment-management commands.
-12. In the final summary, explicitly report which deployment pieces came from the reference project directly and which ones had to be adapted while preserving the same reference-project approach.
+Load `agents/recipes/deployment-recipe.md` and follow its "Implement deployment" path. Also load `agents/recipes/save-rails-secrets-1password.md` before requesting, configuring, or documenting `RAILS_MASTER_KEY`, `config/master.key`, Rails credentials keys, staging secrets, production secrets, provider tokens, or repository secrets.
 
 ### Update deployment
 
 Treat a request like `update deployment` as a deployment-sync task against the reference project.
 
-Load `agents/rails.md` for deployment command and configuration conventions. Also load `agents/integrations.md` if the update touches third-party providers or external service wiring.
-
-Required scope:
-
-1. Inspect the current deployment-related files before editing:
-   - `config/deploy.yml`
-   - `config/deploy.staging.yml`
-   - `config/deploy.production.yml`
-   - `.kamal/secrets`
-   - `terraform/`
-   - `Makefile`
-   - CI deploy workflows/config
-2. Read the matching deployment-related files from the reference project and use them as the baseline.
-3. Apply all deployment-related changes from the reference project that are applicable to the current project.
-4. Explicitly include:
-   - `Makefile` updates
-   - Terraform configuration updates
-   - Terraform usage patterns and helper scripts
-   - deployment configuration updates
-   - `.kamal/secrets` updates, when applicable, with no shell `if` statements
-5. If some reference project deployment file is not directly applicable, preserve the reference-project behavior and adapt it to the current hosting/provider/platform instead of skipping it without explanation.
-6. Keep project-specific identifiers adapted correctly:
-   - app name
-   - repository/service identifiers
-   - hosts/domains
-   - secret names
-   - provider-specific values
-7. If `Makefile` was added or updated, tell the user how to use the available `make` commands in the final response.
-8. If `Makefile` was added or updated, also update the target project `README` with concise usage instructions.
-9. In the final summary, explicitly separate:
-   - deployment items updated directly from the reference project
-   - deployment items adapted from the reference project
-   - deployment items not applied, with reason
+Load `agents/recipes/deployment-recipe.md` and follow its "Update deployment" path. Also load `agents/recipes/save-rails-secrets-1password.md` if the update touches secret storage, repository secrets, Rails credentials, or `.kamal/secrets`.
 
 ### Implement database dump/restore
 
@@ -741,33 +475,34 @@ Procedure:
 
 1. Read latest reference project remotely from GitHub `main` branch (no local clone).
 2. Detect how the user currently stores keys and credentials for the project (for example password manager, encrypted secret manager, repository secrets, `terraform/secrets.auto.tfvars`, unencrypted `.env*` files, or another local approach).
-3. If current key storage is unsafe or unencrypted, explicitly propose moving to a password manager or another encrypted approach before continuing secret-related update steps.
+3. If the project has `config/master.key` or `config/credentials/*.key`, explicitly warn that these files are mandatory recovery material, are ignored by git, and must be saved in a secure place before secret-related update work continues. Load and run `agents/recipes/save-rails-secrets-1password.md` when the user asks for help saving them or when new staging/production secrets must be stored.
+4. If current key storage is unsafe or unencrypted, explicitly propose moving to a password manager or another encrypted approach before continuing secret-related update steps.
    - Recommend `1Password` first because it is implemented and tested via this skill.
    - Mention `Bitwarden` and other secure methods the user prefers as acceptable alternatives.
    - If user chooses to keep an unsafe local approach, clearly warn about the risk and continue only after that warning is acknowledged.
-4. Diff current project vs reference at config/tooling layers first.
-5. Classify changes:
+5. Diff current project vs reference at config/tooling layers first.
+6. Classify changes:
    - Safe to apply directly.
    - Needs adaptation for local domain logic.
    - Not applicable.
-6. Exclude models and feature-level behavior from sync scope; keep updates/upgrades to app/platform layers only.
-7. During any project update request, inspect the target `tramway` gem version and replace the project's `Gemfile` `tramway` version with that exact version when needed.
-8. If the `tramway` gem version changed to a newer version, running `dip rails g tramway:install` in local development is mandatory and must happen before the rest of the update validation.
-9. For any downloaded reference content, apply required project-specific rewrites (project name, repository path, env keys/values) before merge.
-10. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
-11. During project update/upgrade requests, always inspect the reference project for applicable changes to:
+7. Exclude models and feature-level behavior from sync scope; keep updates/upgrades to app/platform layers only.
+8. During any project update request, inspect the target `tramway` gem version and replace the project's `Gemfile` `tramway` version with that exact version when needed.
+9. If the `tramway` gem version changed to a newer version, running `dip rails g tramway:install` in local development is mandatory and must happen before the rest of the update validation.
+10. For any downloaded reference content, apply required project-specific rewrites (project name, repository path, env keys/values) before merge.
+11. Apply in small commits by area (CI, linters, initializers, Docker/dev tooling, security).
+12. During project update/upgrade requests, always inspect the reference project for applicable changes to:
    - `.gitignore`
    - `AGENTS.md`
    - `Makefile`
    - deployment configuration such as `config/deploy.yml`, `config/deploy.staging.yml`, `config/deploy.production.yml`
    - Terraform configuration in `terraform/`
-12. If those `.gitignore`, `AGENTS.md`, and deployment-related updates are applicable, apply/adapt them as part of the project update instead of skipping them by default.
-13. Keep or enforce HAML-only view setup from the reference project (no new `.erb`).
-14. Run validation after each batch.
-15. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item, including whether `.gitignore`, `AGENTS.md`, `Makefile`, deployment, and Terraform updates were applied or skipped and why.
-16. For reference-file imports, request user approval once per import batch, not once per file.
-17. Ask only decision-level update/upgrade questions, not file-level copy questions.
-18. For each approved batch, build one temporary script for import/apply commands, run it, then remove it.
+13. If those `.gitignore`, `AGENTS.md`, and deployment-related updates are applicable, apply/adapt them as part of the project update instead of skipping them by default. When deployment files are included, load `agents/recipes/deployment-recipe.md`.
+14. Keep or enforce HAML-only view setup from the reference project (no new `.erb`).
+15. Run validation after each batch.
+16. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item, including whether `.gitignore`, `AGENTS.md`, `Makefile`, deployment, and Terraform updates were applied or skipped and why.
+17. For reference-file imports, request user approval once per import batch, not once per file.
+18. Ask only decision-level update/upgrade questions, not file-level copy questions.
+19. For each approved batch, build one temporary script for import/apply commands, run it, then remove it.
 
 CI parity rule during updates/upgrades:
 

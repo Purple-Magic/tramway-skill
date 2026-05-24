@@ -6,6 +6,7 @@ Load this file when the task touches pages, views, components, Tailwind, Haml ma
 
 - Prefer Haml for views unless a component template already uses ERB.
 - Keep JavaScript minimal. Use Stimulus if needed and avoid SPA patterns unless explicitly requested.
+- If `config/importmap.rb` exists, use importmap for JavaScript. Do **not** introduce `package.json`, `node_modules`, or any npm/yarn/bun toolchain.
 - Reusable UI should be implemented as ViewComponents.
 - Components should inherit from `Tramway::BaseComponent`.
 - Render components with the `component` helper, not with `render ComponentClass.new(...)`.
