@@ -19,13 +19,16 @@ Tramway extends Rails with:
 - ViewComponents for reusable UI
 - Tailwind safelist utilities for dynamic classes
 
-Before searching installed Tramway gem source code to understand how a Tramway feature should be used, read the upstream Tramway README first:
+**MANDATORY: Before writing or modifying any of the following, fetch and read the upstream Tramway README:**
+
+- Any call to a `tramway_*` helper (e.g. `tramway_form_for`, `tramway_table`, `tramway_button`, etc.)
+- Any class that inherits from a class in the `Tramway::` namespace (e.g. `Tramway::BaseForm`, `Tramway::BaseDecorator`, or any other `Tramway::Base*`)
 
 ```text
 https://raw.githubusercontent.com/Purple-Magic/tramway/refs/heads/main/README.md
 ```
 
-Use gem source inspection only when the README does not answer the feature-usage question.
+Do not rely on memory or prior knowledge of the Tramway API for these cases — always fetch the README first. Use gem source inspection only when the README does not answer the question.
 
 ## Quick Start Workflow
 

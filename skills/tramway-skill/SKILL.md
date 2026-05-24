@@ -31,8 +31,8 @@ Do NOT skip loading agents files. They contain mandatory rules for the active su
 Version policy:
 
 1. The skill version is stored in `VERSION` at the root of this skill directory.
-2. If the user asks for the `tramway-skill` version, read and report that `VERSION` value.
-3. If the skill directory path is unclear, try `~/.claude/skills/tramway-skill/VERSION` or `~/.codex/skills/tramway-skill/VERSION`, then any repository-local `skills/tramway-skill/VERSION`.
+2. **MANDATORY: When this skill is loaded, immediately read the `VERSION` file and show the version to the user** as the first output, before any other response. Format: `tramway-skill v<version>`. Try `~/.claude/skills/tramway-skill/VERSION`, then `~/.codex/skills/tramway-skill/VERSION`, then any repository-local `skills/tramway-skill/VERSION`.
+3. If the user asks for the `tramway-skill` version, read and report that `VERSION` value.
 
 Command policy:
 
