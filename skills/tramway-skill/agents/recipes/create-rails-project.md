@@ -101,14 +101,20 @@ Then run `save-rails-secrets-1password.md`:
 12. Clearly warn that `config/master.key` and `config/credentials/*.key` are ignored by git and must be securely stored.
 13. Create or update project-root `AGENTS.md` and `CLAUDE.md` so future Codex and Claude Code sessions use `tramway-skill` by default for the created project.
 14. Take HAML setup from the reference project.
-15. Ensure Tailwind uses `tailwindcss-rails`.
-16. Enable PostgreSQL `uuid-ossp` via migration, following the reference project approach.
-17. Tell the user UUID public IDs avoid exposing sequential record counts and reduce easy record enumeration.
-18. Ensure view layer is HAML-only.
-19. Import full `.dockerdev/` content from the reference project and keep it project-local.
-20. Do not modify `.dockerdev/compose.yml` `x-*` extension blocks unless explicitly asked.
-21. Use `dip` for local development. Never use `dip` in production, staging, or CI.
-22. If `dip` commands fail because ports or container names are occupied, pause and ask the user to free resources or approve project-local changes.
+15. After the tramway gem is added from the reference project, immediately run the install generator. This step is mandatory and must happen before any further setup continues:
+
+    ```bash
+    dip rails g tramway:install
+    ```
+
+16. Ensure Tailwind uses `tailwindcss-rails`.
+17. Enable PostgreSQL `uuid-ossp` via migration, following the reference project approach.
+18. Tell the user UUID public IDs avoid exposing sequential record counts and reduce easy record enumeration.
+19. Ensure view layer is HAML-only.
+20. Import full `.dockerdev/` content from the reference project and keep it project-local.
+21. Do not modify `.dockerdev/compose.yml` `x-*` extension blocks unless explicitly asked.
+22. Use `dip` for local development. Never use `dip` in production, staging, or CI.
+23. If `dip` commands fail because ports or container names are occupied, pause and ask the user to free resources or approve project-local changes.
 
 ## Project Agent Files
 

@@ -15,7 +15,7 @@ Load this file when the task touches Tramway entities, forms, decorators, compon
 Tramway extends Rails with:
 
 - CRUD actions configured in `config/initializers/tramway.rb`
-- generators such as `bin/rails g tramway:install`
+- generators such as `dip rails g tramway:install`
 - ViewComponents for reusable UI
 - Tailwind safelist utilities for dynamic classes
 
@@ -32,10 +32,12 @@ Use gem source inspection only when the README does not answer the feature-usage
 Prefer installing Tramway defaults before hand-rolling setup:
 
 ```bash
-bin/rails g tramway:install
+dip rails g tramway:install
 ```
 
 The install generator appends missing gems, copies Tailwind safelist config, ensures `app/assets/tailwind/application.css` imports Tailwind, and writes an `AGENTS.md` guide in the project root.
+
+**MANDATORY: Any time the tramway gem is added or upgraded, run `dip rails g tramway:install` immediately after the bundle step, before any other validation.**
 
 ## Technology Stack And Gems
 
