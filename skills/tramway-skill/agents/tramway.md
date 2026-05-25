@@ -21,7 +21,7 @@ Tramway extends Rails with:
 
 **MANDATORY: Before writing or modifying any of the following, fetch and read the upstream Tramway README:**
 
-- Any call to a `tramway_*` helper (e.g. `tramway_form_for`, `tramway_table`, `tramway_button`, etc.)
+- Any call to a `tramway_*` helper (e.g. `tramway_form_for`, `tramway_table`, `tramway_button`, `tramway_tooltip`, etc.)
 - Any class that inherits from a class in the `Tramway::` namespace (e.g. `Tramway::BaseForm`, `Tramway::BaseDecorator`, or any other `Tramway::Base*`)
 
 ```text
@@ -252,6 +252,8 @@ tramway_title text: 'Title'
 - Always set a button color via `color:` or `type:`.
 - `color:` accepts direct colors like `red`, `yellow`, and `blue`.
 - `type:` accepts lantern colors like `will`, `hope`, and `rage`.
+- Use `tramway_tooltip` for every tooltip unless the existing Tramway component API explicitly requires another invocation form. Do not use raw `title=` attributes, do not use custom CSS tooltip markup, and do not build custom tooltip components for standard tooltips.
+- Before using `tramway_tooltip`, fetch the Tramway README and search for `tramway_tooltip` to find the correct signature, required options, and examples. Do not rely on memory or prior knowledge.
 
 Flash examples:
 
