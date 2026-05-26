@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.2
+
+- Added an Add Flash Messages recipe that makes `tramway_flash` mandatory for rendered flash messages and notifications.
+- Linked the recipe from the focused loading rules and recipes index.
+
 ## 1.8.5
 
 - Added Tramway feature lookup guidance: read the upstream Tramway README before inspecting installed gem source code for feature usage.
