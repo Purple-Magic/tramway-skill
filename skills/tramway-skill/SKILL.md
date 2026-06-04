@@ -104,6 +104,7 @@ Load files only when needed:
 - `agents/recipes/save-rails-secrets-1password.md` when the user asks how to save `config/master.key`, Rails credentials keys, staging/production secrets, or deployment secrets, and whenever create/update/deployment work introduces or touches those secrets. **Claude Code**: Read `~/.claude/skills/tramway-skill/agents/recipes/save-rails-secrets-1password.md`; if unavailable, read `skills/tramway-skill/agents/recipes/save-rails-secrets-1password.md`.
 - `agents/recipes/add-flash-messages.md` when the user asks to add, fix, render, or standardize flash messages or notifications. **Claude Code**: Read `~/.claude/skills/tramway-skill/agents/recipes/add-flash-messages.md`; if unavailable, read `skills/tramway-skill/agents/recipes/add-flash-messages.md`.
 - For button requests that change a record's business state, including wording like "make a button on `<resource>#show` that calls `<event_or_method>` for the object", load `agents/recipes.md` and then `agents/recipes/state-change-recipe.md` before designing routes or controller actions.
+- `agents/recipes/pagination.md` when the user asks to add pagination to any list of records. **Claude Code**: Read `~/.claude/skills/tramway-skill/agents/recipes/pagination.md`; if unavailable, read `skills/tramway-skill/agents/recipes/pagination.md`.
 
 Usage rules:
 

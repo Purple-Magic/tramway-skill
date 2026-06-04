@@ -14,6 +14,7 @@ Do not open every recipe by default. Open only the recipe that matches the reque
 - For adding, fixing, rendering, or standardizing flash messages and notifications, open [agents/recipes/add-flash-messages.md](/home/pavel/projects/tramway-skill/skills/tramway-skill/agents/recipes/add-flash-messages.md).
 - For lazy loading older messages in `tramway_chat`, open [agents/recipes/tramway-chat-lazy-loading.md](/home/pavel/projects/tramway-skill/skills/tramway-skill/agents/recipes/tramway-chat-lazy-loading.md).
 - For record state changes triggered by a button, including requests like "make a button on `<resource>#show` that calls `<event_or_method>` for the object" when that method/event advances business state, open [agents/recipes/state-change-recipe.md](/home/pavel/projects/tramway-skill/skills/tramway-skill/agents/recipes/state-change-recipe.md).
+- For adding pagination to any list of records, open [agents/recipes/pagination.md](/home/pavel/projects/tramway-skill/skills/tramway-skill/agents/recipes/pagination.md).
 
 ## How To Use Recipes
 
