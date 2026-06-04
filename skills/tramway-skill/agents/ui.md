@@ -25,6 +25,7 @@ Load this file when the task touches pages, views, components, Tailwind, Haml ma
 - Use Tramway Flash for notifications.
 - Use `tramway_table` for tabular data whenever a table is needed.
 - Use `tramway_row href:` for row links instead of placing a link inside a table cell.
+- **NEVER place `link_to` or a raw `<a>` tag inside a `tramway_row` that already has an `href:` attribute.** The row itself is the link. If a secondary link action is needed inside the row, use `tramway_button` instead.
 - Keep `preview: true` on rows unless the request explicitly needs it disabled.
 - Use `tramway_button` for every button unless the existing Tramway component API explicitly requires another Tramway Button invocation form. Do not use `button_to`, do not use `<a>`/link markup with button classes, and do not use raw `<button>` markup for buttons. Always specify `color:` or `type:`.
 - Use `tramway_title` for the main page title.
