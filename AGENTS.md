@@ -41,6 +41,8 @@ Then run these commands from the repo root:
 python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py ./skills/tramway-skill
 rm -rf ~/.codex/skills/tramway-skill
 cp -R ./skills/tramway-skill ~/.codex/skills/tramway-skill
+rm -rf ~/.claude/skills/tramway-skill
+cp -R ./skills/tramway-skill ~/.claude/skills/tramway-skill
 ```
 
-This is a developer workflow requirement for local testing of the current skill revision in Codex.
+This is a developer workflow requirement for local testing of the current skill revision in both Codex and Claude Code.

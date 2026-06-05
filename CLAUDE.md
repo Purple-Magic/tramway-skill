@@ -18,4 +18,6 @@ At the end of every task that changes this repository, update `skills/tramway-sk
 ```bash
 rm -rf ~/.claude/skills/tramway-skill
 cp -R ./skills/tramway-skill ~/.claude/skills/tramway-skill
+rm -rf ~/.codex/skills/tramway-skill
+cp -R ./skills/tramway-skill ~/.codex/skills/tramway-skill
 ```

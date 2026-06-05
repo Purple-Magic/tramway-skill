@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.10.5
+
+- Updated `AGENTS.md` and `CLAUDE.md` so the end-of-task sync always copies the skill to both `~/.codex/skills/tramway-skill` and `~/.claude/skills/tramway-skill`.
+
+## 1.10.4
+
+- Extended the favicon recipe to support non-Rails projects: added project-type detection, a static-root lookup table, and framework-specific tag-wiring instructions for Next.js (App Router and Pages Router), Vite/React/Vue SPA, Nuxt, and plain static HTML.
+
+## 1.10.3
+
+- Updated the skill metadata and default prompt so favicon and provided `favicon.png` requests trigger `tramway-skill` before recipe selection.
+
+## 1.10.2
+
+- Expanded favicon recipe routing so asset-placement requests like using `favicon.png` as the site favicon load the favicon recipe.
+- Clarified that provided PNG favicon requests must generate the full required favicon set, wire layout tags, validate, and mention the Evil Martians source article.
+
+## 1.10.1
+
+- Updated the favicon recipe to install and use generation tools when favicon files are missing.
+- Added a PNG-source workflow that prepares the full favicon set from a PNG, including a fallback SVG wrapper.
+
+## 1.10.0
+
+- Added a modern favicon recipe based on the Evil Martians 2026 favicon guide, including the minimal browser/PWA icon set, Rails HAML layout tags, generation commands, optimization guidance, and required source attribution.
+- Linked the favicon recipe from the focused loading rules and recipes index.
+
 ## 1.9.2
 
 - Added an Add Flash Messages recipe that makes `tramway_flash` mandatory for rendered flash messages and notifications.
