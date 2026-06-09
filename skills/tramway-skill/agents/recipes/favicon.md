@@ -152,6 +152,57 @@ MAGICK="$(command -v magick || command -v convert)"
 "$MAGICK" public/icon-source.png -resize 409x409 -gravity center -background none -extent 512x512 public/icon-mask.png
 ```
 
+### Validating and fixing favicon.ico format
+
+Python/Pillow's default ICO save embeds PNG data inside the ICO container. Some browsers, legacy tools, and RSS readers only accept BMP/DIB-format ICO files. A PNG-in-ICO file has `89504e47` at the data offset; a valid BMP-in-ICO has `28000000`.
+
+Run this immediately after generating `favicon.ico` with Pillow:
+
+```bash
+python3 -c "
+import struct
+data = open('public/favicon.ico', 'rb').read()
+_, _, count = struct.unpack_from('<HHH', data, 0)
+_, _, _, _, _, _, size, offset = struct.unpack_from('<BBBBHHII', data, 6)
+magic = data[offset:offset+4].hex()
+print('PNG-in-ICO (bad)' if magic == '89504e47' else 'BMP/DIB (good)', magic)
+"
+```
+
+If it prints `PNG-in-ICO`, regenerate with this BMP/DIB writer instead of Pillow's `.save(..., format='ICO')`:
+
+```python
+import struct
+from PIL import Image
+
+def make_bmp_ico(img_rgba, output_path):
+    w, h = img_rgba.size
+    pixels = img_rgba.load()
+    rows = []
+    for y in range(h - 1, -1, -1):
+        row = []
+        for x in range(w):
+            r, g, b, a = pixels[x, y]
+            row += [b, g, r, a]
+        rows.append(bytes(row))
+    pixel_data = b''.join(rows)
+
+    bih = struct.pack('<IiiHHIIiiII', 40, w, h * 2, 1, 32, 0, len(pixel_data), 0, 0, 0, 0)
+    row_bytes = (w + 31) // 32 * 4
+    and_mask = b'\x00' * (row_bytes * h)
+    dib = bih + pixel_data + and_mask
+
+    ico_header = struct.pack('<HHH', 0, 1, 1)
+    data_offset = 6 + 16
+    dir_entry = struct.pack('<BBBBHHII', w, h, 0, 0, 1, 32, len(dib), data_offset)
+
+    with open(output_path, 'wb') as f:
+        f.write(ico_header + dir_entry + dib)
+
+img = Image.open('public/icon-source.png').convert('RGBA').resize((32, 32))
+make_bmp_ico(img, 'public/favicon.ico')
+```
+
 Create `public/icon.svg` as an SVG wrapper only when no real SVG source exists:
 
 ```bash
@@ -354,3 +405,4 @@ When the project has production and staging environments, offer a distinct stagi
 9. Wire the tags using the correct method for the detected framework (Rails helpers, Next.js metadata API, `index.html`, Nuxt config, or plain HTML `<link>` tags).
 10. Validate with a browser page load, direct requests to `/favicon.ico` and `/icon.svg`, and manifest inspection if PWA support was added.
 11. Tell the user the Evil Martians article was used and list the advice from that article that shaped the implementation.
+12. After generating `favicon.ico`, verify the embedded image data starts with `28000000` (BMP/DIB), not `89504e47` (PNG-in-ICO). If it's PNG-in-ICO, regenerate using the BMP/DIB writer — Pillow's default ICO format is not supported by all browsers, legacy tools, and RSS readers.
