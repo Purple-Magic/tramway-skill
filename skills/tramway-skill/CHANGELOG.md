@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.10.7
+
+- Added a presentation-layer restriction: do not put JavaScript or CSS code in Ruby helper files under `app/helpers/`; use views, ViewComponents, Stimulus or separate `.js` files, and Tailwind or separate `.css` files instead.
+
 ## 1.10.5
 
 - Updated `AGENTS.md` and `CLAUDE.md` so the end-of-task sync always copies the skill to both `~/.codex/skills/tramway-skill` and `~/.claude/skills/tramway-skill`.

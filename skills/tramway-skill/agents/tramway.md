@@ -49,6 +49,7 @@ The install generator appends missing gems, copies Tailwind safelist config, ens
 - Expect Rails 7+ with `kaminari`, `view_component`, `haml-rails`, `dry-initializer`, and `tailwindcss-rails`.
 - Prefer Haml for views unless the existing component or file uses ERB.
 - Keep JavaScript minimal. Use Stimulus if needed and avoid SPA patterns unless explicitly requested.
+- Do not add JavaScript or CSS code to Ruby helper files under `app/helpers/`. Put UI markup in views or ViewComponents, JavaScript in Stimulus or separate `.js` files, and CSS in Tailwind or separate `.css` files.
 - Do not introduce alternative architectures such as operation/context gems unless the request requires them.
 
 ## File Structure And Organization

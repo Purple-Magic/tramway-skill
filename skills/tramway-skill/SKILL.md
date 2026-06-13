@@ -56,6 +56,7 @@ View policy:
 3. If touched feature still uses `.erb`, migrate it to `.haml` as part of the change when safe.
 4. Use Tailwind as the main CSS framework.
 5. Use `tailwindcss-rails` gem for Tailwind integration.
+6. Do not add JavaScript or CSS code to Ruby helper files under `app/helpers/`; put UI markup in views or ViewComponents, JavaScript in Stimulus or separate `.js` files, and CSS in Tailwind or separate `.css` files.
 
 Testing policy:
 

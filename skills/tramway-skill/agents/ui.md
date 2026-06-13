@@ -8,6 +8,7 @@ Load this file when the task touches pages, views, components, Tailwind, Haml ma
 - Keep JavaScript minimal. Use Stimulus if needed and avoid SPA patterns unless explicitly requested.
 - If `config/importmap.rb` exists, use importmap for JavaScript. Do **not** introduce `package.json`, `node_modules`, or any npm/yarn/bun toolchain.
 - Reusable UI should be implemented as ViewComponents.
+- Do not add JavaScript or CSS code to Ruby helper files under `app/helpers/`. Put UI markup in views or ViewComponents, JavaScript in Stimulus or separate `.js` files, and CSS in Tailwind or separate `.css` files.
 - Components should inherit from `Tramway::BaseComponent`.
 - Render components with the `component` helper, not with `render ComponentClass.new(...)`.
 
