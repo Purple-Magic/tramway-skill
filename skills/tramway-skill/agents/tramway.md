@@ -263,6 +263,23 @@ Flash examples:
 = tramway_flash text: 'Double check your data', type: :greed, class: 'mt-2', data: { turbo: 'false' }
 ```
 
+## JS Setup For Tramway Components
+
+- `tramway_select`, `tramway_tooltip`, checkbox fields, and `tramway_row preview: true` are backed by Stimulus controllers shipped in the `@tramway/tramway` JS package. Wire the package once per project instead of pinning/importing controllers one at a time as each helper is introduced.
+- Add the importmap pin in `config/importmap.rb`:
+
+  ```ruby
+  pin "@tramway/tramway", to: "tramway/tramway.js"
+  ```
+
+- Import every controller the package provides together in `app/javascript/controllers/index.js`:
+
+  ```js
+  import { TramwaySelect, TableRowPreview, UiCheckbox, Tooltip } from "@tramway/tramway"
+  ```
+
+- Fetch the upstream Tramway README before finalizing the `application.register` identifiers for these controllers; do not guess controller names from memory.
+
 ## Chat UI
 
 - Use `tramway_chat` for chat interfaces.

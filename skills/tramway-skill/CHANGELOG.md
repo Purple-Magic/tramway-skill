@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.11.0
+
+- Added mandatory JS setup guidance for Tramway-provided Stimulus components: pin `@tramway/tramway` once in `config/importmap.rb` and import `TramwaySelect`, `TableRowPreview`, `UiCheckbox`, and `Tooltip` together in `app/javascript/controllers/index.js`.
+
 ## 1.10.7
 
 - Added a presentation-layer restriction: do not put JavaScript or CSS code in Ruby helper files under `app/helpers/`; use views, ViewComponents, Stimulus or separate `.js` files, and Tailwind or separate `.css` files instead.
