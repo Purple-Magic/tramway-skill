@@ -54,11 +54,12 @@ end
 
 1. Add or update the model and migration only if the resource does not already exist.
 2. Configure `{ action: :create }` on the Tramway entity.
-3. Define the form with `properties` and `fields`.
-4. Use Tramway form helpers only.
-5. Use decorated objects for presented data.
-6. Add `spec/features/#{pluralized_model_name}/create_spec.rb`.
-7. Verify with local development commands from the main skill.
+3. Check `config/routes.rb` and confirm the Tramway engine routes are mounted there, following the reference project pattern before wiring any feature route assumptions.
+4. Define the form with `properties` and `fields`.
+5. Use Tramway form helpers only.
+6. Use decorated objects for presented data.
+7. Add `spec/features/#{pluralized_model_name}/create_spec.rb`.
+8. Verify with local development commands from the main skill.
 
 ## Approach 2: Custom Create Flow
 

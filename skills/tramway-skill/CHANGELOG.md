@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.11.3
+
+- Added an `aasm` usage rule clarifying that generated scopes should be used instead of querying `aasm_state` directly.
+
+## 1.11.2
+
+- Added a constants rule clarifying that single-use string literals should not be promoted to constants, for example `ACTIVE_AASM_STATE = "active"`.
+
+## 1.11.1
+
+- Clarified the default Tramway CRUD checklist to verify `config/routes.rb` mounts the Tramway engine routes before assuming create-page routing is available.
+
 ## 1.11.0
 
 - Added mandatory JS setup guidance for Tramway-provided Stimulus components: pin `@tramway/tramway` once in `config/importmap.rb` and import `TramwaySelect`, `TableRowPreview`, `UiCheckbox`, and `Tooltip` together in `app/javascript/controllers/index.js`.

@@ -33,11 +33,13 @@ puts "Creating users...".colorize(:blue)
 ## Syntax And Modeling
 
 - Use symbols directly instead of constants that only wrap symbols.
+- Do not define constants just to hold a single string literal used once, such as `ACTIVE_AASM_STATE = "active"`.
 - Do not create modules and classes with the same singular name.
 - Use model scopes instead of private controller/model methods for object collections.
 - Use `enumerize` for enumerated attributes, not `boolean` or `integer`.
 - Ensure `ApplicationRecord` extends `Enumerize` when needed.
 - For process states, prefer `aasm` instead of forcing the state into `enumerize`.
+- When using `aasm`, use its generated scopes instead of querying `aasm_state` directly, such as `Habit.active` rather than `Habit.where(aasm_state: :active)`.
 - For `enumerize`, use `scope: :shallow` instead of custom scopes for enumerated values.
 
 Example:
