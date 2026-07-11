@@ -65,6 +65,7 @@ Testing policy:
 3. Do not create model tests by default.
 4. Create model tests only when user explicitly asks for model tests.
 5. In local development, run RSpec tests via `dip rspec` (not direct `rspec`/`bin/rspec`). In CI, use CI-native test commands and services; do not use `dip`.
+6. If the project has RSpec configured with Capybara, verify every feature you build or change by running its RSpec/Capybara feature specs. Do not use Playwright or other browser-automation/testing alternatives to verify features unless the user explicitly asks for them.
 
 Secrets policy:
 

@@ -32,3 +32,8 @@ end
 - Add the smallest set of specs that proves the requested behavior.
 - Prefer feature specs for user-visible page flows.
 - Keep assertions focused on visible behavior and persisted outcomes.
+
+## Verifying Features
+
+- If the project has RSpec configured with Capybara, verify every feature you build or change by running its RSpec/Capybara feature specs (via `dip rspec`, per the Testing policy in `SKILL.md`).
+- Do not use Playwright or any other browser-automation/testing alternative to verify features unless the user explicitly asks for it.

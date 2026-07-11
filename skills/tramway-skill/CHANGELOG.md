@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.11.4
+
+- Added a testing rule requiring feature verification via RSpec/Capybara when the project has it configured, and prohibiting Playwright or other browser-automation alternatives unless explicitly requested.
+
 ## 1.11.3
 
 - Added an `aasm` usage rule clarifying that generated scopes should be used instead of querying `aasm_state` directly.
