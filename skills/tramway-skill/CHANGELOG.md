@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.11.5
+
+- Added a testing rule requiring specs for Turbo/Hotwire/Stimulus features to assert there is no "Content missing" content wherever a broken Turbo Frame target could cause it.
+
 ## 1.11.4
 
 - Added a testing rule requiring feature verification via RSpec/Capybara when the project has it configured, and prohibiting Playwright or other browser-automation alternatives unless explicitly requested.

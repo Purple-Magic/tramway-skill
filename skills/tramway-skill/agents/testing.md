@@ -37,3 +37,8 @@ end
 
 - If the project has RSpec configured with Capybara, verify every feature you build or change by running its RSpec/Capybara feature specs (via `dip rspec`, per the Testing policy in `SKILL.md`).
 - Do not use Playwright or any other browser-automation/testing alternative to verify features unless the user explicitly asks for it.
+
+## Turbo/Hotwire/Stimulus Features
+
+- When writing feature specs for pages or interactions that use Turbo, Hotwire, or Stimulus (Turbo Drive navigation, Turbo Frames, Turbo Streams, Stimulus controllers), always assert that the page does not render `Content missing` in any case where a broken Turbo Frame target could cause it (e.g. after a Turbo Frame navigation, form submission, or Turbo Stream update).
+- Add an assertion such as `expect(page).not_to have_content('Content missing')` after each interaction that triggers a Turbo Frame or Turbo Stream response.
