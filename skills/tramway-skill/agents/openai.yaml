@@ -1,4 +1,4 @@
 interface:
   display_name: "Rails Project Manager"
   short_description: "Safe Rails build, deploy, favicon, and DB ops"
-  default_prompt: "Use $tramway-skill v1.10.7 to manage Rails projects with safe setup, development, updates, deployment, favicon setup, and database dump/restore workflows."
+  default_prompt: "Use $tramway-skill v1.11.7 to manage Rails projects with safe setup, development, updates, deployment, favicon setup, and database dump/restore workflows."

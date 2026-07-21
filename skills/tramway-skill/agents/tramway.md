@@ -79,6 +79,7 @@ tailwind.config.js
   - etc.
 - When a task asks to add creation of a model/resource, a `new` page, a `create` action, or wording like "Event creation", load `agents/recipes/create-feature.md` before implementation.
 - Configure CRUD through Tramway Entities in `config/initializers/tramway.rb`.
+- Full CRUD in `config/initializers/tramway.rb` means adding an entity definition for the model with all standard entity pages: `{ action: :index }`, `{ action: :show }`, `{ action: :create }`, `{ action: :update }`, and `{ action: :destroy }`.
 - Do not implement CRUD by hand with custom Rails controllers, routes, views, strong params, or plain Rails forms.
 - Do not add a custom `create`, `update`, or `destroy` action for a resource when Tramway Entity pages can handle the operation.
 - If a CRUD request appears to need custom behavior, first implement the standard CRUD surface with Tramway Entities, Tramway Forms, and Tramway Decorators, then add only the smallest custom extension needed around that surface.
@@ -203,6 +204,8 @@ end
 - Always use decorated objects in views.
 - Always instantiate decorators with `tramway_decorate`.
 - In Tramway decorators, use `delegate_attributes` instead of `delegate ... to: :object`.
+- When using `show_associations` inside any Tramway decorator class, first verify that every named association exists on the decorated model. If an association is missing, either add the model association yourself when the correct relationship is clear from the schema and surrounding code, or ask the user how the association should be modeled before keeping it in `show_associations`.
+- When using `show_associations` for an associated model that is not listed as an entity in `config/initializers/tramway.rb`, ask the user whether they want full Tramway CRUD for that associated model too. If they say yes, add that model's full CRUD entity definition to `config/initializers/tramway.rb`.
 - If an entity has an index page, define `index_attributes` in its decorator.
 
 Example:

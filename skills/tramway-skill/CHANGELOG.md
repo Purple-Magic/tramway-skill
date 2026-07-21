@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.11.7
+
+- Added guidance that `show_associations` should trigger a user question about adding full Tramway CRUD when the associated model is missing from `config/initializers/tramway.rb`, and defined full CRUD entity pages for the initializer.
+
+## 1.11.6
+
+- Added a Tramway decorator rule requiring every `show_associations` entry to be verified against a real model association, with missing associations added when clear or confirmed with the user when unclear.
+
 ## 1.11.5
 
 - Added a testing rule requiring specs for Turbo/Hotwire/Stimulus features to assert there is no "Content missing" content wherever a broken Turbo Frame target could cause it.
