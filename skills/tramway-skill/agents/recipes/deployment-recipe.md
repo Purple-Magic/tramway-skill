@@ -82,16 +82,21 @@ If a new Rails project setup includes server/deploy setup, run this recipe after
 5. Ask DNS provider. Recommend `Cloudflare` because this skill has complete setup guidance.
 6. If DNS is `Cloudflare`, use/adapt Cloudflare Terraform from the reference project.
 7. If DNS is not `Cloudflare`, build domain/DNS configuration for the selected provider.
-8. Keep Terraform files in `terraform/` and ensure scripts are executable when present.
-9. Default database secret handling must follow the reference project:
-   - Store deploy database values in Rails credentials by default.
-   - Include `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` or equivalent values used by the current project.
-10. Collect deploy variables only after the project and `terraform/` directory exist.
-11. For DigitalOcean, collect `do_token`, `ssh_fingerprint`, `region`, `size`, and `app_name`.
-12. For Cloudflare, collect `domain`, `cloudflare_email`, and `cloudflare_api_key`.
-13. Keep `terraform/secrets.auto.tfvars` gitignored.
-14. Do not ask the user to set `MAIN_HOST` in 1Password before Terraform apply.
-15. Validate:
+8. Ask the user to choose an SSL/TLS termination variant. There is no default; the user must pick one:
+   - `Cloudflare SSL`: Cloudflare terminates TLS at its edge (proxy/orange-cloud on the DNS record). Requires an SSL/TLS encryption mode in Cloudflare (`Full` or `Full (strict)` recommended over `Flexible`) and, when using `Full (strict)`, either a Cloudflare Origin Certificate installed on the server or a publicly trusted cert. Only viable when DNS is `Cloudflare`.
+   - `Kamal-based SSL`: `kamal-proxy` issues and renews certificates automatically via Let's Encrypt for the hosts in `config/deploy*.yml` (`proxy.ssl: true` / host-based ACME), with no Cloudflare proxying (DNS record must be un-proxied/"grey-cloud" so ACME HTTP-01 challenges reach the server).
+   - If the user's choice does not match one of these two variants, ask them to describe their own SSL setup and adapt the deployment config to it.
+9. Apply the chosen SSL variant consistently across `config/deploy.yml`, `config/deploy.staging.yml`, `config/deploy.production.yml`, and, for `Cloudflare SSL`, the Cloudflare Terraform/DNS proxy settings.
+10. Keep Terraform files in `terraform/` and ensure scripts are executable when present.
+11. Default database secret handling must follow the reference project:
+    - Store deploy database values in Rails credentials by default.
+    - Include `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` or equivalent values used by the current project.
+12. Collect deploy variables only after the project and `terraform/` directory exist.
+13. For DigitalOcean, collect `do_token`, `ssh_fingerprint`, `region`, `size`, and `app_name`.
+14. For Cloudflare, collect `domain`, `cloudflare_email`, and `cloudflare_api_key`.
+15. Keep `terraform/secrets.auto.tfvars` gitignored.
+16. Do not ask the user to set `MAIN_HOST` in 1Password before Terraform apply.
+17. Validate:
     - `if ! command -v terraform >/dev/null 2>&1; then bash scripts/install_terraform.sh; fi`
     - `terraform -version`
     - `doctl version` only when using the DigitalOcean reference wait script
@@ -99,9 +104,9 @@ If a new Rails project setup includes server/deploy setup, run this recipe after
     - `terraform -chdir=terraform init`
     - `terraform -chdir=terraform validate`
     - `terraform -chdir=terraform plan`
-16. Apply only after explicit user confirmation with `terraform -chdir=terraform apply`.
-17. After apply, if `.env` exists and `update_env_hosts.sh` is present, run `bash terraform/update_env_hosts.sh`.
-18. Explain key outputs to the user.
+18. Apply only after explicit user confirmation with `terraform -chdir=terraform apply`.
+19. After apply, if `.env` exists and `update_env_hosts.sh` is present, run `bash terraform/update_env_hosts.sh`.
+20. Explain key outputs to the user, including which SSL variant was configured and any manual step it still requires (e.g., setting Cloudflare's SSL/TLS mode in the dashboard).
 
 ## Repository Secrets
 
