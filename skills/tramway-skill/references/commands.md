@@ -212,6 +212,8 @@ bin/console -d production    # resolves Terraform outputs for production, then k
 bin/remove -d staging        # resolves Terraform outputs for staging, prompts to type "staging" to confirm, then kamal remove -d staging
 ```
 
+Whenever these scripts are added or updated, also update the project's `AGENTS.md`/`CLAUDE.md` so future agent sessions use them instead of raw `kamal` commands for `staging`/`production` operations (see `agents/recipes/deployment-recipe.md` "Deployment Management Scripts" rule 9). Do not call `kamal` directly for these environments once the `bin/` scripts exist.
+
 Each script passes its original arguments straight through to the underlying `kamal` command, so any native Kamal flag (`-d`, `-h`, `--version`, etc.) keeps working as it would with plain `kamal`.
 
 ## Local App Lifecycle
@@ -327,7 +329,7 @@ After downloading reference content:
 - Rewrite project-specific values (project name, repository URL, CI env vars, service identifiers) before applying.
 - For project update/upgrade requests, always inspect the reference project for applicable updates to `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`/`lib/kamal_cli.rb`, deployment configuration, and Terraform configuration.
 - If those `bin/`, deployment, or Terraform updates are applicable, update/adapt them instead of skipping them by default.
-- For `update deployment` requests, apply all applicable deployment-related setup from the reference project, including `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`, Terraform configuration, and Terraform usage/helper-script patterns.
+- For `update deployment` requests, apply all applicable deployment-related setup from the reference project, including `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`, `AGENTS.md`/`CLAUDE.md` deployment-command guidance, Terraform configuration, and Terraform usage/helper-script patterns.
 - Report what was updated and what was not updated, including reason for each non-updated item.
 
 ## Jobs and cache

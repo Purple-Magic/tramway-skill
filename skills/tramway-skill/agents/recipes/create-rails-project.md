@@ -131,6 +131,7 @@ Required `AGENTS.md` behavior:
 2. Instruct Codex to use `tramway-skill` by default for Rails setup, feature work, bugfixes, updates/upgrades, deployment, database dump/restore, and maintenance.
 3. Tell Codex to follow this project's local instructions first, then load the focused `tramway-skill` guidance files required by the task.
 4. Include a short reminder not to bypass Tramway CRUD/forms/components unless the skill allows it and the user approves the exception.
+5. If this project creation includes server/deploy setup, include the deployment-command guidance from `agents/recipes/deployment-recipe.md` "Deployment Management Scripts (`bin/`)" rule 9: use `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove` instead of raw `kamal` commands.
 
 Required `CLAUDE.md` behavior:
 
@@ -141,6 +142,7 @@ Required `CLAUDE.md` behavior:
    - If the home skill path is unavailable, fall back to repository-local `skills/tramway-skill/...` only when that path exists.
 3. If `AGENTS.md` already contains project-specific rules, preserve them and add the `tramway-skill` default instruction rather than replacing the file wholesale.
 4. If `CLAUDE.md` already contains project-specific rules, preserve them and add the Claude Code `tramway-skill` loading instructions rather than replacing the file wholesale.
+5. If this project creation includes server/deploy setup, apply the same `bin/`-scripts-over-`kamal` guidance as `AGENTS.md` rule 5 above (or have `CLAUDE.md` delegate to `AGENTS.md` for it, consistent with how it delegates for the rest of the workflow).
 
 ## Completion
 

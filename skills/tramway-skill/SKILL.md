@@ -147,12 +147,13 @@ Rules:
     - Kamal deployment for `staging` and `production`
     - Terraform configuration for creating `staging` and `production`
     - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove` (Ruby, see `agents/recipes/deployment-recipe.md` "Deployment Management Scripts") for infra/deploy management, not `Makefile` targets
+    - `AGENTS.md`/`CLAUDE.md` updated so agents use those `bin/` scripts instead of raw `kamal` commands (see `agents/recipes/deployment-recipe.md` "Deployment Management Scripts" rule 9)
     - CI configuration
 22. For `Implement deployment`, use the same approach as the reference project and use the reference project files/configuration as the source whenever they are applicable to the current project.
 23. If a reference project file is not directly applicable, preserve the same deployment approach, behavior, naming conventions, workflow shape, and operator experience from the reference project, adapting only the parts required by the current hosting/git platform.
-24. For `Implement deployment`, treat partial deployment setup as incomplete until all four areas above are covered or explicitly skipped by the user.
+24. For `Implement deployment`, treat partial deployment setup as incomplete until all five areas above are covered or explicitly skipped by the user.
 25. If the user asks for project updating/upgrading, always check the reference project for applicable updates to `.gitignore`, `AGENTS.md`, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`, deployment configuration, and Terraform configuration in addition to the usual app/tooling review.
-26. If the user asks to `update deployment`, treat that as an explicit request to apply all applicable deployment-related setup from the reference project, including deployment configuration, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`, and Terraform usage patterns.
+26. If the user asks to `update deployment`, treat that as an explicit request to apply all applicable deployment-related setup from the reference project, including deployment configuration, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`, `AGENTS.md`/`CLAUDE.md` deployment-command guidance, and Terraform usage patterns.
 27. When creating or updating Kamal deployment configuration, `.kamal/secrets` must not contain shell `if` statements. Keep conditional secret resolution in project scripts or external secret tooling, and keep `.kamal/secrets` as a simple declarative secret-loading file.
 28. If the user asks to `Implement dump`, `implement dump and restore`, `dump database to local environment`, `dump database`, or equivalent, treat that as an explicit request to add the reference-project database dump/restore workflow. Use the same operator experience as the reference project: the user runs `./dump ENVIRONMENT` and the remote database is dumped, downloaded, and restored into the local development database.
 29. For database dump/restore implementation, read these reference project files remotely from GitHub `main` and adapt them to the current project:

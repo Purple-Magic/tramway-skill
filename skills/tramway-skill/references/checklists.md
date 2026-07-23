@@ -32,6 +32,7 @@
 5. Apply/adapt those `.gitignore`, `AGENTS.md`, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`, deployment, and Terraform updates when they are applicable to the current project.
 6. If the user asked to `update deployment`, apply all applicable deployment-related setup from the reference project, including:
    - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove` (Ruby Kamal proxies, see `agents/recipes/deployment-recipe.md`)
+   - `AGENTS.md`/`CLAUDE.md` deployment-command guidance pointing agents at those `bin/` scripts instead of raw `kamal` commands
    - deployment configuration
    - `.kamal/secrets`, when applicable; it must not contain shell `if` statements
    - Terraform configuration

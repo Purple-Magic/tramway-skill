@@ -182,6 +182,9 @@ Rules:
 6. When implementing or updating deployment, replace any existing `Makefile` targets named `setup_<env>`, `deploy_<env>`, `logs_<env>`, `remove_<env>`, or similar with these five `bin/` scripts; do not keep both.
 7. Update the target project `README` with `bin/setup -d <environment>`, `bin/deploy -d <environment>`, `bin/logs -d <environment>`, `bin/console -d <environment>`, and `bin/remove -d <environment>` usage whenever these scripts are added or changed.
 8. Never run `bin/remove` unsupervised or as part of an automated flow; only run it when the user explicitly confirms they want that environment's app removed.
+9. Whenever `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, or `bin/remove` are created or updated, update the target project's `AGENTS.md` (and `CLAUDE.md` if it does not simply delegate to `AGENTS.md`) so future Codex/Claude Code sessions in that project use these scripts instead of raw `kamal` commands for staging/production operations. Preserve existing `AGENTS.md`/`CLAUDE.md` content and add or refresh only the deployment-command guidance; do not replace the file wholesale. Use wording equivalent to:
+
+   > For Kamal/deploy operations against `staging` or `production`, use `bin/setup -d <environment>`, `bin/deploy -d <environment>`, `bin/logs -d <environment>`, `bin/console -d <environment>`, and `bin/remove -d <environment>` instead of running `kamal` directly. These scripts preload the environment (`MAIN_HOST`/`DB_HOST`/`HOST`/`RAILS_ENV`) that Kamal needs for that destination.
 
 ## Implement Deployment
 
@@ -196,6 +199,7 @@ Required scope:
    - `.kamal/secrets`
    - `terraform/`
    - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove`, `lib/kamal_cli.rb`
+   - `AGENTS.md`, `CLAUDE.md` (deployment-command guidance)
    - `Makefile` (Terraform provisioning targets only)
    - CI config such as `.github/workflows/` or the equivalent for the current git platform
 2. Use the reference project as the primary source:
@@ -216,7 +220,7 @@ Required scope:
     - syntax/consistency checks on Kamal config
     - `ruby -c` on `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove`, and `lib/kamal_cli.rb`
     - CI workflow validation where practical
-12. If `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, or `bin/remove` were added or updated, update the target project `README` with concise deployment-management command usage.
+12. If `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, or `bin/remove` were added or updated, update the target project `README` with concise deployment-management command usage, and update `AGENTS.md`/`CLAUDE.md` per rule 9 in "Deployment Management Scripts (`bin/`)" above.
 13. In the final summary, report what came directly from the reference project and what was adapted.
 
 ## Update Deployment
@@ -232,6 +236,7 @@ Required scope:
    - `.kamal/secrets`
    - `terraform/`
    - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove`, `lib/kamal_cli.rb`
+   - `AGENTS.md`, `CLAUDE.md` (deployment-command guidance)
    - `Makefile` (Terraform provisioning targets only)
    - CI deploy workflows/config
 2. Read matching deployment files from the reference project.
@@ -245,7 +250,7 @@ Required scope:
    - If a project still has `Makefile` targets for `setup`/`deploy`/`logs`/`console`/`remove`, replace them with the `bin/` scripts and remove the old targets
 5. If a reference project deployment file is not directly applicable, preserve the reference behavior and adapt it to the current hosting/provider/platform.
 6. Keep project-specific identifiers adapted correctly.
-7. If `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, or `bin/remove` were added or updated, tell the user how to use the commands and update the target project `README`.
+7. If `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, or `bin/remove` were added or updated, tell the user how to use the commands, update the target project `README`, and update `AGENTS.md`/`CLAUDE.md` per rule 9 in "Deployment Management Scripts (`bin/`)" above.
 8. In the final summary, separate direct updates, adapted updates, and unapplied items with reasons.
 
 ## New-Project Deployment Add-On
