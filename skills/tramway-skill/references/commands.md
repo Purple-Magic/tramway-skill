@@ -199,6 +199,20 @@ Repository secrets setup guide (never in chat):
   - `DISCORD_WEBHOOK_URL` (if Discord enabled)
   - `KAMAL_REGISTRY_USERNAME` / `KAMAL_REGISTRY_PASSWORD` (only if user explicitly chose external registry)
 
+## Deployment management commands
+
+Use `bin/setup`, `bin/deploy`, `bin/logs`, and `bin/console` (Ruby, see `agents/recipes/deployment-recipe.md` "Deployment Management Scripts") for Kamal deploy management. Do not add or use `Makefile` targets for these four commands.
+
+```bash
+bin/setup                    # local development bootstrap (no -d flag): bundle install, db:prepare, boot bin/dev
+bin/setup -d staging         # resolves Terraform outputs for staging, then kamal setup -d staging
+bin/deploy -d production     # resolves Terraform outputs for production, then kamal deploy -d production
+bin/logs -d staging          # resolves Terraform outputs for staging, then kamal app logs -d staging
+bin/console -d production    # resolves Terraform outputs for production, then kamal app exec --interactive -d production "bin/rails console"
+```
+
+Each script passes its original arguments straight through to the underlying `kamal` command, so any native Kamal flag (`-d`, `-h`, `--version`, etc.) keeps working as it would with plain `kamal`.
+
 ## Local App Lifecycle
 
 ```bash
@@ -310,9 +324,9 @@ curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/Gemf
 After downloading reference content:
 - Verify it is applicable to current project setup.
 - Rewrite project-specific values (project name, repository URL, CI env vars, service identifiers) before applying.
-- For project update/upgrade requests, always inspect the reference project for applicable updates to `Makefile`, deployment configuration, and Terraform configuration.
-- If those `Makefile`, deployment, or Terraform updates are applicable, update/adapt them instead of skipping them by default.
-- For `update deployment` requests, apply all applicable deployment-related setup from the reference project, including `Makefile`, Terraform configuration, and Terraform usage/helper-script patterns.
+- For project update/upgrade requests, always inspect the reference project for applicable updates to `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`lib/kamal_cli.rb`, deployment configuration, and Terraform configuration.
+- If those `bin/`, deployment, or Terraform updates are applicable, update/adapt them instead of skipping them by default.
+- For `update deployment` requests, apply all applicable deployment-related setup from the reference project, including `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`, Terraform configuration, and Terraform usage/helper-script patterns.
 - Report what was updated and what was not updated, including reason for each non-updated item.
 
 ## Jobs and cache

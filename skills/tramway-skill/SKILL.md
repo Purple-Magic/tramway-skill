@@ -146,13 +146,13 @@ Rules:
 21. For `Implement deployment`, always check and implement all of these areas together:
     - Kamal deployment for `staging` and `production`
     - Terraform configuration for creating `staging` and `production`
-    - `Makefile` commands for infra/deploy management
+    - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console` (Ruby, see `agents/recipes/deployment-recipe.md` "Deployment Management Scripts") for infra/deploy management, not `Makefile` targets
     - CI configuration
 22. For `Implement deployment`, use the same approach as the reference project and use the reference project files/configuration as the source whenever they are applicable to the current project.
 23. If a reference project file is not directly applicable, preserve the same deployment approach, behavior, naming conventions, workflow shape, and operator experience from the reference project, adapting only the parts required by the current hosting/git platform.
 24. For `Implement deployment`, treat partial deployment setup as incomplete until all four areas above are covered or explicitly skipped by the user.
-25. If the user asks for project updating/upgrading, always check the reference project for applicable updates to `.gitignore`, `AGENTS.md`, `Makefile`, deployment configuration, and Terraform configuration in addition to the usual app/tooling review.
-26. If the user asks to `update deployment`, treat that as an explicit request to apply all applicable deployment-related setup from the reference project, including deployment configuration, `Makefile`, and Terraform usage patterns.
+25. If the user asks for project updating/upgrading, always check the reference project for applicable updates to `.gitignore`, `AGENTS.md`, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`, deployment configuration, and Terraform configuration in addition to the usual app/tooling review.
+26. If the user asks to `update deployment`, treat that as an explicit request to apply all applicable deployment-related setup from the reference project, including deployment configuration, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`, and Terraform usage patterns.
 27. When creating or updating Kamal deployment configuration, `.kamal/secrets` must not contain shell `if` statements. Keep conditional secret resolution in project scripts or external secret tooling, and keep `.kamal/secrets` as a simple declarative secret-loading file.
 28. If the user asks to `Implement dump`, `implement dump and restore`, `dump database to local environment`, `dump database`, or equivalent, treat that as an explicit request to add the reference-project database dump/restore workflow. Use the same operator experience as the reference project: the user runs `./dump ENVIRONMENT` and the remote database is dumped, downloaded, and restored into the local development database.
 29. For database dump/restore implementation, read these reference project files remotely from GitHub `main` and adapt them to the current project:
@@ -498,13 +498,13 @@ Procedure:
 12. During project update/upgrade requests, always inspect the reference project for applicable changes to:
    - `.gitignore`
    - `AGENTS.md`
-   - `Makefile`
+   - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `lib/kamal_cli.rb`
    - deployment configuration such as `config/deploy.yml`, `config/deploy.staging.yml`, `config/deploy.production.yml`
    - Terraform configuration in `terraform/`
 13. If those `.gitignore`, `AGENTS.md`, and deployment-related updates are applicable, apply/adapt them as part of the project update instead of skipping them by default. When deployment files are included, load `agents/recipes/deployment-recipe.md`.
 14. Keep or enforce HAML-only view setup from the reference project (no new `.erb`).
 15. Run validation after each batch.
-16. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item, including whether `.gitignore`, `AGENTS.md`, `Makefile`, deployment, and Terraform updates were applied or skipped and why.
+16. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item, including whether `.gitignore`, `AGENTS.md`, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`, deployment, and Terraform updates were applied or skipped and why.
 17. For reference-file imports, request user approval once per import batch, not once per file.
 18. Ask only decision-level update/upgrade questions, not file-level copy questions.
 19. For each approved batch, build one temporary script for import/apply commands, run it, then remove it.

@@ -26,12 +26,12 @@
 4. If the user asked for project updating/upgrading, explicitly inspect the reference project for applicable updates to:
    - `.gitignore`
    - `AGENTS.md`
-   - `Makefile`
+   - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `lib/kamal_cli.rb`
    - deployment configuration
    - Terraform configuration
-5. Apply/adapt those `.gitignore`, `AGENTS.md`, `Makefile`, deployment, and Terraform updates when they are applicable to the current project.
+5. Apply/adapt those `.gitignore`, `AGENTS.md`, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`, deployment, and Terraform updates when they are applicable to the current project.
 6. If the user asked to `update deployment`, apply all applicable deployment-related setup from the reference project, including:
-   - `Makefile`
+   - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console` (Ruby Kamal proxies, see `agents/recipes/deployment-recipe.md`)
    - deployment configuration
    - `.kamal/secrets`, when applicable; it must not contain shell `if` statements
    - Terraform configuration
@@ -68,7 +68,7 @@
 15. Apply changes in small thematic batches.
 16. Preserve HAML-only views and avoid introducing new `.erb` files.
 17. In local development, run `dip rails db:prepare`, boot check, and tests after each batch. In CI, use CI-native commands and services; do not use `dip`.
-18. Summarize applied/skipped updates with reasons for every skipped item, including `.gitignore`, `AGENTS.md`, `Makefile`, deployment, and Terraform decisions.
+18. Summarize applied/skipped updates with reasons for every skipped item, including `.gitignore`, `AGENTS.md`, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`, deployment, and Terraform decisions.
 
 ## Migration Safety
 
