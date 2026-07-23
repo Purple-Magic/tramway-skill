@@ -8,9 +8,9 @@ Load `agents/rails.md` for deployment command and configuration conventions. Als
 
 ## Deployment Management Scripts (`bin/`)
 
-Deploy/infra management commands (setup, deploy, logs, console) are Ruby scripts under `bin/`, not `Makefile` targets. Each script is a thin proxy for the matching Kamal command: it preloads the environment Kamal needs for the target destination, then hands off to `kamal` with the original arguments intact, the same way the reference project's `Makefile` + `terraform/run_kamal_*.sh` helpers resolve `MAIN_HOST`/`DB_HOST`/`HOST`/`RAILS_ENV` before invoking Kamal.
+Deploy/infra management commands (setup, deploy, logs, console, remove) are Ruby scripts under `bin/`, not `Makefile` targets. Each script is a thin proxy for the matching Kamal command: it preloads the environment Kamal needs for the target destination, then hands off to `kamal` with the original arguments intact, the same way the reference project's `Makefile` + `terraform/run_kamal_*.sh` helpers resolve `MAIN_HOST`/`DB_HOST`/`HOST`/`RAILS_ENV` before invoking Kamal.
 
-Keep `Makefile` only for Terraform provisioning targets that are not one of these four commands (for example `terraform_init`, `create_new_production`, `destroy_staging`), when the project already has them. Do not keep duplicate `Makefile` targets for `setup`/`deploy`/`logs`/`console` once the `bin/` scripts exist.
+Keep `Makefile` only for Terraform provisioning targets that are not one of these five commands (for example `terraform_init`, `create_new_production`, `destroy_staging`), when the project already has them. Do not keep duplicate `Makefile` targets for `setup`/`deploy`/`logs`/`console`/`remove` once the `bin/` scripts exist.
 
 Required scripts:
 
@@ -18,6 +18,7 @@ Required scripts:
 - `bin/deploy` — resolve the Terraform outputs/environment for the given `-d`/`--destination`, then `exec kamal deploy` with the original arguments.
 - `bin/logs` — resolve the same environment, then `exec kamal app logs` with the original arguments.
 - `bin/console` — resolve the same environment, then `exec kamal app exec --interactive` with the original arguments plus the Rails console command.
+- `bin/remove` — resolve the same environment, require the operator to type the destination name to confirm (matching this skill's other destructive-operation confirmations), then `exec kamal remove` with the original arguments. `kamal remove` tears down the app, containers, and networks on that server, so it must not run without an explicit typed confirmation.
 
 Shared logic (Terraform workspace selection, output resolution, required-command checks) belongs in `lib/kamal_cli.rb` and is `require_relative`d from each `bin/` script, not copy-pasted per script.
 
@@ -155,15 +156,32 @@ KamalCli.load_environment!(destination)
 exec("kamal", "app", "exec", "--interactive", *ARGV, "bin/rails console")
 ```
 
+`bin/remove`:
+
+```ruby
+#!/usr/bin/env ruby
+require_relative "../lib/kamal_cli"
+
+destination = KamalCli.destination_from(ARGV) or abort "Usage: bin/remove -d <staging|production> [kamal remove options]"
+KamalCli.load_environment!(destination)
+
+print "Type '#{destination}' to confirm removing the app from that server: "
+confirmation = $stdin.gets&.strip
+abort "Confirmation did not match '#{destination}'. Aborting." unless confirmation == destination
+
+exec("kamal", "remove", *ARGV)
+```
+
 Rules:
 
-1. `chmod +x bin/setup bin/deploy bin/logs bin/console` and keep `#!/usr/bin/env ruby` as the shebang on each.
+1. `chmod +x bin/setup bin/deploy bin/logs bin/console bin/remove` and keep `#!/usr/bin/env ruby` as the shebang on each.
 2. Pass the original `ARGV` straight through to `kamal` (including `-d <destination>`) so every native Kamal flag keeps working exactly as `kamal <subcommand> ...` would; do not reimplement or restrict Kamal's own CLI surface.
 3. Do not duplicate the Terraform-output/env-var resolution logic per script; keep it in `lib/kamal_cli.rb`.
 4. If the project uses 1Password for host sync (see `terraform/sync_1password_hosts.sh` in the reference project), call that sync from `KamalCli.load_environment!` before exporting `MAIN_HOST`/`HOST`, instead of duplicating the sync per script.
 5. `exec` the final `kamal ...` call (not `system`) so exit codes and signals propagate normally.
-6. When implementing or updating deployment, replace any existing `Makefile` targets named `setup_<env>`, `deploy_<env>`, `logs_<env>`, or similar with these four `bin/` scripts; do not keep both.
-7. Update the target project `README` with `bin/setup -d <environment>`, `bin/deploy -d <environment>`, `bin/logs -d <environment>`, and `bin/console -d <environment>` usage whenever these scripts are added or changed.
+6. When implementing or updating deployment, replace any existing `Makefile` targets named `setup_<env>`, `deploy_<env>`, `logs_<env>`, `remove_<env>`, or similar with these five `bin/` scripts; do not keep both.
+7. Update the target project `README` with `bin/setup -d <environment>`, `bin/deploy -d <environment>`, `bin/logs -d <environment>`, `bin/console -d <environment>`, and `bin/remove -d <environment>` usage whenever these scripts are added or changed.
+8. Never run `bin/remove` unsupervised or as part of an automated flow; only run it when the user explicitly confirms they want that environment's app removed.
 
 ## Implement Deployment
 
@@ -177,7 +195,7 @@ Required scope:
    - `config/deploy.production.yml`
    - `.kamal/secrets`
    - `terraform/`
-   - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `lib/kamal_cli.rb`
+   - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove`, `lib/kamal_cli.rb`
    - `Makefile` (Terraform provisioning targets only)
    - CI config such as `.github/workflows/` or the equivalent for the current git platform
 2. Use the reference project as the primary source:
@@ -187,7 +205,7 @@ Required scope:
    - GitHub CI/deploy workflows: `.github/workflows/ci.yml`, `.github/workflows/deploy.yml`, `.github/workflows/deploy-production.yml`
 3. Ensure Kamal deployment exists for both `staging` and `production`.
 4. Ensure Terraform can create both `staging` and `production`.
-5. Ensure `bin/setup`, `bin/deploy`, `bin/logs`, and `bin/console` cover the deploy-management flow for both environments, per "Deployment Management Scripts (`bin/`)" above.
+5. Ensure `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, and `bin/remove` cover the deploy-management flow for both environments, per "Deployment Management Scripts (`bin/`)" above.
 6. Ensure CI is implemented. For non-GitHub platforms, preserve the same gate structure as the reference project using that platform's syntax.
 7. Adapt imported config to the current project: app name, repository names, environments, hostnames, provider identifiers, and secret names.
 8. If deployment uses Auth0, keep Auth0 secrets in Rails credentials when the reference-project approach does so.
@@ -196,9 +214,9 @@ Required scope:
 11. Verify with the strongest available checks, such as:
     - `terraform -chdir=terraform validate`
     - syntax/consistency checks on Kamal config
-    - `ruby -c` on `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, and `lib/kamal_cli.rb`
+    - `ruby -c` on `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove`, and `lib/kamal_cli.rb`
     - CI workflow validation where practical
-12. If `bin/setup`, `bin/deploy`, `bin/logs`, or `bin/console` were added or updated, update the target project `README` with concise deployment-management command usage.
+12. If `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, or `bin/remove` were added or updated, update the target project `README` with concise deployment-management command usage.
 13. In the final summary, report what came directly from the reference project and what was adapted.
 
 ## Update Deployment
@@ -213,21 +231,21 @@ Required scope:
    - `config/deploy.production.yml`
    - `.kamal/secrets`
    - `terraform/`
-   - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `lib/kamal_cli.rb`
+   - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove`, `lib/kamal_cli.rb`
    - `Makefile` (Terraform provisioning targets only)
    - CI deploy workflows/config
 2. Read matching deployment files from the reference project.
 3. Apply all applicable deployment-related changes.
 4. Explicitly include:
-   - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, and `lib/kamal_cli.rb` updates, per "Deployment Management Scripts (`bin/`)" above
+   - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove`, and `lib/kamal_cli.rb` updates, per "Deployment Management Scripts (`bin/`)" above
    - Terraform configuration updates
    - Terraform usage patterns and helper scripts
    - deployment configuration updates
    - `.kamal/secrets` updates, when applicable, with no shell `if` statements
-   - If a project still has `Makefile` targets for `setup`/`deploy`/`logs`/`console`, replace them with the `bin/` scripts and remove the old targets
+   - If a project still has `Makefile` targets for `setup`/`deploy`/`logs`/`console`/`remove`, replace them with the `bin/` scripts and remove the old targets
 5. If a reference project deployment file is not directly applicable, preserve the reference behavior and adapt it to the current hosting/provider/platform.
 6. Keep project-specific identifiers adapted correctly.
-7. If `bin/setup`, `bin/deploy`, `bin/logs`, or `bin/console` were added or updated, tell the user how to use the commands and update the target project `README`.
+7. If `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, or `bin/remove` were added or updated, tell the user how to use the commands and update the target project `README`.
 8. In the final summary, separate direct updates, adapted updates, and unapplied items with reasons.
 
 ## New-Project Deployment Add-On
