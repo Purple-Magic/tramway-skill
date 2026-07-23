@@ -216,6 +216,20 @@ Whenever these scripts are added or updated, also update the project's `AGENTS.m
 
 Each script passes its original arguments straight through to the underlying `kamal` command, so any native Kamal flag (`-d`, `-h`, `--version`, etc.) keeps working as it would with plain `kamal`.
 
+Before a real `bin/setup`/`bin/deploy` run, verify every `.kamal/secrets` local secret-resolution command returns a non-empty value (see `agents/recipes/deployment-recipe.md` "`.kamal/secrets` Local Secret Resolution"):
+
+```bash
+dip rails runner "puts Rails.application.credentials.dig(:production, :database, :username)"
+```
+
+After a `bin/setup`/`bin/deploy` run that Kamal reports as successful, smoke-check the real page, not just Kamal's health check:
+
+```bash
+curl -skL -o /dev/null -w '%{http_code}' https://<host>/
+```
+
+A non-2xx result (after redirects) is a deploy failure to investigate with `bin/logs -d <environment>`, even though Kamal and the container health check both reported success.
+
 ## Local App Lifecycle
 
 ```bash

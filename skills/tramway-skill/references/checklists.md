@@ -34,7 +34,8 @@
    - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove` (Ruby Kamal proxies, see `agents/recipes/deployment-recipe.md`)
    - `AGENTS.md`/`CLAUDE.md` deployment-command guidance pointing agents at those `bin/` scripts instead of raw `kamal` commands
    - deployment configuration
-   - `.kamal/secrets`, when applicable; it must not contain shell `if` statements
+   - `.kamal/secrets`, when applicable; it must not contain shell `if` statements, and any local secret-resolution command in it must use the project's local command runner (e.g. `dip rails runner ...`), never bare `rails`/`bin/rails` (see `agents/recipes/deployment-recipe.md` "`.kamal/secrets` Local Secret Resolution")
+   - any `.gitignore` `.keep`-exception directory (e.g. `app/assets/builds`) actually has its `.keep` file committed, not just declared in `.gitignore`
    - Terraform configuration
    - Terraform helper/usage scripts and patterns
 7. Confirm repository service (GitHub, GitLab, etc.) and apply CI rules:

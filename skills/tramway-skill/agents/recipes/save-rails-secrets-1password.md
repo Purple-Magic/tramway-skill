@@ -78,3 +78,4 @@ When deployment is involved:
 4. `RAILS_MASTER_KEY` must come from `config/master.key` or the relevant environment key, but the user should save that key in 1Password before adding it to repository secrets.
 5. Do not ask the user to create or fill `MAIN_HOST` in 1Password before Terraform apply. Terraform derives and syncs it in the reference-project flow.
 6. Walk the user through repository secrets one-by-one and wait for `done` after each.
+7. If `.kamal/secrets` resolves any value by running Rails/Ruby locally (`rails runner`, `rails credentials:...`, etc.), that command must go through the project's local command runner (`dip rails runner ...` for `dip`-based projects), never bare `rails`/`bin/rails`, and its output must be verified non-empty before deploying. See `agents/recipes/deployment-recipe.md` "`.kamal/secrets` Local Secret Resolution" for the full rule and the reason it fails silently otherwise.

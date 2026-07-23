@@ -185,6 +185,28 @@ Rules:
 9. Whenever `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, or `bin/remove` are created or updated, update the target project's `AGENTS.md` (and `CLAUDE.md` if it does not simply delegate to `AGENTS.md`) so future Codex/Claude Code sessions in that project use these scripts instead of raw `kamal` commands for staging/production operations. Preserve existing `AGENTS.md`/`CLAUDE.md` content and add or refresh only the deployment-command guidance; do not replace the file wholesale. Use wording equivalent to:
 
    > For Kamal/deploy operations against `staging` or `production`, use `bin/setup -d <environment>`, `bin/deploy -d <environment>`, `bin/logs -d <environment>`, `bin/console -d <environment>`, and `bin/remove -d <environment>` instead of running `kamal` directly. These scripts preload the environment (`MAIN_HOST`/`DB_HOST`/`HOST`/`RAILS_ENV`) that Kamal needs for that destination.
+10. After any successful `bin/setup -d <environment>` or `bin/deploy -d <environment>` (Kamal itself reports success), run an HTTP smoke check against the deployed host's real URL — not just Kamal's own container health check — for example:
+
+    ```bash
+    curl -skL -o /dev/null -w '%{http_code}' https://<host>/
+    ```
+
+    A container passing its health check only proves the process is up; it does not prove a real page renders. Treat any response that isn't a terminal 2xx (following redirects) as a deploy failure and investigate with `bin/logs -d <environment>` before telling the user the deploy succeeded.
+
+## `.kamal/secrets` Local Secret Resolution
+
+`.kamal/secrets` is evaluated by the local Kamal process on the host machine, not inside any project container. This is a common source of deploys that look successful (Kamal reports success, the container passes its health check) but 500 on the actual page, because the failure only surfaces in an accessory's container logs, not in Kamal's own web-role deploy output.
+
+1. Any `$(...)` command inside `.kamal/secrets` that needs to run Rails/Ruby locally to resolve a secret (`rails runner`, `rails credentials:...`, etc.) must go through the project's configured local command runner — `dip rails runner ...` for `dip`-based projects — never bare `bin/rails`, `rails`, or `bundle exec rails`. Bare Rails commands only work when the project's gems are installed on the host Ruby, which `dip`-based projects intentionally do not do; the command fails with something like `Bundler::GemNotFound` on the host, and Kamal never sees that failure directly.
+2. Redirect stderr on these substitutions (`2>/dev/null`). `dip`'s own container-startup/compose status lines print to stderr and would otherwise leak into the captured secret value.
+3. A failed or empty local secret resolution does not raise a loud error at the point of failure: `$(...)` simply captures an empty string, and Kamal boots the affected accessory (for example Postgres) with that empty value (for example an empty `POSTGRES_PASSWORD`), which then crash-loops with an error like "Database is uninitialized and superuser password is not specified" in the accessory's own logs, not in Kamal's web-role deploy output. Treat an empty resolved secret as equivalent to a hard deployment failure, not a warning.
+4. Before running `bin/setup`/`bin/deploy` against a real server, resolve every `$(...)` command from `.kamal/secrets` locally using the same local command runner and confirm each one returns a non-empty value, for example:
+
+   ```bash
+   dip rails runner "puts Rails.application.credentials.dig(:production, :database, :username)"
+   ```
+
+   An empty result here is the actual failure mode to catch — nothing else errors loudly, so this check must run every time `.kamal/secrets` is created or changed, before the next `bin/setup`/`bin/deploy`.
 
 ## Implement Deployment
 
@@ -214,14 +236,18 @@ Required scope:
 7. Adapt imported config to the current project: app name, repository names, environments, hostnames, provider identifiers, and secret names.
 8. If deployment uses Auth0, keep Auth0 secrets in Rails credentials when the reference-project approach does so.
 9. If deployment files already exist, preserve applicable project-specific values and fill gaps instead of resetting the deployment stack.
-10. If creating or updating `.kamal/secrets`, it must not contain shell `if` statements. Keep conditional lookup in scripts or external secret tooling.
-11. Verify with the strongest available checks, such as:
+10. If creating or updating `.kamal/secrets`, it must not contain shell `if` statements. Keep conditional lookup in scripts or external secret tooling. Any local secret-resolution command in it must follow "`.kamal/secrets` Local Secret Resolution" above (project's local command runner, stderr redirected).
+11. If a `.gitignore` rule was added or changed that excludes a directory except a `.keep` file (`!/path/.keep`), create and commit that `.keep` file in the same change; do not leave it as an uncommitted no-op (see `agents/rails.md` "Deployment").
+12. Verify with the strongest available checks, such as:
     - `terraform -chdir=terraform validate`
     - syntax/consistency checks on Kamal config
     - `ruby -c` on `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove`, and `lib/kamal_cli.rb`
+    - resolve every `$(...)` secret-lookup command from `.kamal/secrets` locally (e.g. `dip rails runner "puts Rails.application.credentials.dig(...)"`) and confirm each returns a non-empty value, before running `bin/setup`/`bin/deploy` against a real server
+    - `git ls-files <dir>/.keep` for every directory with a `.gitignore` `.keep`-exception pattern (e.g. `git ls-files app/assets/builds/.keep`), to confirm it is actually committed and will exist in Kamal's fresh build clone
     - CI workflow validation where practical
-12. If `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, or `bin/remove` were added or updated, update the target project `README` with concise deployment-management command usage, and update `AGENTS.md`/`CLAUDE.md` per rule 9 in "Deployment Management Scripts (`bin/`)" above.
-13. In the final summary, report what came directly from the reference project and what was adapted.
+13. If `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, or `bin/remove` were added or updated, update the target project `README` with concise deployment-management command usage, and update `AGENTS.md`/`CLAUDE.md` per rule 9 in "Deployment Management Scripts (`bin/`)" above.
+14. After a real `bin/setup`/`bin/deploy` run against a server, run the HTTP smoke check from "Deployment Management Scripts (`bin/`)" rule 10 against the deployed host before reporting the deploy as done.
+15. In the final summary, report what came directly from the reference project and what was adapted.
 
 ## Update Deployment
 
@@ -246,12 +272,14 @@ Required scope:
    - Terraform configuration updates
    - Terraform usage patterns and helper scripts
    - deployment configuration updates
-   - `.kamal/secrets` updates, when applicable, with no shell `if` statements
+   - `.kamal/secrets` updates, when applicable, with no shell `if` statements and following "`.kamal/secrets` Local Secret Resolution" above
    - If a project still has `Makefile` targets for `setup`/`deploy`/`logs`/`console`/`remove`, replace them with the `bin/` scripts and remove the old targets
+   - Any `.gitignore` `.keep`-exception directory (e.g. `app/assets/builds`) actually has its `.keep` file created and committed, not just declared in `.gitignore`
 5. If a reference project deployment file is not directly applicable, preserve the reference behavior and adapt it to the current hosting/provider/platform.
 6. Keep project-specific identifiers adapted correctly.
 7. If `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, or `bin/remove` were added or updated, tell the user how to use the commands, update the target project `README`, and update `AGENTS.md`/`CLAUDE.md` per rule 9 in "Deployment Management Scripts (`bin/`)" above.
-8. In the final summary, separate direct updates, adapted updates, and unapplied items with reasons.
+8. Before confirming the update is done, resolve every `$(...)` secret-lookup command from `.kamal/secrets` locally (non-empty check), run `git ls-files <dir>/.keep` for every `.gitignore` `.keep`-exception directory, and, after the next real `bin/setup`/`bin/deploy`, run the HTTP smoke check from "Deployment Management Scripts (`bin/`)" rule 10.
+9. In the final summary, separate direct updates, adapted updates, and unapplied items with reasons.
 
 ## New-Project Deployment Add-On
 

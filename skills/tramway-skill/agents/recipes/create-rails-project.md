@@ -97,7 +97,7 @@ Then run `save-rails-secrets-1password.md`:
 8. If chat is `Discord`, copy/adapt Discord CI/deploy/team-update notification configuration.
 9. Ask the user to set `DISCORD_WEBHOOK_URL` in repository secrets only after the repository exists.
 10. If chat is not `Discord`, ask whether they want generated team chat integration and warn it is untested.
-11. Apply `.gitignore` from the reference project, adapting only when needed.
+11. Apply `.gitignore` from the reference project, adapting only when needed. For every rule that excludes a directory except a `.keep` file (`!/path/.keep`), create that `.keep` file and `git add` it in this same step — an uncommitted `.keep` is a silent no-op that leaves the directory absent everywhere except the local working tree (see `agents/rails.md` "Deployment").
 12. Clearly warn that `config/master.key` and `config/credentials/*.key` are ignored by git and must be securely stored.
 13. Create or update project-root `AGENTS.md` and `CLAUDE.md` so future Codex and Claude Code sessions use `tramway-skill` by default for the created project.
 14. Take HAML setup from the reference project.
@@ -107,7 +107,7 @@ Then run `save-rails-secrets-1password.md`:
     dip rails g tramway:install
     ```
 
-16. Ensure Tailwind uses `tailwindcss-rails`.
+16. Ensure Tailwind uses `tailwindcss-rails`. Create `app/assets/builds/.keep` and `git add` it in this same step. Kamal's builder clones the repository fresh for each build (it does not use the local working tree); `assets:precompile` runs `tailwindcss:build` as a prerequisite in the same rake invocation, but Propshaft scans `app/assets/*` once at boot, before `tailwindcss:build` creates `app/assets/builds/tailwind.css` — so if `app/assets/builds` does not exist yet in the cloned repo, Propshaft excludes it from its manifest entirely. The Docker build and Kamal health check both succeed regardless; every page that references the missing asset then 500s at runtime with `Propshaft::MissingAssetError`.
 17. Enable PostgreSQL `uuid-ossp` via migration, following the reference project approach.
 18. Tell the user UUID public IDs avoid exposing sequential record counts and reduce easy record enumeration.
 19. Ensure view layer is HAML-only.

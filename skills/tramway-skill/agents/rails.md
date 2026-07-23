@@ -62,6 +62,8 @@ enumerize :role, in: [:admin, :default], scope: :shallow
 
 - Terraform create commands must not include destroy actions unless the user explicitly asks for destroy flows.
 - If destroy behavior is needed, keep it in a separate command.
+- Any directory referenced only through a `.gitignore` negation exception (for example `!/app/assets/builds/.keep`) must have that `.keep` file actually created and committed in the same change that adds the `.gitignore` rule. Kamal's builder clones the repository fresh for each build; it does not use the local working tree. An uncommitted `.keep` is a silent no-op: the directory is simply absent from the build clone, which can make an asset pipeline (Propshaft, Sprockets) drop generated assets from its manifest and 500 at runtime even though the Docker build and Kamal health check both succeed.
+- Any command inside `.kamal/secrets` that resolves a secret by running Rails/Ruby locally (`rails runner`, `rails credentials:...`, etc.) must go through the project's configured local command runner (`dip rails runner ...` for `dip`-based projects), never bare `bin/rails`/`rails`/`bundle exec rails`. `.kamal/secrets` runs on the host, not inside any project container, so a bare Rails command fails silently there when project gems are only installed inside the local dev container, and `$(...)` captures an empty string instead of raising.
 
 ## Controllers And Services
 
