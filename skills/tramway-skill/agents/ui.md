@@ -47,6 +47,7 @@ Flash example:
 - Use `autocomplete: true` when autocomplete behavior is needed.
 - Do not combine `autocomplete: true` and `multiselect: true` on the same select.
 - `tramway_form_for` supports `horizontal: true`.
+- To add a hint to an input inside `tramway_form_for` or `TramwayForm#fields`, pass `placeholder:` (short hints) or `hint:` (long hints) as an option to that field's helper — these keys must be used with a field, not on the form itself.
 
 ## Tailwind And Haml
 
