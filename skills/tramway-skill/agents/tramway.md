@@ -449,7 +449,7 @@ end
 - Do not use `boolean` or `integer` columns for enumerations.
 - Ensure `ApplicationRecord` extends `Enumerize`.
 - Do not create scopes for enumerized values manually. Use `scope: :shallow`.
-- If the requirement is really a process state machine, use `aasm` instead.
+- If the requirement is really a process state machine, use `aasm` instead. Its default state column should be `aasm_state`; if a context-specific state column is needed, use `#{process_name}_state`.
 
 ## Querying And Modeling
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.14.4
+
+- Clarified `aasm` state-column naming: use `aasm_state` by default, and use `#{process_name}_state` when a context-specific column name is needed.
+
+## 1.14.3
+
+- Clarified UUID rules: `uuid` must never be an ActiveRecord primary key, `record.id` is always a `bigint`, and `uuid` exists only for external queries and identifiers exposed outside the app.
+
 ## 1.11.7
 
 - Added guidance that `show_associations` should trigger a user question about adding full Tramway CRUD when the associated model is missing from `config/initializers/tramway.rb`, and defined full CRUD entity pages for the initializer.

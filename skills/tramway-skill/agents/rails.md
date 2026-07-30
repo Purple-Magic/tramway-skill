@@ -4,6 +4,8 @@ Load this file when the task touches models, routes, seeds, migrations, services
 
 ## Data And Routing
 
+- Never make `uuid` the ActiveRecord primary key. `record.id` is always a `bigint` primary key — keep Rails defaults (`create_table :things` without `id: :uuid`) and never configure generators or migrations to produce UUID primary keys.
+- `uuid` is a separate, additional column used only for external exposure: URLs, params, API payloads, broadcast targets, and any identifier a client can see. Internal code, associations, foreign keys, and joins keep using `id`.
 - Do not use `id` as a parameter outside `admin` namespace. Use `uuid`.
 - If a page must expose a record identifier and it does not have `uuid`, add a migration to provide it.
 - Do not add ActiveRecord validations to `uuid`.
@@ -12,6 +14,20 @@ Load this file when the task touches models, routes, seeds, migrations, services
 ```ruby
 add_column table_name, :uuid, :uuid, default: -> { "uuid_generate_v4()" }
 ```
+
+- Look records up by `uuid` for external requests, and never change the primary key to do it:
+
+```ruby
+# good
+Chat.find_by!(uuid: params[:chat_id])
+
+# bad — turns uuid into the primary key
+class Chat < ApplicationRecord
+  self.primary_key = :uuid
+end
+```
+
+- Foreign keys reference the `bigint` `id` (`t.references :chat, foreign_key: true`), never the `uuid` column.
 
 - Do not use `match` in routes.
 - Use `resources` for standard routes and `get`, `post`, `patch`, `delete` for custom routes.
@@ -39,7 +55,8 @@ puts "Creating users...".colorize(:blue)
 - Use `enumerize` for enumerated attributes, not `boolean` or `integer`.
 - Ensure `ApplicationRecord` extends `Enumerize` when needed.
 - For process states, prefer `aasm` instead of forcing the state into `enumerize`.
-- When using `aasm`, use its generated scopes instead of querying `aasm_state` directly, such as `Habit.active` rather than `Habit.where(aasm_state: :active)`.
+- When using `aasm`, name the default state column `aasm_state`. If a model needs a context-specific state column, use the process name in the form `#{process_name}_state`.
+- When using `aasm`, use its generated scopes instead of querying the state column directly, such as `Habit.active` rather than `Habit.where(aasm_state: :active)`.
 - For `enumerize`, use `scope: :shallow` instead of custom scopes for enumerated values.
 
 Example:

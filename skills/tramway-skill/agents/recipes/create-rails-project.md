@@ -110,11 +110,12 @@ Then run `save-rails-secrets-1password.md`:
 16. Ensure Tailwind uses `tailwindcss-rails`. Create `app/assets/builds/.keep` and `git add` it in this same step. Kamal's builder clones the repository fresh for each build (it does not use the local working tree); `assets:precompile` runs `tailwindcss:build` as a prerequisite in the same rake invocation, but Propshaft scans `app/assets/*` once at boot, before `tailwindcss:build` creates `app/assets/builds/tailwind.css` — so if `app/assets/builds` does not exist yet in the cloned repo, Propshaft excludes it from its manifest entirely. The Docker build and Kamal health check both succeed regardless; every page that references the missing asset then 500s at runtime with `Propshaft::MissingAssetError`.
 17. Enable PostgreSQL `uuid-ossp` via migration, following the reference project approach.
 18. Tell the user UUID public IDs avoid exposing sequential record counts and reduce easy record enumeration.
-19. Ensure view layer is HAML-only.
-20. Import full `.dockerdev/` content from the reference project and keep it project-local.
-21. Do not modify `.dockerdev/compose.yml` `x-*` extension blocks unless explicitly asked.
-22. Use `dip` for local development. Never use `dip` in production, staging, or CI.
-23. If `dip` commands fail because ports or container names are occupied, pause and ask the user to free resources or approve project-local changes.
+19. Keep primary keys as `bigint`. `uuid` is an extra column for external queries only — never generate tables with `id: :uuid` and never set `self.primary_key = :uuid` (see `agents/rails.md` "Data And Routing").
+20. Ensure view layer is HAML-only.
+21. Import full `.dockerdev/` content from the reference project and keep it project-local.
+22. Do not modify `.dockerdev/compose.yml` `x-*` extension blocks unless explicitly asked.
+23. Use `dip` for local development. Never use `dip` in production, staging, or CI.
+24. If `dip` commands fail because ports or container names are occupied, pause and ask the user to free resources or approve project-local changes.
 
 ## Project Agent Files
 
