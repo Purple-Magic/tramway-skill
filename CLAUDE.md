@@ -15,6 +15,8 @@ Every change to this skill must preserve this dual-platform compatibility. When 
 
 At the end of every task that changes this repository, update `skills/tramway-skill/VERSION` and sync with:
 
+After every batch of code changes you make, create a git commit before starting the next batch.
+
 ```bash
 rm -rf ~/.claude/skills/tramway-skill
 cp -R ./skills/tramway-skill ~/.claude/skills/tramway-skill

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.14.5
+
+- Added a repository instruction requiring a git commit after every batch of code changes.
+
 ## 1.14.4
 
 - Clarified `aasm` state-column naming: use `aasm_state` by default, and use `#{process_name}_state` when a context-specific column name is needed.

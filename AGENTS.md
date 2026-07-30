@@ -21,6 +21,8 @@ When writing or updating instructions:
 
 At the end of every task that changes this repository, update `skills/tramway-skill/VERSION` before validation and sync.
 
+After every batch of code changes you make, create a git commit before starting the next batch.
+
 Version rules:
 
 - Use semantic versioning: `MAJOR.MINOR.PATCH`.
