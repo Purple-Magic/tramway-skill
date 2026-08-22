@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.14.6
+
+- Added guidance forbidding ORM queries and association loading in views or ViewComponent templates; such work must live in the controller or the ViewComponent Ruby class.
+
 ## 1.14.5
 
 - Added a repository instruction requiring a git commit after every batch of code changes.

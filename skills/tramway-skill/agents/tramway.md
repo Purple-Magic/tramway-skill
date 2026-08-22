@@ -224,6 +224,7 @@ end
 - Use `tramway_decorate` and `tramway_form`; do not instantiate decorator or form classes directly.
 - Prefer ViewComponents for repeatable UI.
 - Render components with the `component` helper, not with `render ComponentClass.new(...)`.
+- Keep ORM requests out of view templates. If a view needs a collection, load it in the controller or in the ViewComponent Ruby class, then pass it into the template. Do not write lines like `dashboard_widgets = current_user.dashboard_widgets.ordered` in Haml.
 
 ```haml
 -# Correct

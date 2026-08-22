@@ -11,6 +11,7 @@ Load this file when the task touches pages, views, components, Tailwind, Haml ma
 - Do not add JavaScript or CSS code to Ruby helper files under `app/helpers/`. Put UI markup in views or ViewComponents, JavaScript in Stimulus or separate `.js` files, and CSS in Tailwind or separate `.css` files.
 - Components should inherit from `Tramway::BaseComponent`.
 - Render components with the `component` helper, not with `render ComponentClass.new(...)`.
+- Do not run ORM queries or association loading in Haml views, partials, or component templates. If a view needs records or ordered collections, fetch them in the controller or in the Ruby class backing the ViewComponent before rendering. Example: `dashboard_widgets = current_user.dashboard_widgets.ordered` belongs in the controller or component Ruby file, not in the view.
 
 ```haml
 -# Correct
