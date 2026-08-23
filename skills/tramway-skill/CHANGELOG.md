@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.14.8
+
+- Clarified HAML `div` class syntax so safe class names must be written in the leading shorthand portion and only complex class names stay in the `class:` hash.
+
 ## 1.14.7
 
 - Added HAML view guidance requiring direct HTML tag syntax for all elements and shorthand `.class1.class2` syntax for `div` elements.
