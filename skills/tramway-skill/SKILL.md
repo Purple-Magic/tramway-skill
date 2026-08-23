@@ -57,6 +57,8 @@ View policy:
 4. Use Tailwind as the main CSS framework.
 5. Use `tailwindcss-rails` gem for Tailwind integration.
 6. Do not add JavaScript or CSS code to Ruby helper files under `app/helpers/`; put UI markup in views or ViewComponents, JavaScript in Stimulus or separate `.js` files, and CSS in Tailwind or separate `.css` files.
+7. In HAML, write HTML tags directly instead of wrapping them with `content_tag` or similar helpers. Use explicit tag syntax such as `%p` for `<p>`, `%span` for `<span>`, and so on.
+8. For `<div>` elements in HAML, use the shorthand class syntax like `.class1.class2` instead of `%div.class1.class2`.
 
 Testing policy:
 

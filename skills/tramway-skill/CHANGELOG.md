@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.14.7
+
+- Added HAML view guidance requiring direct HTML tag syntax for all elements and shorthand `.class1.class2` syntax for `div` elements.
+
 ## 1.14.6
 
 - Added guidance forbidding ORM queries and association loading in views or ViewComponent templates; such work must live in the controller or the ViewComponent Ruby class.
