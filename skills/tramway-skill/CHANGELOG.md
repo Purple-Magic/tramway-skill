@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.14.9
+
+- Expanded the HAML class shorthand rule so every HTML tag must use leading shorthand for simple classes, with `div` still using bare shorthand syntax.
+
 ## 1.14.8
 
 - Clarified HAML `div` class syntax so safe class names must be written in the leading shorthand portion and only complex class names stay in the `class:` hash.
