@@ -135,8 +135,12 @@ end
 
 - Normalize input with Tramway `normalizes` for attributes like email or phone when the request calls for it.
 - Do not add `normalizes` to the model unless that behavior is explicitly requested.
+- Use the `phonelib` gem for phone validation.
 - Use Tramway Form validation for form-only rules.
 - Keep data-integrity validation in the model unless form-only behavior is explicitly needed.
+- For presence validation, use `validates :attribute_name, presence: true`.
+- Validate each attribute separately by default.
+- Do not combine multiple attributes in a single validation unless it was explicitly requested.
 
 ## Forms
 

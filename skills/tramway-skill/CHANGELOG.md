@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.14.10
+
+- Added validation guidance to use `phonelib` for phone validation and to keep presence validations explicit and per-attribute by default.
+
 ## 1.14.9
 
 - Expanded the HAML class shorthand rule so every HTML tag must use leading shorthand for simple classes, with `div` still using bare shorthand syntax.
