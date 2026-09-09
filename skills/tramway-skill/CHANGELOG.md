@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.15.0
+
+- Added Claude Code plugin marketplace support (`.claude-plugin/marketplace.json` at the repository root) so `tramway-skill` can be installed and updated through Claude Code's plugin mechanism instead of a manual copy.
+- Made manual `cp -R` installation an explicitly documented fallback in `README.md`, with a warning that it does not receive automatic updates, alongside the new recommended marketplace install/update flow.
+- Made Claude Code file-loading guidance in `SKILL.md` and `agents/recipes/create-rails-project.md` resolve `agents/*.md`, `agents/recipes/*.md`, and `VERSION` relative to wherever the skill's own `SKILL.md` was actually loaded from, instead of assuming a fixed `~/.claude/skills/tramway-skill/` install path; the old fixed paths remain as fallbacks. This keeps file loading working when the skill is installed via the plugin marketplace, where the on-disk location differs from a manual copy.
+- Confirmed the skill has no runtime self-update/self-copy behavior; the existing `AGENTS.md`/`CLAUDE.md` "End-of-Task Skill Sync" `cp -R` steps remain a local-development-only workflow for testing this repository, not part of `SKILL.md`'s runtime instructions.
+
 ## 1.14.10
 
 - Added validation guidance to use `phonelib` for phone validation and to keep presence validations explicit and per-attribute by default.

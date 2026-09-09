@@ -14,15 +14,10 @@ This skill runs in two environments. Behavior differs for file loading:
 
 **Codex** — `agents/*.md` files are loaded natively by the Codex agents system. The "load `agents/X.md`" instructions work without extra steps.
 
-**Claude Code** — `agents/*.md` files are NOT auto-loaded. Whenever this document says "load `agents/X.md`", you MUST use the Read tool to read that file before continuing. Use the following path:
+**Claude Code** — `agents/*.md` files are NOT auto-loaded. Whenever this document says "load `agents/X.md`", you MUST use the Read tool to read that file before continuing. Resolve the path relative to the directory containing this `SKILL.md` file (`<skill-directory>/agents/X.md`) — this works no matter how the skill was installed (plugin marketplace, manual copy, or repository checkout). If the skill directory cannot be determined from context, try these common locations in order:
 
 ```
 ~/.claude/skills/tramway-skill/agents/X.md
-```
-
-If that path does not resolve, fall back to a project-local path:
-
-```
 skills/tramway-skill/agents/X.md
 ```
 
@@ -31,7 +26,7 @@ Do NOT skip loading agents files. They contain mandatory rules for the active su
 Version policy:
 
 1. The skill version is stored in `VERSION` at the root of this skill directory.
-2. **MANDATORY: When this skill is loaded, immediately read the `VERSION` file and show the version to the user** as the first output, before any other response. Format: `tramway-skill v<version>`. Try `~/.claude/skills/tramway-skill/VERSION`, then `~/.codex/skills/tramway-skill/VERSION`, then any repository-local `skills/tramway-skill/VERSION`.
+2. **MANDATORY: When this skill is loaded, immediately read the `VERSION` file and show the version to the user** as the first output, before any other response. Format: `tramway-skill v<version>`. Read `VERSION` relative to this `SKILL.md`'s directory. If that directory is unknown, try `~/.claude/skills/tramway-skill/VERSION`, then `~/.codex/skills/tramway-skill/VERSION`, then any repository-local `skills/tramway-skill/VERSION`.
 3. If the user asks for the `tramway-skill` version, read and report that `VERSION` value.
 
 Command policy:
@@ -104,13 +99,13 @@ Load files only when needed:
 - `agents/integrations.md` when the task touches third-party services, service objects, background jobs, controller orchestration, or external APIs.
 - `agents/documentation.md` when the task changes a user-visible feature or workflow that should be reflected in `docs/users/`.
 - `agents/recipes.md` when the user asks for a usual implementation pattern or the task clearly matches an existing feature recipe. After opening the index, load only the specific recipe file that matches the feature.
-- `agents/recipes/create-rails-project.md` when the user asks to create a new Rails project. **Claude Code**: Read `~/.claude/skills/tramway-skill/agents/recipes/create-rails-project.md`; if unavailable, read `skills/tramway-skill/agents/recipes/create-rails-project.md`.
-- `agents/recipes/deployment-recipe.md` when the user asks to implement deployment, update deployment, or add deployment during new-project setup. **Claude Code**: Read `~/.claude/skills/tramway-skill/agents/recipes/deployment-recipe.md`; if unavailable, read `skills/tramway-skill/agents/recipes/deployment-recipe.md`.
-- `agents/recipes/save-rails-secrets-1password.md` when the user asks how to save `config/master.key`, Rails credentials keys, staging/production secrets, or deployment secrets, and whenever create/update/deployment work introduces or touches those secrets. **Claude Code**: Read `~/.claude/skills/tramway-skill/agents/recipes/save-rails-secrets-1password.md`; if unavailable, read `skills/tramway-skill/agents/recipes/save-rails-secrets-1password.md`.
-- `agents/recipes/add-flash-messages.md` when the user asks to add, fix, render, or standardize flash messages or notifications. **Claude Code**: Read `~/.claude/skills/tramway-skill/agents/recipes/add-flash-messages.md`; if unavailable, read `skills/tramway-skill/agents/recipes/add-flash-messages.md`.
-- `agents/recipes/favicon.md` when the user asks to add, update, generate, use, place, wire, or standardize favicons, browser tab icons, Apple touch icons, Android/PWA icons, or a web app manifest. Also load it when the user mentions a file such as `favicon.png`, `favicon.ico`, `icon.png`, `logo.png`, or an uploaded/provided image that should be used as the site's favicon or browser tab icon. **Claude Code**: Read `~/.claude/skills/tramway-skill/agents/recipes/favicon.md`; if unavailable, read `skills/tramway-skill/agents/recipes/favicon.md`.
+- `agents/recipes/create-rails-project.md` when the user asks to create a new Rails project. **Claude Code**: Read `agents/recipes/create-rails-project.md` relative to this `SKILL.md`'s directory; if that directory is unknown, try `~/.claude/skills/tramway-skill/agents/recipes/create-rails-project.md`, then `skills/tramway-skill/agents/recipes/create-rails-project.md`.
+- `agents/recipes/deployment-recipe.md` when the user asks to implement deployment, update deployment, or add deployment during new-project setup. **Claude Code**: Read `agents/recipes/deployment-recipe.md` relative to this `SKILL.md`'s directory; if that directory is unknown, try `~/.claude/skills/tramway-skill/agents/recipes/deployment-recipe.md`, then `skills/tramway-skill/agents/recipes/deployment-recipe.md`.
+- `agents/recipes/save-rails-secrets-1password.md` when the user asks how to save `config/master.key`, Rails credentials keys, staging/production secrets, or deployment secrets, and whenever create/update/deployment work introduces or touches those secrets. **Claude Code**: Read `agents/recipes/save-rails-secrets-1password.md` relative to this `SKILL.md`'s directory; if that directory is unknown, try `~/.claude/skills/tramway-skill/agents/recipes/save-rails-secrets-1password.md`, then `skills/tramway-skill/agents/recipes/save-rails-secrets-1password.md`.
+- `agents/recipes/add-flash-messages.md` when the user asks to add, fix, render, or standardize flash messages or notifications. **Claude Code**: Read `agents/recipes/add-flash-messages.md` relative to this `SKILL.md`'s directory; if that directory is unknown, try `~/.claude/skills/tramway-skill/agents/recipes/add-flash-messages.md`, then `skills/tramway-skill/agents/recipes/add-flash-messages.md`.
+- `agents/recipes/favicon.md` when the user asks to add, update, generate, use, place, wire, or standardize favicons, browser tab icons, Apple touch icons, Android/PWA icons, or a web app manifest. Also load it when the user mentions a file such as `favicon.png`, `favicon.ico`, `icon.png`, `logo.png`, or an uploaded/provided image that should be used as the site's favicon or browser tab icon. **Claude Code**: Read `agents/recipes/favicon.md` relative to this `SKILL.md`'s directory; if that directory is unknown, try `~/.claude/skills/tramway-skill/agents/recipes/favicon.md`, then `skills/tramway-skill/agents/recipes/favicon.md`.
 - For button requests that change a record's business state, including wording like "make a button on `<resource>#show` that calls `<event_or_method>` for the object", load `agents/recipes.md` and then `agents/recipes/state-change-recipe.md` before designing routes or controller actions.
-- `agents/recipes/pagination.md` when the user asks to add pagination to any list of records. **Claude Code**: Read `~/.claude/skills/tramway-skill/agents/recipes/pagination.md`; if unavailable, read `skills/tramway-skill/agents/recipes/pagination.md`.
+- `agents/recipes/pagination.md` when the user asks to add pagination to any list of records. **Claude Code**: Read `agents/recipes/pagination.md` relative to this `SKILL.md`'s directory; if that directory is unknown, try `~/.claude/skills/tramway-skill/agents/recipes/pagination.md`, then `skills/tramway-skill/agents/recipes/pagination.md`.
 
 Usage rules:
 

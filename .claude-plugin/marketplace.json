@@ -1,0 +1,18 @@
+{
+  "name": "tramway-skill",
+  "owner": {
+    "name": "purple-magic"
+  },
+  "description": "Marketplace for tramway-skill, an operational Rails playbook for Claude Code and Codex.",
+  "plugins": [
+    {
+      "name": "tramway-skill",
+      "source": "./",
+      "description": "Operational playbook for managing Ruby on Rails projects end-to-end: setup, development, testing, deployment, and maintenance.",
+      "strict": false,
+      "skills": [
+        "./skills/tramway-skill"
+      ]
+    }
+  ]
+}

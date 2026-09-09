@@ -5,8 +5,10 @@
 ## Table of Contents
 
 - [Installation](#installation)
+  - [Claude Code — recommended](#claude-code--recommended)
+  - [Updating](#updating)
+  - [Manual installation](#manual-installation)
   - [Codex](#codex)
-  - [Claude Code](#claude-code)
 - [Base Features](#base-features)
 - [What It Does](#what-it-does)
 - [Philosophy](#philosophy)
@@ -16,13 +18,54 @@
 
 ## Installation
 
+### Claude Code — recommended
+
+Install `tramway-skill` through Claude Code's plugin marketplace. This is the recommended installation method: it lets Claude Code track and update the plugin for you instead of relying on a manual copy.
+
+Add the marketplace (this repository doubles as its own marketplace source):
+
+```
+/plugin marketplace add purple-magic/tramway-skill
+```
+
+Install the plugin:
+
+```
+/plugin install tramway-skill@tramway-skill
+```
+
+After installation, restart Claude Code.
+
+### Updating
+
+Update the plugin manually at any time:
+
+```bash
+claude plugin update tramway-skill@tramway-skill
+```
+
+You can also enable automatic updates for the marketplace through Claude Code's `/plugin` UI (marketplace auto-update), so `tramway-skill` stays current without a manual update command. This applies only to plugin-marketplace installs — [manual installations](#manual-installation) below never update automatically.
+
+### Manual installation
+
+If you'd rather not use the plugin marketplace, you can copy the skill directly into Claude Code's skills directory. This is a fallback path only: manual copies do **not** receive automatic updates.
+
+```bash
+rm -rf ~/.claude/skills/tramway-skill
+cp -R ./skills/tramway-skill ~/.claude/skills/tramway-skill
+```
+
+To update a manual install, re-clone or `git pull` this repository, then re-run the same `cp -R` command to replace the copied directory.
+
+After installation, restart Claude Code.
+
 ### Codex
 
 Install it through Codex's standard `skill-installer` flow from this GitHub path:
 
 `https://github.com/purple-magic/tramway-skill/tree/main/skills/tramway-skill`
 
-The skill now lives under `skills/tramway-skill/`, so Codex can install it as a normal GitHub-hosted skill instead of reading it from an arbitrary local path.
+The skill lives under `skills/tramway-skill/`, so Codex can install it as a normal GitHub-hosted skill instead of reading it from an arbitrary local path.
 
 If you want to install it through the Codex CLI itself, start Codex and ask it to use the `skill-installer` skill with this GitHub path:
 
@@ -42,16 +85,7 @@ python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-githu
 
 After installation, restart Codex.
 
-### Claude Code
-
-Copy the skill into Claude Code's skills directory:
-
-```bash
-rm -rf ~/.claude/skills/tramway-skill
-cp -R ./skills/tramway-skill ~/.claude/skills/tramway-skill
-```
-
-After installation, restart Claude Code.
+Codex installation is manual: there is no marketplace-style auto-update for Codex today. Re-run the `skill-installer` flow above to pick up updates.
 
 It is built around a simple idea: Rails is still one of the best stacks for shipping useful products, especially now that experienced engineers can use AI to remove routine friction and newcomers can build much more ambitious things with far less pain.
 

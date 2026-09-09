@@ -138,9 +138,9 @@ Required `CLAUDE.md` behavior:
 
 1. State that Claude Code must use `tramway-skill` by default for the same project workflows.
 2. Include explicit Claude Code file-loading guidance:
-   - Read `~/.claude/skills/tramway-skill/SKILL.md` before Rails project work.
-   - When that skill says to load `agents/X.md` or `agents/recipes/X.md`, use the Read tool with `~/.claude/skills/tramway-skill/agents/X.md` or `~/.claude/skills/tramway-skill/agents/recipes/X.md`.
-   - If the home skill path is unavailable, fall back to repository-local `skills/tramway-skill/...` only when that path exists.
+   - Read `tramway-skill`'s `SKILL.md` before Rails project work.
+   - When that skill says to load `agents/X.md` or `agents/recipes/X.md`, use the Read tool, resolving the path relative to the directory containing the loaded `SKILL.md`.
+   - If that directory is unknown, try `~/.claude/skills/tramway-skill/SKILL.md` (and its sibling `agents/...` files) first, then fall back to repository-local `skills/tramway-skill/...` only when that path exists.
 3. If `AGENTS.md` already contains project-specific rules, preserve them and add the `tramway-skill` default instruction rather than replacing the file wholesale.
 4. If `CLAUDE.md` already contains project-specific rules, preserve them and add the Claude Code `tramway-skill` loading instructions rather than replacing the file wholesale.
 5. If this project creation includes server/deploy setup, apply the same `bin/`-scripts-over-`kamal` guidance as `AGENTS.md` rule 5 above (or have `CLAUDE.md` delegate to `AGENTS.md` for it, consistent with how it delegates for the rest of the workflow).
