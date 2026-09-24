@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.16.1
+
+- Documented in `agents/rails.md` that a `.sql` file written for a one-off data migration must never be committed; create it for the user to run and leave it untracked.
+
 ## 1.16.0
 
 - Added an "Infra-Dependent Features" recipe to `agents/tramway.md`: infra-dependent Tramway features (a required

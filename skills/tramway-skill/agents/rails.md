@@ -28,6 +28,7 @@ end
 ```
 
 - Foreign keys reference the `bigint` `id` (`t.references :chat, foreign_key: true`), never the `uuid` column.
+- If a task requires writing a `.sql` file for a one-off data migration (backfills, data fixes run directly against the database), never commit that file. Create it, let the user run it, and leave it untracked/out of the change — do not `git add` it, and delete it once it has served its purpose if it is no longer needed.
 
 - Do not use `match` in routes.
 - Use `resources` for standard routes and `get`, `post`, `patch`, `delete` for custom routes.
