@@ -114,7 +114,11 @@ end
 - Search is disabled by default on entity index pages.
 - Enable it with `search: true` on the `:index` page.
 - If `Model.search` exists, Tramway uses it.
-- Otherwise Tramway falls back to `Model.tramway_search`. Treat that as a temporary fallback because it is generic and may not scale well.
+- Otherwise Tramway falls back to `Model.tramway_search`, which searches across all string/text columns using the
+  `pg_search` gem. Treat that as a temporary fallback because it is generic and may not scale well.
+- `Model.tramway_search` requires PostgreSQL (pg_search depends on `to_tsvector`/`to_tsquery`). On any other adapter it
+  raises `Tramway::Errors::UnsupportedDatabaseAdapterError` with an explanation instead of failing with a confusing SQL
+  error — see "Infra-Dependent Features" below.
 
 Example:
 
@@ -130,6 +134,22 @@ Tramway.configure do |config|
   ]
 end
 ```
+
+## Infra-Dependent Features
+
+When you implement a Tramway feature that only works with specific infrastructure present in the host application (a
+particular database adapter, a particular external service, a required gem, etc.), do not let it fail with a raw,
+low-level error when that infrastructure is missing.
+
+- Detect the missing dependency as early as possible, before any operation that would fail with a cryptic low-level
+  error (e.g. check `ActiveRecord::Base.connection.adapter_name` before relying on Postgres-only SQL).
+- Raise a dedicated error class under `Tramway::Errors` with a message that names the feature, the missing
+  infrastructure, and a concrete next step for the developer (switch infra, or define a manual override).
+- Do not silently no-op or swallow the failure — a developer must see why the feature does not work in their
+  environment.
+- Add a test that exercises the missing-infrastructure path, not just the happy path.
+- Example: `Model.tramway_search` (see "Search" above) checks for PostgreSQL before using `pg_search` and raises
+  `Tramway::Errors::UnsupportedDatabaseAdapterError` otherwise.
 
 ## Normalization And Validation
 

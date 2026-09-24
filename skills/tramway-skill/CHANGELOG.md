@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.16.0
+
+- Added an "Infra-Dependent Features" recipe to `agents/tramway.md`: infra-dependent Tramway features (a required
+  database adapter, external service, or gem) must detect the missing infrastructure early and raise a dedicated
+  `Tramway::Errors::*` error with an actionable message, instead of failing with a raw low-level error.
+- Documented that `Model.tramway_search` now uses the `pg_search` gem and requires PostgreSQL, raising
+  `Tramway::Errors::UnsupportedDatabaseAdapterError` on other adapters, as the worked example for the new recipe.
+
 ## 1.15.0
 
 - Added Claude Code plugin marketplace support (`.claude-plugin/marketplace.json` at the repository root) so `tramway-skill` can be installed and updated through Claude Code's plugin mechanism instead of a manual copy.
