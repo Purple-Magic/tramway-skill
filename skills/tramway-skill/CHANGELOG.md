@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.16.2
+
+- Documented that adjacent `tramway_button`s in a row must have a `.space-x-2` gap, matching the `Edit`/`Destroy` buttons on `entities#show`.
+
 ## 1.16.1
 
 - Documented in `agents/rails.md` that a `.sql` file written for a one-off data migration must never be committed; create it for the user to run and leave it untracked.

@@ -281,6 +281,7 @@ tramway_title text: 'Title'
 - Always set a button color via `color:` or `type:`.
 - `color:` accepts direct colors like `red`, `yellow`, and `blue`.
 - `type:` accepts lantern colors like `will`, `hope`, and `rage`.
+- When placing two or more `tramway_button`s next to each other in a row, add a gap between them with `.space-x-2` on their wrapping container — the same gap the `Edit` and `Destroy` buttons use on `entities#show`.
 - Use `tramway_tooltip` for every tooltip unless the existing Tramway component API explicitly requires another invocation form. Do not use raw `title=` attributes, do not use custom CSS tooltip markup, and do not build custom tooltip components for standard tooltips.
 - Before using `tramway_tooltip`, fetch the Tramway README and search for `tramway_tooltip` to find the correct signature, required options, and examples. Do not rely on memory or prior knowledge.
 

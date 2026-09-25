@@ -30,6 +30,7 @@ Load this file when the task touches pages, views, components, Tailwind, Haml ma
 - **NEVER place `link_to` or a raw `<a>` tag inside a `tramway_row` that already has an `href:` attribute.** The row itself is the link. If a secondary link action is needed inside the row, use `tramway_button` instead.
 - Keep `preview: true` on rows unless the request explicitly needs it disabled.
 - Use `tramway_button` for every button unless the existing Tramway component API explicitly requires another Tramway Button invocation form. Do not use `button_to`, do not use `<a>`/link markup with button classes, and do not use raw `<button>` markup for buttons. Always specify `color:` or `type:`.
+- When placing two or more `tramway_button`s next to each other in a row, add a gap between them with `.space-x-2` on their wrapping container — the same gap the `Edit` and `Destroy` buttons use on `entities#show` (`tramway/actions_buttons_container_component.html.haml` renders its buttons inside `.flex.justify-end.mt-2.space-x-2`).
 - Use `tramway_title` for the main page title.
 - Use `tramway_container` for page containers.
 - Use `tramway_main_container` in layouts instead of custom wrapper divs when a standard container is needed.
