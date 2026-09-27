@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.17.0
+
+- Added a new "Product Design" guidance category (`agents/product_design.md`), loaded whenever a task adds,
+  changes, or reviews a model's attributes. Its first rule: never create an attribute that duplicates or
+  strongly overlaps an existing one's meaning — flag the overlap and propose consolidation to the user instead.
+
 ## 1.16.2
 
 - Documented that adjacent `tramway_button`s in a row must have a `.space-x-2` gap, matching the `Edit`/`Destroy` buttons on `entities#show`.
