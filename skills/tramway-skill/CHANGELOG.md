@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.0
+
+- Added Rails version-specific best-practice guidance (`agents/rails-versions.md`), covering Rails `8.1.4` onward.
+  Loaded during the Start-of-Skill Context Check and Rails/dependency upgrade work; detects the project's Rails
+  version from `Gemfile.lock`/`Gemfile` and applies the matching version's guidance.
+- If the detected Rails version is lower than `8.1.4`, the skill now tells the user upfront that version-specific
+  best-practice guidance only covers `8.1.4` and higher, instead of silently applying nothing.
+- Major version bump because this changes skill startup behavior (an additional mandatory version check/announcement)
+  for every Rails project detection, not just an additive guidance file.
+
 ## 1.17.0
 
 - Added a new "Product Design" guidance category (`agents/product_design.md`), loaded whenever a task adds,

@@ -107,6 +107,7 @@ Load files only when needed:
 - For button requests that change a record's business state, including wording like "make a button on `<resource>#show` that calls `<event_or_method>` for the object", load `agents/recipes.md` and then `agents/recipes/state-change-recipe.md` before designing routes or controller actions.
 - `agents/recipes/pagination.md` when the user asks to add pagination to any list of records. **Claude Code**: Read `agents/recipes/pagination.md` relative to this `SKILL.md`'s directory; if that directory is unknown, try `~/.claude/skills/tramway-skill/agents/recipes/pagination.md`, then `skills/tramway-skill/agents/recipes/pagination.md`.
 - `agents/product_design.md` is mandatory whenever a task adds, changes, or reviews a model's attributes (columns, `data`/jsonb keys, derived fields) — load it before designing the attribute so duplicate or overlapping attributes get caught and proposed for consolidation instead of created.
+- `agents/rails-versions.md` is mandatory during Start-of-Skill Context Check (see "0) Start-of-Skill Context Check"), new project creation, and Rails/dependency update or upgrade work, to apply or gate version-specific best practices.
 
 Usage rules:
 
@@ -217,6 +218,11 @@ If inside a Rails project, tell the user you figured out you are in a Rails proj
 4. Rails/gem updates and upgrades using the reference project.
 5. Migration review and DB safety checks.
 6. CI/CD and deploy-readiness improvements.
+
+Immediately after this, load `agents/rails-versions.md` and check the project's Rails version (from `Gemfile.lock`'s `rails (X.Y.Z)` line, or `Gemfile` if `Gemfile.lock` is absent):
+
+- If the detected Rails version is lower than `8.1.4`, tell the user that this skill's Rails-version best-practice guidance currently only covers Rails `8.1.4` and higher, so no version-specific suggestions will be applied for their current version.
+- If the detected Rails version is `8.1.4` or higher, apply the matching guidance from `agents/rails-versions.md` for that version during feature, update/upgrade, and maintenance work.
 
 If not inside a Rails project, tell the user you figured out you are not in a Rails project and that you can create a best-practice, fully configured Rails project with:
 
@@ -452,6 +458,7 @@ Prefer incremental upgrades:
 1. Upgrade patch versions first.
 2. Upgrade minor versions with changelog review.
 3. Upgrade Rails one minor at a time.
+4. After a Rails version bump, load `agents/rails-versions.md` and apply any best practices listed for the new version. If the new version is lower than `8.1.4`, tell the user this skill has no version-specific guidance for it yet.
 
 For each bump:
 
