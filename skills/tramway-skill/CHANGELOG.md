@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.0
+
+- Added a "Plugins" section to `agents/tramway.md` documenting Tramway's `config.plugins` DSL and the `:solid_queue`
+  dashboard plugin, with a mandatory rule to prefer it over installing `mission_control-jobs`, `solid_queue_web`,
+  `solid-queue-panel`, or a hand-rolled dashboard when the host app uses SolidQueue and needs job/queue monitoring.
+- Added `config.plugins` usage to the mandatory "fetch the upstream Tramway README first" trigger list.
+- Cross-referenced the new Plugins guidance from `agents/integrations.md`'s Async Execution rules.
+
 ## 2.0.0
 
 - Added Rails version-specific best-practice guidance (`agents/rails-versions.md`), covering Rails `8.1.4` onward.

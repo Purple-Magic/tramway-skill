@@ -45,3 +45,5 @@ end
 - Do not call third-party services synchronously from controllers.
 - Put external work in background jobs.
 - Let controllers enqueue work and handle user-facing flow only.
+- If the app uses SolidQueue and needs a jobs/queues monitoring dashboard, use Tramway's `:solid_queue` plugin
+  instead of a separate job-dashboard gem — see "Plugins" in `agents/tramway.md`.

@@ -23,6 +23,7 @@ Tramway extends Rails with:
 
 - Any call to a `tramway_*` helper (e.g. `tramway_form_for`, `tramway_table`, `tramway_button`, `tramway_tooltip`, etc.)
 - Any class that inherits from a class in the `Tramway::` namespace (e.g. `Tramway::BaseForm`, `Tramway::BaseDecorator`, or any other `Tramway::Base*`)
+- Any `config.plugins` usage (see "Plugins" below)
 
 ```text
 https://raw.githubusercontent.com/Purple-Magic/tramway/refs/heads/main/README.md
@@ -150,6 +151,39 @@ low-level error when that infrastructure is missing.
 - Add a test that exercises the missing-infrastructure path, not just the happy path.
 - Example: `Model.tramway_search` (see "Search" above) checks for PostgreSQL before using `pg_search` and raises
   `Tramway::Errors::UnsupportedDatabaseAdapterError` otherwise.
+
+## Plugins
+
+Tramway ships optional, pre-built dashboards as plugins, configured in `config/initializers/tramway.rb` via
+`config.plugins`. Prefer an available Tramway plugin over installing a separate third-party gem or hand-rolling a
+custom dashboard for the same job.
+
+- Enable a plugin by adding its name to `config.plugins`; configure it with a hash assigned to
+  `config.plugins.<name>`.
+- Enabling a plugin automatically adds its navbar entry. Do not hand-build a competing navbar link for it.
+
+```ruby
+Tramway.configure do |config|
+  config.plugins = [:solid_queue]
+  config.plugins.solid_queue = {
+    path: '/jobs'
+  }
+end
+```
+
+### SolidQueue dashboard (`:solid_queue`)
+
+- If the host app uses SolidQueue as its Active Job queue adapter and the task asks for a jobs/queues monitoring or
+  management dashboard, enable Tramway's `:solid_queue` plugin instead of installing `mission_control-jobs`,
+  `solid_queue_web`, `solid-queue-panel`, or building a custom dashboard by hand.
+- It requires the `solid_queue` gem in the host app's `Gemfile`. If it's missing, Tramway raises a clear,
+  actionable error naming the missing dependency instead of failing deep inside a controller — do not add your own
+  guard for this.
+- It provides: a filterable/searchable jobs list with per-status counts, a job detail page with failure details for
+  failed jobs, single/bulk retry/discard/destroy, a queues list with pause/resume/clear, and a recurring tasks list
+  with manual enqueue.
+- Fetch the upstream Tramway README (see above) for the exact `config.plugins.solid_queue` options and what
+  `path:` controls before wiring this plugin. Do not guess the DSL from memory.
 
 ## Normalization And Validation
 
