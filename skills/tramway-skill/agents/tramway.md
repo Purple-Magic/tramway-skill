@@ -110,6 +110,72 @@ Tramway.configure do |config|
 end
 ```
 
+## Custom Pages
+
+- A Custom Page is an entity page whose `action` is not one of the built-in CRUD actions (`index`, `show`, `create`,
+  `update`, `destroy`). Use it for anything that genuinely isn't CRUD on that entity — a report, a bulk action, an
+  "impersonate" link's target page — never as a way to reimplement one of the built-in actions by hand.
+- Declare it like any other page in the entity's `pages:` array, with these extra options:
+  - `member: true` nests the route under `/:id` (e.g. `/admin/users/:id/impersonate`). Omit it (default `false`) for
+    an entity-level route with no id (e.g. `/admin/users/impersonate`).
+  - `via:` sets the HTTP method(s) the route accepts (default `:get`). Pass an array (e.g. `via: %i[get post]`) to
+    accept more than one verb on the same action.
+  - `params:` appends extra required path segments after the action name, in order (e.g. `params: [:redirect_to]` on
+    a member page produces `/admin/users/:id/impersonate/:redirect_to`), available in the controller as regular
+    `params` entries, same as `:id`. Never name one of these `:format` — it collides with Rails' reserved
+    format-extension segment and causes 406 errors.
+- Tramway only generates the route; it does not generate the controller action or the view. By Rails naming
+  convention, the route points at the controller Tramway would otherwise infer for that namespace/entity (e.g.
+  `namespace: :admin, name: :user` → `Admin::UsersController`). Create that controller action yourself.
+- Make the Custom Page controller inherit from `Tramway::EntitiesController` (not the host app's usual base
+  controller) so it automatically gets the same layout, navbar, and `entity`/`model_class` lookups as the built-in
+  CRUD pages — no extra plumbing needed.
+- Add the view at the conventional Rails path for that controller/action (e.g.
+  `app/views/admin/users/impersonate.html.haml`). Rails' normal view resolution finds it; nothing extra is required
+  to make it render inside Tramway's layout.
+- A Custom Page does not get an automatic navbar entry. If it needs one, add it explicitly through the navbar
+  configuration.
+
+Example:
+
+```ruby
+Tramway.configure do |config|
+  config.entities = [
+    {
+      name: :user,
+      namespace: :admin,
+      pages: [
+        { action: :index },
+        {
+          action: :impersonate,
+          member: true,
+          via: :post,
+          params: [:redirect_to]
+        }
+      ]
+    }
+  ]
+end
+```
+
+```ruby
+# app/controllers/admin/users_controller.rb
+module Admin
+  class UsersController < Tramway::EntitiesController
+    def impersonate
+      @user = model_class.find(params[:id])
+      # ...
+    end
+  end
+end
+```
+
+```haml
+-# app/views/admin/users/impersonate.html.haml
+= tramway_container do
+  %p Impersonating #{@user.email}
+```
+
 ## Search
 
 - Search is disabled by default on entity index pages.

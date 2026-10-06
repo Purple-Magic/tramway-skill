@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.2.0
+
+- Added a "Custom Pages" section to `agents/tramway.md` documenting Tramway's Custom Pages feature: declaring an
+  entity page whose `action` isn't one of the built-in CRUD actions, routed via `member:`/`via:`/`params:` options to
+  a host app controller that inherits from `Tramway::EntitiesController` for the same layout/navbar/helpers, with
+  its own conventionally-named view and no automatic navbar entry.
+
 ## 2.1.0
 
 - Added a "Plugins" section to `agents/tramway.md` documenting Tramway's `config.plugins` DSL and the `:solid_queue`
