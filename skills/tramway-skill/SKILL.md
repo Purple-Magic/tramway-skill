@@ -40,7 +40,7 @@ Command policy:
 7. If `dip` is missing in local development, explicitly offer the user to install it with `gem install dip`.
 8. Local development services must run in containers through `dip`. Do not use host-installed PostgreSQL, Redis, Node/Yarn, or other project services for Rails project operations unless the user explicitly asks for a non-container setup.
 9. If a task requires Terraform and `terraform` is missing, install it with `bash scripts/install_terraform.sh` before running Terraform commands.
-10. Scoped exception: when implementing the reference-project database dump/restore feature, preserve the reference script behavior. A direct `docker` volume reset is allowed only inside the imported/adapted `script/dump/restore` flow if needed to match the reference local restore behavior.
+10. Scoped exception: when implementing the reference-project database dump/restore feature, preserve the reference script behavior. A direct `docker` volume reset is allowed only inside the imported/adapted `script/dump/restore` flow if needed to match the reference local restore behavior. In this project's own convention, the top-level entry point is `bin/dump -d ENVIRONMENT`, not `./dump ENVIRONMENT`.
 11. If `dip` reports that a required port is already in use or a container cannot be created because a name is already used, pause the task. Ask the user to free the needed resources, or explain the project-local configuration changes needed to use different ports/container names and wait for confirmation before changing them.
 12. Do not suggest direct `bundle`, `bin/rails`, `bin/rspec`, `docker`, or `docker-compose` commands for local development project operations.
 
@@ -155,14 +155,14 @@ Rules:
 25. If the user asks for project updating/upgrading, always check the reference project for applicable updates to `.gitignore`, `AGENTS.md`, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`, deployment configuration, and Terraform configuration in addition to the usual app/tooling review.
 26. If the user asks to `update deployment`, treat that as an explicit request to apply all applicable deployment-related setup from the reference project, including deployment configuration, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`, `AGENTS.md`/`CLAUDE.md` deployment-command guidance, and Terraform usage patterns.
 27. When creating or updating Kamal deployment configuration, `.kamal/secrets` must not contain shell `if` statements. Keep conditional secret resolution in project scripts or external secret tooling, and keep `.kamal/secrets` as a simple declarative secret-loading file.
-28. If the user asks to `Implement dump`, `implement dump and restore`, `dump database to local environment`, `dump database`, or equivalent, treat that as an explicit request to add the reference-project database dump/restore workflow. Use the same operator experience as the reference project: the user runs `./dump ENVIRONMENT` and the remote database is dumped, downloaded, and restored into the local development database.
+28. If the user asks to `Implement dump`, `implement dump and restore`, `dump database to local environment`, `dump database`, or equivalent, treat that as an explicit request to add the reference-project database dump/restore workflow, adapted to this project's own command convention. Use the same operator experience as the reference project but with the final entry point relocated and reshaped: the user runs `bin/dump -d ENVIRONMENT` and the remote database is dumped, downloaded, and restored into the local development database.
 29. For database dump/restore implementation, read these reference project files remotely from GitHub `main` and adapt them to the current project:
-    - `dump`
+    - `dump` (adapt into `bin/dump`, taking `-d ENVIRONMENT` instead of a positional `ENVIRONMENT` argument)
     - `script/dump/prepare_secrets.rb`
     - `script/dump/restore`
     - `config/database.yml` only as needed to determine local/remote database naming and credential shape.
 29. Preserve the reference dump/restore approach unless a project-specific difference makes direct copy unsafe:
-    - Top-level executable command is `./dump <environment>`.
+    - Top-level executable command is `bin/dump -d <environment>` (not `./dump <environment>`).
     - Secrets are prepared by `ruby script/dump/prepare_secrets.rb "$ENVIRONMENT"`.
     - `MAIN_HOST` can come from Terraform output `main_host_ip` or environment variable.
     - Before adapting `prepare_secrets.rb`, inspect how the current project's Kamal deployment already gets secrets and use that same source for database host/user/password/name.
@@ -172,10 +172,10 @@ Rules:
     - Local restore uses `pg_restore --clean --if-exists --no-owner` into the development database.
     - The local test database is recreated/migrated after restore, matching the reference flow.
 30. Warn the user that dumping, downloading, and restoring a full deployed database can be very heavy for large databases. Ask which high-row-count tables they want to exclude before implementing or updating the dump script:
-    - Copy the reference project's existing `EXCLUDED_TABLES=(...)` approach in `dump`.
+    - Copy the reference project's existing `EXCLUDED_TABLES=(...)` approach in `dump`, placed into `bin/dump`.
     - Put the user's chosen tables into that static excluded-table list, adapting the reference defaults only as needed for the current schema.
     - Pass each excluded table to `pg_dump` as `--exclude-table-data=<table>` so table schemas are restored but their rows are skipped.
-    - Keep the command shape as `./dump <environment>`; do not add table names as command-line arguments unless the reference project changes to that approach.
+    - Keep the command shape as `bin/dump -d <environment>`; do not add table names as command-line arguments unless the reference project changes to that approach.
 31. Adapt only project-specific values:
     - app name and Docker volume/storage path, for example replace `base_project_storage` with the current Kamal storage volume name;
     - local development database name, for example replace `base_project_development` with the current project's development database;
@@ -183,10 +183,10 @@ Rules:
     - deploy user/host handling only when the current deployment is not `root@$MAIN_HOST`.
 32. Do not ask the user to paste database credentials. Use the existing project-defined Kamal secret source, Terraform output, local environment variables, or confirmed local secret storage following the secrets policy.
 33. Validate dump/restore setup without requiring a live production dump unless the user explicitly wants to run it:
-    - syntax-check `dump` with `bash -n dump`;
+    - syntax-check `bin/dump` with `bash -n bin/dump`;
     - syntax-check Ruby scripts with `ruby -c script/dump/prepare_secrets.rb` and `ruby -c script/dump/restore`;
     - verify scripts are executable where needed;
-    - verify `./dump` prints usage or exits predictably when no environment is provided.
+    - verify `bin/dump` prints usage or exits predictably when `-d` / an environment is not provided.
 
 ## Workflow
 
@@ -324,12 +324,14 @@ Required scope:
    - scripts referenced by Kamal secret hooks or deploy configuration
    - `terraform/`
    - `dip.yml`
-   - existing `dump` or `script/dump/`
+   - existing `bin/dump`, `dump`, or `script/dump/`
 2. Read the reference project files remotely from GitHub `main`:
    - `dump`
    - `script/dump/prepare_secrets.rb`
    - `script/dump/restore`
-3. Implement the same user workflow: `./dump ENVIRONMENT`.
+3. Implement the same user workflow but relocated and reshaped into `bin/dump -d ENVIRONMENT`.
+   - Place the top-level entry point at `bin/dump`, not at the repository root as `dump`.
+   - Parse the environment from a `-d` flag (e.g. `bin/dump -d production`) instead of a positional argument.
    - Do not replace it with a Make task, Rails task, README-only instructions, or manual multi-command procedure.
    - The command should dump the selected deployed environment and restore it into local development.
    - Tell the user this can be very heavy for a large database because it dumps, downloads, and restores the deployed data.
@@ -342,7 +344,7 @@ Required scope:
    - Do not introduce a second secret source just for dump/restore.
    - Keep Terraform output for host discovery when the current deployment uses Terraform for host discovery.
    - Keep environment variables as overrides.
-   - Keep the reference `dump` script's static `EXCLUDED_TABLES=(...)` pattern. Put the user's chosen excluded tables there, together with applicable reference defaults.
+   - Keep the reference `dump` script's static `EXCLUDED_TABLES=(...)` pattern inside `bin/dump`. Put the user's chosen excluded tables there, together with applicable reference defaults.
 5. Adapt hardcoded reference values to the current project:
    - Kamal app/storage volume path used for the remote dump file.
    - Local development database name used by `pg_restore`.
@@ -350,18 +352,18 @@ Required scope:
    - Default excluded tables, based on current schema.
 6. Preserve the destructive local-restore behavior visibly and intentionally.
    - The restore replaces the local development database.
-   - Do not run `./dump ENVIRONMENT` for validation unless the user explicitly confirms they want to overwrite local data.
+   - Do not run `bin/dump -d ENVIRONMENT` for validation unless the user explicitly confirms they want to overwrite local data.
 7. Keep secrets out of chat and source control.
    - Do not request database passwords in chat.
    - Do not create committed files containing database credentials.
 8. Validate the implementation locally:
-   - `bash -n dump`
+   - `bash -n bin/dump`
    - `ruby -c script/dump/prepare_secrets.rb`
    - `ruby -c script/dump/restore`
-   - `test -x dump`
+   - `test -x bin/dump`
    - run no-live-network checks only unless the user confirms an actual dump.
 9. In the final summary, explicitly tell the user:
-   - the command to run: `./dump <environment>`;
+   - the command to run: `bin/dump -d <environment>`;
    - which large tables are excluded from row-data dumping;
    - how the dump script gets secrets and how that matches the existing Kamal setup;
    - that it overwrites the local development database;

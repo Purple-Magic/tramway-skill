@@ -9,7 +9,7 @@ If `dip` reports that a required port is already in use or a container cannot be
 Assume Ruby is already installed. If Rails is missing, run `gem install rails`.
 If `dip` is missing in local development, offer installing it via `gem install dip`.
 If a task requires Terraform and `terraform` is missing, install it with `bash scripts/install_terraform.sh` before running Terraform commands.
-For database dump/restore implementation, preserve the reference-project `./dump <environment>` workflow. A direct `docker` volume reset is allowed only inside the imported/adapted `script/dump/restore` flow when needed to match the reference local restore behavior.
+For database dump/restore implementation, preserve the reference-project workflow but adapted into this project's convention of `bin/dump -d <environment>`. A direct `docker` volume reset is allowed only inside the imported/adapted `script/dump/restore` flow when needed to match the reference local restore behavior.
 
 For production, staging, and CI, use the environment's native command runner and service definitions. Examples include CI workflow steps such as `bundle exec rspec` after the job has installed gems, or deploy-platform commands documented by the chosen hosting/deployment tool. Do not add `dip` to CI images, deploy scripts, staging consoles, or production maintenance procedures.
 
@@ -271,7 +271,7 @@ dip rails dbconsole
 
 ## Database dump/restore from deployed environment
 
-Use this when the user asks to implement dump/restore, dump a deployed database into local development, or add `./dump ENVIRONMENT` behavior.
+Use this when the user asks to implement dump/restore, dump a deployed database into local development, or add `bin/dump -d ENVIRONMENT` behavior.
 
 Read these files remotely from the reference project `main` branch and adapt them:
 
@@ -282,8 +282,8 @@ curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/scri
 ```
 
 Required workflow:
-- Top-level executable command must be `./dump <environment>`.
-- `dump` calls `ruby script/dump/prepare_secrets.rb "$environment"`.
+- Top-level executable command must be `bin/dump -d <environment>` (the reference project's `dump` is relocated to `bin/dump` and takes `-d` instead of a positional argument).
+- `bin/dump` calls `ruby script/dump/prepare_secrets.rb "$environment"`.
 - Before adapting `prepare_secrets.rb`, inspect how the current project's Kamal setup gets secrets.
 - Check `config/deploy*.yml` `env.clear`, `env.secret`, accessories, builder/registry secrets, `.kamal/secrets*`, `config/secrets*`, `bin/kamal`, and any scripts those files call.
 - Secrets must come from the same source Kamal already uses in the current project: Rails credentials, `.kamal/secrets`, 1Password/`op`, dotenv, repository/env variables, or another project-local secret command.
@@ -293,8 +293,8 @@ Required workflow:
 - Dump is downloaded with `scp` and restored locally with `pg_restore --clean --if-exists --no-owner`.
 - Restore overwrites the local development database and then recreates/migrates the local test database as in the reference flow.
 - Tell the user that dumping, downloading, and restoring a full deployed database can be very heavy for large databases.
-- Ask which high-row-count tables the user wants to exclude from dumped data before writing/adapting `dump`.
-- Copy the reference script's `EXCLUDED_TABLES=(...)` approach. Put selected tables in that static list and keep the command shape as `./dump <environment>`.
+- Ask which high-row-count tables the user wants to exclude from dumped data before writing/adapting `bin/dump`.
+- Copy the reference script's `EXCLUDED_TABLES=(...)` approach. Put selected tables in that static list and keep the command shape as `bin/dump -d <environment>`.
 - Each excluded table must become `--exclude-table-data=<table>` for `pg_dump`, so table schemas are restored but row data is skipped.
 
 Adapt project-specific values:
@@ -307,13 +307,13 @@ Adapt project-specific values:
 Validation without live dump:
 
 ```bash
-bash -n dump
+bash -n bin/dump
 ruby -c script/dump/prepare_secrets.rb
 ruby -c script/dump/restore
-test -x dump
+test -x bin/dump
 ```
 
-Do not run `./dump <environment>` unless the user explicitly confirms they want to overwrite local development data.
+Do not run `bin/dump -d <environment>` unless the user explicitly confirms they want to overwrite local development data.
 
 ## Code health
 
