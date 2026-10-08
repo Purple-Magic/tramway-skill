@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.4.0
+
+- Documented `show_attributes` in the "Decorators" section of `agents/tramway.md`, including the new Hash entry
+  form (`{ attribute:, options: }`) that forwards `options:` to the `tramway_cell` rendering that attribute's value
+  (e.g. `truncate: false`).
+
 ## 2.2.0
 
 - Added a "Custom Pages" section to `agents/tramway.md` documenting Tramway's Custom Pages feature: declaring an

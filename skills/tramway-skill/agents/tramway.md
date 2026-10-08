@@ -331,6 +331,12 @@ end
 - When using `show_associations` inside any Tramway decorator class, first verify that every named association exists on the decorated model. If an association is missing, either add the model association yourself when the correct relationship is clear from the schema and surrounding code, or ask the user how the association should be modeled before keeping it in `show_associations`.
 - When using `show_associations` for an associated model that is not listed as an entity in `config/initializers/tramway.rb`, ask the user whether they want full Tramway CRUD for that associated model too. If they say yes, add that model's full CRUD entity definition to `config/initializers/tramway.rb`.
 - If an entity has an index page, define `index_attributes` in its decorator.
+- If an entity has a show page, define `show_attributes` in its decorator. Tramway renders a two-column table from it:
+  the localized attribute name on the left, the attribute's value on the right.
+- Each entry in `show_attributes` can be a plain symbol, or a Hash to pass options to the `tramway_cell` that renders
+  that attribute's value. A Hash entry requires an `attribute:` key (the method to display) and accepts an
+  `options:` key (a Hash forwarded as-is to `tramway_cell`, e.g. `{ truncate: false }` to stop a long value from
+  being truncated with an ellipsis). Omitting `attribute:` on a Hash entry raises `ArgumentError`.
 
 Example:
 
@@ -338,6 +344,10 @@ Example:
 class ParticipantDecorator < Tramway::BaseDecorator
   def self.index_attributes
     %i[id name email created_at]
+  end
+
+  def show_attributes
+    [:name, :email, { attribute: :bio, options: { truncate: false } }]
   end
 end
 ```
