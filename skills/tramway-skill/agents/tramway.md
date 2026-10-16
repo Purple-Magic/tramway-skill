@@ -384,6 +384,7 @@ tramway_title text: 'Title'
 
 - Use `tramway_navbar` for every navbar or primary navigation block unless the existing Tramway component API explicitly requires another Tramway Navbar invocation form. Do not use raw `<nav>` markup, do not use `<div>`/link groups styled as navbars, and do not build custom navbar components for standard navigation.
 - Put basic authentication links such as Login and Logout in the navbar when applicable.
+- `with_entities:` only gates the auto-generated items derived from `config.entities`; it never suppresses plugin nav items (`config.plugins` entries always render) and never replaces custom `nav.item` calls — block-provided items are merged alongside whatever `with_entities` produces, not instead of it. When a feature adds custom `nav.left { nav.item ... }` / `nav.right { nav.item ... }` items, pass `with_entities: false` so the auto config.entities items don't mix in unexpectedly with the custom ones.
 - Use Tramway Flash for notifications.
 - Use Tramway Table for tabular data.
 - Keep `preview: true` as the default for `tramway_row` unless preview is explicitly unwanted.

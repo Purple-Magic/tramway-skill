@@ -24,6 +24,8 @@ Load this file when the task touches pages, views, components, Tailwind, Haml ma
 ## Tramway UI Helpers
 
 - Use `tramway_navbar` for every navbar or primary navigation block unless the existing Tramway component API explicitly requires another Tramway Navbar invocation form. Do not use raw `<nav>` markup, do not use `<div>`/link groups styled as navbars, and do not build custom navbar components for standard navigation. Include at least Login and Logout links when relevant.
+- `with_entities:` only controls the auto-generated items derived from `config.entities`. It does **not** suppress plugin nav items (`config.plugins` entries always render, regardless of `with_entities`), and it does **not** replace custom `nav.item` calls — any items added inside the `tramway_navbar` block are merged alongside whatever `with_entities` produces, never instead of it.
+- Whenever the task adds custom `nav.left { nav.item ... }` / `nav.right { nav.item ... }` items to `tramway_navbar`, pass `with_entities: false` explicitly so the auto config.entities items don't also render mixed in with the custom ones. Still expect plugin items to appear even with `with_entities: false` — that's expected, not a bug.
 - Use Tramway Flash for notifications.
 - Use `tramway_table` for tabular data whenever a table is needed.
 - Use `tramway_row href:` for row links instead of placing a link inside a table cell.
