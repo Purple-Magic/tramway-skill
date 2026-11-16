@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.1.0
+
+- Added "Tooling Preflight" to the deployment recipe: during `Implement deployment` / `update deployment` the skill now
+  checks which tools the user has installed (kamal, docker, hosting provider CLI, gh, op, ssh key, ...), reports missing
+  or unauthenticated ones, and offers to install them immediately (with approval) before editing deployment files.
+- `SKILL.md` rule 27a points to it.
+
 ## 3.0.0
 
 - **Breaking:** removed Terraform from the skill entirely (deleted `scripts/install_terraform.sh`; removed every

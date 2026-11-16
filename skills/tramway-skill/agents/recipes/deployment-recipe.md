@@ -419,12 +419,32 @@ When `update deployment` (or any task) finds a `terraform/` directory, Terraform
 
    An empty result here is the actual failure mode to catch — nothing else errors loudly, so this check must run every time `.kamal/secrets` is created or changed, before the next `bin/setup`/`bin/deploy`.
 
+## Tooling Preflight (Installed Tools Check)
+
+Before writing or changing any deployment file, check which tools the user already has for what the chosen setup needs, and offer to install what is missing right away, instead of discovering gaps when a script fails.
+
+1. Decide the required tool list from the user's choices (hosting provider, secret storage, git platform, DNS):
+   - always: `git`, `ruby` (matching the project's `.ruby-version`), `bundler`, `docker`, `ssh`/`ssh-keygen`, `curl`
+   - Kamal: the global `kamal` binary (`gem install kamal`; not a `bin/kamal` binstub)
+   - hosting provider CLI: e.g. `doctl` for DigitalOcean, `hcloud` for Hetzner, `aws` for AWS, or the provider's equivalent used by `lib/server_provider.rb`
+   - secrets: `op` (1Password CLI) when 1Password is used; see `agents/recipes/save-rails-secrets-1password.md`
+   - git platform CLI: `gh` for GitHub (repository secrets, CI), or the platform's equivalent
+   - Cloudflare DNS tooling, only if the user chose it
+   - local dev: `dip`, only for the local development environment
+2. Detect, without changing anything: `command -v <tool>` and `<tool> --version` for each. For CLIs that need authentication, also check login state (`doctl account get`, `gh auth status`, `op whoami`) and an SSH key (`ls ~/.ssh/*.pub`).
+3. Show the user one short table: tool, installed (with version) / missing / not authenticated.
+4. For everything missing, propose installing it in the same message, using the user's platform package manager (detect it: `pacman`/`yay`, `apt`, `dnf`, `brew`, or `gem` for Ruby gems). Show the exact install command and wait for the user's approval before running it. Do not install anything silently, and never run `sudo` commands without approval.
+5. For missing authentication, tell the user which login command to run themselves (in Claude Code, suggest the `! <command>` prefix so the output lands in the session). Never ask for tokens in chat and never print token values (see `SKILL.md` secrets rules).
+6. If the user declines a tool, record what is skipped and adapt: do not generate scripts that depend on a tool the user will not install, or mark that area as skipped in the final summary.
+7. Re-run the detection after installing and continue only when every required tool is present or explicitly skipped.
+
 ## Implement Deployment
 
 Treat `Implement deployment` as a full deployment-systems task, not a narrow single-file change.
 
 Required scope:
 
+0. Run "Tooling Preflight (Installed Tools Check)" first: check the user's installed tools and offer to install the missing ones before editing anything.
 1. Inspect existing deployment pieces before editing:
    - `config/deploy.yml`
    - `config/deploy.staging.yml`
@@ -465,6 +485,7 @@ Treat `update deployment` as a deployment-sync task against the reference projec
 
 Required scope:
 
+0. Run "Tooling Preflight (Installed Tools Check)" first: check the user's installed tools and offer to install the missing ones before editing anything.
 1. Inspect current deployment-related files:
    - `config/deploy.yml`
    - `config/deploy.staging.yml`
