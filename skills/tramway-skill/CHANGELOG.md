@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.2.0
+
+- Added "Guided Tool Setup": after installing a tool the skill authenticates it (browser/OAuth or MCP preferred over
+  pasted tokens) and configures dependent values (SSH keys, region/size/image, DNS) immediately.
+- Added "Creating Servers Without `bin/setup`": servers can be created via a provider MCP server or the browser console,
+  then recorded in `.kamal/servers.yml`. Mandatory reminder that servers are paid and must be monitored.
+- `ServerProvider.preflight!` runs before any prompt; the DigitalOcean reference auto-resolves the SSH key (no
+  `DO_SSH_KEY_FINGERPRINT` surprise after confirmation) and checks `doctl` auth up front.
+
 ## 3.1.2
 
 - Scripts must not hang silently: `KamalCli` now validates typed IP and hostname answers (re-prompt, max 3 tries),

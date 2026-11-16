@@ -184,6 +184,7 @@ module KamalCli
   # --- Server provisioning (only bin/setup -d calls this) -------------------
 
   def provision_server!(destination)
+    ServerProvider.preflight! # tools, login and SSH key are checked before asking anything
     puts "No server IP is recorded for '#{destination}' in #{SERVERS_FILE}."
 
     if yes?("Create a new server for '#{destination}' at the hosting provider?")
@@ -267,6 +268,7 @@ end
 
 This file is the only place that knows about the hosting provider. Generate it for the provider the user chose. Keep this contract so the `bin/` scripts never change per provider:
 
+- `preflight!` → verifies, before any prompt, that the provider CLI exists, is authenticated, and that every value `create` needs (SSH key, region, size, image) is resolvable; aborts with the exact fix. A value must never be discovered missing after the operator already confirmed a paid action.
 - `create(destination)` → `{ "server_id" => "<provider id>", "main_host" => "<public IPv4>" }`; aborts on failure, and when a server was created but its IP could not be read, the abort message includes the provider id so the user can delete the orphan.
 - `delete(server_id)` → deletes the server; aborts on failure. Passes the provider CLI's own "force/yes" flag, because the typed confirmation already happened in `KamalCli.confirm_by_typing!`.
 - `upsert_dns(host, ip)` / `delete_dns(host)` → optional; no-ops when the user manages DNS by hand.
@@ -284,7 +286,33 @@ module ServerProvider
   REGION = "fra1"
   SIZE = "s-2vcpu-4gb"
   IMAGE = "ubuntu-24-04-x64"
-  SSH_KEY_FINGERPRINT = "aa:bb:cc:dd:ee:ff:00:11:22:33:44:55:66:77:88:99"
+  SSH_KEY_FINGERPRINT = nil # optional pin; when nil, the key is resolved by `ssh_key_fingerprint` below
+
+  # Resolved BEFORE any prompt or paid action, so a missing key never fails after the operator confirmed.
+  # Order: ENV["DO_SSH_KEY_FINGERPRINT"] -> SSH_KEY_FINGERPRINT -> the only key in the account -> ask to pick one.
+  def ssh_key_fingerprint
+    pinned = ENV["DO_SSH_KEY_FINGERPRINT"] || SSH_KEY_FINGERPRINT
+    return pinned if pinned
+
+    out, status = Open3.capture2("doctl", "compute", "ssh-key", "list", "--format", "Name,FingerPrint", "--no-header")
+    abort "doctl cannot list SSH keys. Is it authenticated? Run `doctl account get`.".red unless status.success?
+
+    keys = out.lines.map { |line| line.split(/\s+/, 2).map(&:strip) }.reject { |_, fp| fp.to_s.empty? }
+    abort "No SSH key in the DigitalOcean account. Upload one (`doctl compute ssh-key import <name> --public-key-file ~/.ssh/id_ed25519.pub`) and retry.".red if keys.empty?
+    return keys.first.last if keys.one?
+
+    keys.each_with_index { |(name, fp), i| puts "  #{i + 1}. #{name} (#{fp})" }
+    keys[KamalCli.ask("Which SSH key should the server use? [1-#{keys.size}]").to_i - 1]&.last ||
+      abort("Invalid choice. Nothing was created.".red)
+  end
+
+  # Called by KamalCli.provision_server! before the first prompt: fail on missing tools/auth/keys early.
+  def preflight!
+    KamalCli.require_commands!("doctl")
+    system("doctl", "account", "get", out: File::NULL, err: File::NULL) ||
+      abort("doctl is not authenticated. Run `doctl auth init` (see the guided login in the deployment recipe).".red)
+    ssh_key_fingerprint
+  end
 
   def create(destination)
     KamalCli.require_commands!("doctl")
@@ -296,7 +324,7 @@ module ServerProvider
       stdout, status = Open3.capture2(
         "doctl", "compute", "droplet", "create", name,
         "--region", REGION, "--size", SIZE, "--image", IMAGE,
-        "--ssh-keys", SSH_KEY_FINGERPRINT, "--wait", "--output", "json"
+        "--ssh-keys", ssh_key_fingerprint, "--wait", "--output", "json"
       )
     end
     abort "doctl could not create droplet '#{name}'.".red unless status.success?
@@ -527,8 +555,36 @@ Before writing or changing any deployment file, check which tools the user alrea
 3. Show the user one short table: tool, installed (with version) / missing / not authenticated.
 4. For everything missing, propose installing it in the same message, using the user's platform package manager (detect it: `pacman`/`yay`, `apt`, `dnf`, `brew`, or `gem` for Ruby gems). Show the exact install command and wait for the user's approval before running it. Do not install anything silently, and never run `sudo` commands without approval.
 5. For missing authentication, tell the user which login command to run themselves (in Claude Code, suggest the `! <command>` prefix so the output lands in the session). Never ask for tokens in chat and never print token values (see `SKILL.md` secrets rules).
-6. If the user declines a tool, record what is skipped and adapt: do not generate scripts that depend on a tool the user will not install, or mark that area as skipped in the final summary.
-7. Re-run the detection after installing and continue only when every required tool is present or explicitly skipped.
+6. After each approved install, continue with "Guided Tool Setup": authenticate (browser flow preferred) and configure dependent values immediately, not later when a script fails.
+7. If the user declines a tool, record what is skipped and adapt: do not generate scripts that depend on a tool the user will not install, or mark that area as skipped in the final summary.
+8. Re-run the detection after installing and continue only when every required tool is present or explicitly skipped.
+
+## Guided Tool Setup (Don't Just Install, Configure)
+
+Installing a tool is not done until it is authenticated and ready to use. After the user approves installing a missing tool, walk them through the whole setup in the same session, using the lowest-friction login available:
+
+1. **Prefer browser-based login over pasted tokens.** For each tool, check which flow it supports and use it:
+   - `gh`: `gh auth login --web`
+   - `op` (1Password): enable the desktop-app CLI integration, then `op signin`
+   - Cloudflare: use the Cloudflare MCP server's browser authentication when available, or `wrangler login`
+   - hosting provider: first look for a provider MCP server or OAuth/browser login (in the currently available MCP tools, or in the provider's docs); use `doctl auth init`/`hcloud context create`/etc. with a token only when no browser flow exists.
+   In Claude Code, suggest running interactive logins with the `! <command>` prefix so the browser opens and the result lands in the session. Never ask for a token in chat, never write it to a file, never print it.
+2. **Verify after login**, not just install: `doctl account get`, `gh auth status`, `op whoami`, etc. Show the result.
+3. **Configure the dependent values right away** so the scripts do not fail later: list the account's SSH keys (`doctl compute ssh-key list`); if none match the user's local key, offer to import `~/.ssh/*.pub` (`doctl compute ssh-key import`) or generate one (`ssh-keygen -t ed25519`); confirm region, size, and image with the user and write them into `lib/server_provider.rb`. The SSH key fingerprint is not a secret.
+4. **DNS:** ask where the domain's DNS lives. If it is Cloudflare (or another provider with an API/MCP), set up `upsert_dns`/`delete_dns` now. If not, tell the user up front that the A record must be created manually at the new server's IP before Kamal requests a certificate, and show the exact record (name, type, IP) once the IP is known.
+5. Run `ServerProvider.preflight!` (or its equivalent checks) once at the end to prove the setup works, without creating anything.
+
+## Creating Servers Without `bin/setup` (MCP and Browser Login)
+
+`bin/setup -d <environment>` is not the only way to create a server. Offer the user these options and let them choose:
+
+- **Provider MCP server (preferred when available):** if the hosting provider has an MCP server (check the available MCP tools; offer to add it when the provider publishes one) with browser/OAuth authentication, use it to create the server, read its public IP, and manage DNS, with no CLI token handling. Authenticate through the browser, never by pasting tokens.
+- **Browser dashboard:** if no MCP or CLI is workable, drive the provider's web console in the user's browser (Claude in Chrome tools) or guide the user through it step by step.
+- **`bin/setup`:** the scripted path described above.
+
+Whichever path creates the server, finish by recording it so the rest of the flow works: write `main_host` (the real IP, validated), `host`, and `server_id` (when known, so `bin/remove_fully` can delete it) to `.kamal/servers.yml`, then continue with `bin/setup -d <environment>` (it will find the recorded server and go straight to `kamal setup`).
+
+**Paid-resource reminder (mandatory).** Before creating any server by any path, and again in the final summary, remind the user in plain words: these are paid servers that bill for as long as they exist, even when idle; they should watch usage and the provider's billing page, set a billing alert if the provider supports it, and delete servers they no longer need (`bin/remove_fully -d <environment>`, or the provider's console). Creating a server always needs the user's explicit approval for that specific server (name, region, size, approximate price if known).
 
 ## Implement Deployment
 
