@@ -21,6 +21,8 @@ Required scripts:
 - `bin/remove` — resolve the same environment, require the operator to type the full destination name to confirm, then `exec kamal remove` with the original arguments. It removes only the app (containers, networks) from the server; **the server itself stays and keeps costing money.** The script must carry a comment saying that `bin/remove_fully` exists for deleting the server too and must be used with great care.
 - `bin/remove_fully` — resolve the same environment, require the operator to type the full destination name, then run `kamal remove` **and** delete the server at the hosting provider, in that order. `kamal remove` is never run by this script without the server deletion, and the server is never deleted without it. Refuses to run when no server (or no provider `server_id`) is recorded.
 
+**Progress output for `bin/setup -d <environment>`.** Creating a server takes minutes, so the script must never go quiet. Use the `colorize` gem (add `gem "colorize"` to the `Gemfile` development group if absent, and run `bundle install`) via the `KamalCli.step`/`info`/`ok` helpers: print a blue `==>` line before each phase (creating the server, updating DNS, waiting for SSH, running `kamal setup`), a green `✔` line when it finishes, and a heartbeat line every ~10 seconds (`KamalCli.with_progress`) during any long blocking call such as the provider CLI waiting for the server, plus a retry line per SSH attempt. Errors use red. Never print tokens or secret values in these logs.
+
 Shared logic (recorded-server lookup, typed confirmations, SSH wait, environment export, required-command checks) belongs in `lib/kamal_cli.rb` and is `require_relative`d from each `bin/` script, not copy-pasted per script. Provider logic (create/delete server, optional DNS) belongs only in `lib/server_provider.rb`.
 
 ### Recorded server data (`.kamal/servers.yml`)
@@ -53,10 +55,34 @@ Every action that creates or deletes a server must be confirmed by typing the **
 require "fileutils"
 require "socket"
 require "yaml"
+require "colorize"
 require_relative "server_provider"
 
 module KamalCli
   module_function
+
+  # --- Progress output ------------------------------------------------------
+  # Provisioning takes minutes. Every step prints what it is doing, so the operator never wonders
+  # whether the script hung.
+
+  def step(message) = puts("==> #{message}".blue.bold)
+  def info(message) = puts("    #{message}")
+  def ok(message) = puts("    ✔ #{message}".green)
+  def warn_line(message) = puts("    ! #{message}".yellow)
+
+  # Runs the block while a background thread prints "still working" every `every` seconds.
+  def with_progress(message, every: 10)
+    started = Time.now
+    ticker = Thread.new do
+      loop do
+        sleep every
+        info("#{message} (still working, #{(Time.now - started).to_i}s elapsed)".light_black)
+      end
+    end
+    yield
+  ensure
+    ticker&.kill
+  end
 
   SERVERS_FILE = File.expand_path("../.kamal/servers.yml", __dir__)
 
@@ -130,10 +156,15 @@ module KamalCli
       host = ask("Public hostname for '#{destination}' (for example #{destination}.example.com)")
       abort "A hostname is required. Nothing was created." if host.empty?
 
+      step "Creating '#{destination}' server at the hosting provider (usually 1-3 minutes)"
       server = ServerProvider.create(destination).merge("host" => host)
       save_server(destination, server) # record the server_id immediately, before anything else can fail
-      puts "Created server #{server['server_id']} at #{server['main_host']}."
+      ok "Created server #{server['server_id']} at #{server['main_host']}"
+      info "Recorded in #{SERVERS_FILE}"
+
+      step "Updating DNS for #{host}"
       ServerProvider.upsert_dns(host, server["main_host"])
+      ok "DNS step finished"
     else
       ip = ask("IP of an already existing '#{destination}' server (empty to cancel)")
       abort "No server for '#{destination}'. Nothing was changed." if ip.empty?
@@ -148,11 +179,18 @@ module KamalCli
   end
 
   def wait_for_ssh(host, port: 22, timeout: 300)
-    deadline = Time.now + timeout
+    step "Waiting for SSH on #{host}:#{port} (a fresh server needs a minute or two to boot)"
+    started = Time.now
+    deadline = started + timeout
+    attempt = 0
     begin
-      Socket.tcp(host, port, connect_timeout: 5) { return true }
+      attempt += 1
+      Socket.tcp(host, port, connect_timeout: 5) { nil }
+      ok "SSH is reachable after #{(Time.now - started).to_i}s"
+      true
     rescue SystemCallError, SocketError
-      abort "Timed out waiting for SSH on #{host}:#{port}." if Time.now > deadline
+      abort "Timed out waiting for SSH on #{host}:#{port}.".red if Time.now > deadline
+      info "SSH not ready yet (attempt #{attempt}, #{(Time.now - started).to_i}s elapsed), retrying in 5s...".light_black
       sleep 5
       retry
     end
@@ -204,17 +242,22 @@ module ServerProvider
     KamalCli.require_commands!("doctl")
 
     name = "#{APP_NAME}-#{destination}"
-    stdout, status = Open3.capture2(
-      "doctl", "compute", "droplet", "create", name,
-      "--region", REGION, "--size", SIZE, "--image", IMAGE,
-      "--ssh-keys", SSH_KEY_FINGERPRINT, "--wait", "--output", "json"
-    )
-    abort "doctl could not create droplet '#{name}'." unless status.success?
+    KamalCli.info "Requesting droplet '#{name}' (#{REGION}, #{SIZE}, #{IMAGE}) and waiting until it is active..."
+    stdout = status = nil
+    KamalCli.with_progress("Waiting for the provider to build the server") do
+      stdout, status = Open3.capture2(
+        "doctl", "compute", "droplet", "create", name,
+        "--region", REGION, "--size", SIZE, "--image", IMAGE,
+        "--ssh-keys", SSH_KEY_FINGERPRINT, "--wait", "--output", "json"
+      )
+    end
+    abort "doctl could not create droplet '#{name}'.".red unless status.success?
 
     droplet = JSON.parse(stdout).first
     ip = droplet.dig("networks", "v4")&.find { |network| network["type"] == "public" }&.fetch("ip_address")
     abort "Droplet #{droplet['id']} was created but has no public IPv4. Check it in DigitalOcean and delete it if unused." if ip.nil?
 
+    KamalCli.ok "Droplet #{droplet['id']} is active with public IP #{ip}"
     { "server_id" => droplet.fetch("id").to_s, "main_host" => ip }
   end
 
@@ -276,10 +319,11 @@ end
 
 # The only script allowed to create a server: asks first when no IP is recorded for this destination.
 server = KamalCli.load_environment!(destination, provision: true)
-puts "Running Kamal setup for '#{destination}' with MAIN_HOST=#{server['main_host']} and HOST=#{server['host']}"
+KamalCli.step "Server for '#{destination}': MAIN_HOST=#{server['main_host']} HOST=#{server['host']}"
 
 KamalCli.wait_for_ssh(server["main_host"])
 
+KamalCli.step "Running `kamal setup` (installs Docker, boots accessories, first deploy; this can take several minutes)"
 exec("kamal", "setup", *ARGV)
 ```
 

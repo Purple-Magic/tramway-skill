@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.1.1
+
+- `bin/setup -d <environment>` now prints detailed, colored (`colorize`) progress while creating a server: phase headers,
+  success lines, a heartbeat every ~10s during the provider call, and per-attempt SSH wait lines, so it never looks hung.
+
 ## 3.1.0
 
 - Added "Tooling Preflight" to the deployment recipe: during `Implement deployment` / `update deployment` the skill now
