@@ -140,6 +140,7 @@ Rules:
 16. Ensure repository is created/connected before configuring team chat integrations and related secrets.
 17. In user-facing messages, call it "reference project" (not `base_project`).
 18. If user asks what the reference project is, explain briefly and include this link: `https://github.com/purple-magic/base_project`.
+18a. Never save, or ask the user to save, non-secret values (for example `APP_NAME`, `KAMAL_REGISTRY_USERNAME`, `TELEGRAM_BOT_USERNAME`, hostnames, regions, fingerprints) in 1Password or any password manager. Only real secrets go there; see "Secret vs Non-Secret" in `agents/recipes/save-rails-secrets-1password.md`.
 19. Never offer or request posting secrets in chat. Use local secret setup + confirmation-only flow.
 20. If the user asks to `Implement deployment`, treat that as an explicit request to add or update deployment configuration.
 21. For `Implement deployment`, always check and implement all of these areas together:

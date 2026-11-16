@@ -28,6 +28,21 @@ Also run it automatically during:
 2. Project update/upgrade when existing key storage is missing, unsafe, or unknown.
 3. Deployment implementation before requesting `RAILS_MASTER_KEY`, Rails credential keys, staging secrets, production secrets, provider tokens, or repository secrets.
 
+## Secret vs Non-Secret (Never Store Plain Config in 1Password)
+
+1Password holds only real secrets. Before adding any field to the item, classify it:
+
+- **Secret (store in 1Password):** anything that grants access or must stay private: `config/master.key`, `config/credentials/*.key`, `RAILS_MASTER_KEY`, passwords, API/provider tokens, `KAMAL_REGISTRY_PASSWORD`, webhook URLs with embedded tokens, `TELEGRAM_BOT_TOKEN`, SSH private keys.
+- **Non-secret (do NOT store in 1Password, never ask the user to save or copy it there):** public or descriptive configuration such as `APP_NAME`, `KAMAL_REGISTRY_USERNAME`, `TELEGRAM_BOT_USERNAME`, hostnames/domains, region/size/image names, image repository names, SSH key fingerprints, SSH user names, ports, `RAILS_ENV`, feature flags. Put these in `config/deploy*.yml` (`env.clear`, `registry.username`), the code, or the README, and read them from there.
+
+Rules:
+
+1. When building the list of fields for the item, include only secrets. If the user explicitly asks to also store a non-secret value, you may, but never suggest it.
+2. `.kamal/secrets` must not fetch non-secret values through `op`/`$(...)`; non-secret values belong in `env.clear` or `registry.username` in the deploy config.
+3. When a username and its token are a pair (for example `TELEGRAM_BOT_USERNAME` and `TELEGRAM_BOT_TOKEN`), save only the token; the username goes into plain config.
+4. If an existing project reads a non-secret value from 1Password, flag it during `update deployment` and offer to move it to the deploy config; do not remove it without approval.
+5. Do not run `op item create/edit` for non-secret fields, and do not list them in any "save this in 1Password" instruction to the user.
+
 ## Recommended 1Password Flow
 
 Guide the user through the app UI unless they explicitly ask for CLI commands:
@@ -40,8 +55,8 @@ Guide the user through the app UI unless they explicitly ask for CLI commands:
    - `config/credentials/staging.key`, if present
    - `config/credentials/production.key`, if present
    - `RAILS_MASTER_KEY`, if deployment expects that name
-   - `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, if the current deployment design stores database values outside Rails credentials
-   - Auth0, API, webhook, and provider secrets used by staging or production
+   - `POSTGRES_PASSWORD`, if the current deployment design stores database values outside Rails credentials (`POSTGRES_DB` and `POSTGRES_USER` are non-secret: keep them in the deploy config)
+   - Auth0, API, webhook, and provider secrets (secrets only, per the section above) used by staging or production
    - `DISCORD_WEBHOOK_URL`, if Discord integration is enabled
    - `SSH_PRIVATE_KEY` and `SSH_USER`, if repository CI/deploy needs them
    - DigitalOcean and Cloudflare tokens only if the user wants them stored in 1Password in addition to the provider CLI login or local environment variables used by `lib/server_provider.rb`

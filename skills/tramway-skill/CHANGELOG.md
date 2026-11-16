@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.2.1
+
+- The skill no longer saves or asks to save non-secret values (`APP_NAME`, `KAMAL_REGISTRY_USERNAME`,
+  `TELEGRAM_BOT_USERNAME`, hosts, regions, fingerprints, `POSTGRES_DB`/`POSTGRES_USER`) in 1Password. Added a
+  "Secret vs Non-Secret" section to the secrets recipe and `SKILL.md` rule 18a.
+
 ## 3.2.0
 
 - Added "Guided Tool Setup": after installing a tool the skill authenticates it (browser/OAuth or MCP preferred over
