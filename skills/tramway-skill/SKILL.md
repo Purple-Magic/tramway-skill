@@ -74,6 +74,7 @@ Secrets policy:
 6. Do not replace secret guidance with generating app pages/docs (for example, "main page with instructions") unless user explicitly asks for that.
 7. For any app keys, credentials, or recovery material generated during setup, explicitly ask the user how they want to store them before continuing.
 8. Strongly recommend encrypted storage such as password managers or another secure secrets manager.
+8a. App secrets (tokens, passwords, third-party secrets) are stored in Rails credentials by default, but always ask the user whether they also want 1Password (recommended) or an alternative store, and never choose silently. See "Default Storage" in `agents/recipes/save-rails-secrets-1password.md`.
 9. Mention `1Password` as the recommended option because this skill already has implemented and tested guidance for it; also mention alternatives such as `Bitwarden`.
 10. If the user chooses unencrypted local `.env*` files, clearly warn that this is not safe, the keys may be lost with the machine or filesystem, and recovery may be impossible without backups.
 11. During update, upgrade, and maintenance workflows, detect how the user currently stores keys and credentials before asking for any new secret-handling steps.

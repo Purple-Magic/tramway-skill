@@ -11,6 +11,16 @@ Use this recipe when the user asks how to save `config/master.key`, `config/cred
 5. Unencrypted `.env*`, notes files, screenshots, chat messages, or local-only plaintext are fallback-only and unsafe. If the user chooses them, warn that losing the machine or files can permanently lose access to the app credentials.
 6. Ask the user to reply `done` after each secret is saved. Do not request the secret value.
 
+## Default Storage: Rails Credentials (Then Ask About a Secret Store)
+
+1. **Default:** every secret that is not a key (API/provider tokens, webhook URLs, passwords, third-party secrets) goes into Rails credentials (`rails credentials:edit`, per-environment files when the project uses them) by default. Do not invent another store for them.
+2. **Always ask** the user, once per workflow, before storing: "Rails credentials are the default for app secrets. Do you also want to keep operator copies and the master keys in 1Password (recommended, tested with this skill), or in an alternative such as Bitwarden or a company secret manager?" Wait for the answer.
+   - Rails credentials only: proceed; the `config/master.key` / `config/credentials/*.key` recovery warning still applies and they still need a secure backup somewhere.
+   - 1Password or an alternative: follow the matching flow below for the keys and for any secret the user wants mirrored or that cannot live in Rails credentials (for example `KAMAL_REGISTRY_PASSWORD`, CI/SSH secrets, provider CLI tokens).
+3. Never pick the secret store silently, and never move secrets from Rails credentials to a password manager unless the user chose that.
+4. Non-secret values are excluded from both: see "Secret vs Non-Secret".
+5. Remember the user's answer in the project's `AGENTS.md`/`CLAUDE.md` (store name only, never values) so later workflows do not re-ask unless the user wants to change it.
+
 ## When To Run
 
 Run this recipe if the user says anything like:

@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.2.2
+
+- Secrets default to Rails credentials, but the skill must always ask whether the user also wants 1Password
+  (recommended) or an alternative store, and remember the answer (store name only) in `AGENTS.md`/`CLAUDE.md`.
+  Added "Default Storage" to the secrets recipe and `SKILL.md` rule 8a.
+
 ## 3.2.1
 
 - The skill no longer saves or asks to save non-secret values (`APP_NAME`, `KAMAL_REGISTRY_USERNAME`,
