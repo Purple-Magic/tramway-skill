@@ -26,18 +26,17 @@
 4. If the user asked for project updating/upgrading, explicitly inspect the reference project for applicable updates to:
    - `.gitignore`
    - `AGENTS.md`
-   - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove`, `lib/kamal_cli.rb`
+   - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove`, `bin/remove_fully`, `lib/kamal_cli.rb`, `lib/server_provider.rb`
    - deployment configuration
-   - Terraform configuration
-5. Apply/adapt those `.gitignore`, `AGENTS.md`, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`, deployment, and Terraform updates when they are applicable to the current project.
+   - any leftover `terraform/` setup that must be migrated away from Terraform
+5. Apply/adapt those `.gitignore`, `AGENTS.md`, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`/`bin/remove_fully`, deployment, and server-provisioning updates when they are applicable to the current project.
 6. If the user asked to `update deployment`, apply all applicable deployment-related setup from the reference project, including:
-   - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove` (Ruby Kamal proxies, see `agents/recipes/deployment-recipe.md`)
+   - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove`, `bin/remove_fully` (Ruby Kamal proxies with provider-backed server create/delete, see `agents/recipes/deployment-recipe.md`)
    - `AGENTS.md`/`CLAUDE.md` deployment-command guidance pointing agents at those `bin/` scripts instead of raw `kamal` commands
    - deployment configuration
    - `.kamal/secrets`, when applicable; it must not contain shell `if` statements, and any local secret-resolution command in it must use the project's local command runner (e.g. `dip rails runner ...`), never bare `rails`/`bin/rails` (see `agents/recipes/deployment-recipe.md` "`.kamal/secrets` Local Secret Resolution")
    - any `.gitignore` `.keep`-exception directory (e.g. `app/assets/builds`) actually has its `.keep` file committed, not just declared in `.gitignore`
-   - Terraform configuration
-   - Terraform helper/usage scripts and patterns
+   - `lib/kamal_cli.rb` and `lib/server_provider.rb`, plus migrating away from any leftover Terraform setup
 7. Confirm repository service (GitHub, GitLab, etc.) and apply CI rules:
    - GitHub: sync applicable updates from `.github/workflows` in reference project.
    - Non-GitHub: keep equivalent CI scenarios on chosen platform.
@@ -70,7 +69,7 @@
 15. Apply changes in small thematic batches.
 16. Preserve HAML-only views and avoid introducing new `.erb` files.
 17. In local development, run `dip rails db:prepare`, boot check, and tests after each batch. In CI, use CI-native commands and services; do not use `dip`.
-18. Summarize applied/skipped updates with reasons for every skipped item, including `.gitignore`, `AGENTS.md`, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`, deployment, and Terraform decisions.
+18. Summarize applied/skipped updates with reasons for every skipped item, including `.gitignore`, `AGENTS.md`, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`/`bin/remove_fully`, deployment, and server-provisioning decisions.
 
 ## Migration Safety
 

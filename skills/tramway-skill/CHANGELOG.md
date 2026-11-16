@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.0.0
+
+- **Breaking:** removed Terraform from the skill entirely (deleted `scripts/install_terraform.sh`; removed every
+  Terraform instruction from `SKILL.md`, `references/`, and the deployment, project-creation, and secrets recipes).
+- Server provisioning now lives in the project's own `bin/` scripts, driven by the hosting provider the user picks,
+  through its API or command-line utility. All provider-specific code is isolated in `lib/server_provider.rb`
+  (reference implementation: DigitalOcean via `doctl`; guidance for other hostings and optional Cloudflare DNS).
+- `bin/setup -d <environment>` records servers in the gitignored `.kamal/servers.yml`; when no IP is recorded it asks
+  whether to create a new server (or record an existing one) and requires the full environment name to be typed first.
+- Added `bin/remove_fully -d <environment>`: runs `kamal remove` together with deleting the server at the provider,
+  behind a typed full-environment-name confirmation. `bin/remove` now carries a comment pointing to it, warning to use
+  it carefully, and also requires the typed full environment name. Every server create/delete action is confirmed this
+  way; the scripts abort without a terminal instead of guessing.
+- Added a "Migrating Away From Terraform" procedure for `update deployment` on projects that still have `terraform/`.
+- Updated `agents/rails.md`, `references/checklists.md`, and `README.md` to match.
+
 ## 2.4.0
 
 - Documented `show_attributes` in the "Decorators" section of `agents/tramway.md`, including the new Hash entry

@@ -99,8 +99,7 @@ This skill is meant to support both groups:
 - Creating a new Rails project with configured:
   - Docker for development (via dip)
   - Deployment (via Kamal)
-  - Production and staging server management (via Terraform)
-  - Production and staging server management (via Terraform)
+  - Production and staging server creation and deletion through the hosting provider's API/CLI (`bin/setup -d`, `bin/remove_fully -d`)
   - Authentication (via Rails authorization or Auth0)
   - Project structure (via Tramway)
   - Background jobs (via SolidQueue)
@@ -111,7 +110,7 @@ This skill is meant to support both groups:
   - New Rails features and approaches (if applicable)
   - Bug fixes (if they exist)
 - Secrets management
-  - 1Password integration instructions for Terraform
+  - 1Password integration instructions for deployment secrets
   - Rails credentials instructions
 - Authorization
   - Auth0 integration recipe    

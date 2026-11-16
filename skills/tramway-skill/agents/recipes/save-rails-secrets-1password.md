@@ -44,7 +44,7 @@ Guide the user through the app UI unless they explicitly ask for CLI commands:
    - Auth0, API, webhook, and provider secrets used by staging or production
    - `DISCORD_WEBHOOK_URL`, if Discord integration is enabled
    - `SSH_PRIVATE_KEY` and `SSH_USER`, if repository CI/deploy needs them
-   - DigitalOcean and Cloudflare tokens only if the user wants them stored in 1Password in addition to local Terraform secret files
+   - DigitalOcean and Cloudflare tokens only if the user wants them stored in 1Password in addition to the provider CLI login or local environment variables used by `lib/server_provider.rb`
 5. Copy each secret from the local file or provider UI into the matching 1Password field without posting it in chat.
 6. Save the item.
 7. Ask the user to confirm with `done`.
@@ -76,6 +76,6 @@ When deployment is involved:
 2. Use 1Password as backup/operator storage for keys and provider tokens, not as a reason to move secrets out of Rails credentials.
 3. Repository secrets still belong in repository/CI secret storage when CI requires them.
 4. `RAILS_MASTER_KEY` must come from `config/master.key` or the relevant environment key, but the user should save that key in 1Password before adding it to repository secrets.
-5. Do not ask the user to create or fill `MAIN_HOST` in 1Password before Terraform apply. Terraform derives and syncs it in the reference-project flow.
+5. Do not ask the user to create or fill `MAIN_HOST` in 1Password. `bin/setup -d <environment>` records the server IP in the gitignored `.kamal/servers.yml` itself.
 6. Walk the user through repository secrets one-by-one and wait for `done` after each.
 7. If `.kamal/secrets` resolves any value by running Rails/Ruby locally (`rails runner`, `rails credentials:...`, etc.), that command must go through the project's local command runner (`dip rails runner ...` for `dip`-based projects), never bare `rails`/`bin/rails`, and its output must be verified non-empty before deploying. See `agents/recipes/deployment-recipe.md` "`.kamal/secrets` Local Secret Resolution" for the full rule and the reason it fails silently otherwise.

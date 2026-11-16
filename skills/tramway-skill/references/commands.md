@@ -8,7 +8,6 @@ Do not run or suggest direct `docker` or `docker-compose` commands for project o
 If `dip` reports that a required port is already in use or a container cannot be created because a name is already used, pause the task. Ask the user to free the needed resources, or explain the project-local configuration changes needed to use different ports/container names and wait for confirmation before changing them.
 Assume Ruby is already installed. If Rails is missing, run `gem install rails`.
 If `dip` is missing in local development, offer installing it via `gem install dip`.
-If a task requires Terraform and `terraform` is missing, install it with `bash scripts/install_terraform.sh` before running Terraform commands.
 For database dump/restore implementation, preserve the reference-project workflow but adapted into this project's convention of `bin/dump -d <environment>`. A direct `docker` volume reset is allowed only inside the imported/adapted `script/dump/restore` flow when needed to match the reference local restore behavior.
 
 For production, staging, and CI, use the environment's native command runner and service definitions. Examples include CI workflow steps such as `bundle exec rspec` after the job has installed gems, or deploy-platform commands documented by the chosen hosting/deployment tool. Do not add `dip` to CI images, deploy scripts, staging consoles, or production maintenance procedures.
@@ -42,12 +41,9 @@ Before running commands:
 - At the end of create-project questioning, ask whether user wants server creation and deploy configuration.
 - If yes, ask whether they already have a server.
 - If they do not have a server, ask which hosting they want. Recommend `DigitalOcean` because this skill has complete setup guidance for it.
-- If hosting is `DigitalOcean`, use Terraform configuration from the reference project.
-- If hosting is not `DigitalOcean`, build Terraform server/deploy configuration yourself for that hosting.
-- Ask what provider they use for domain/DNS hosting. Recommend `Cloudflare` because this skill has complete setup guidance for it.
-- If domain hosting is `Cloudflare`, use/adapt Cloudflare Terraform configuration from the reference project.
-- If domain hosting is not `Cloudflare`, build Terraform domain/DNS configuration yourself for that provider.
-- Do not collect deploy/provider secrets yet. Collect them in deploy setup phase after Rails project and `terraform/` directory exist.
+- Ask what provider they use for domain/DNS hosting. Recommend `Cloudflare` because this skill describes a complete API flow for it.
+- Server creation and deletion is done by `bin/setup -d <environment>` and `bin/remove_fully -d <environment>` through the chosen hosting's API or command-line utility (see `agents/recipes/deployment-recipe.md`). This skill does not use Terraform.
+- Do not collect deploy/provider secrets yet. Collect provider settings in the deploy setup phase after the Rails project and `lib/server_provider.rb` exist, and never collect provider credentials in chat.
 - Do not create or modify user home dotfiles such as `.bashrc`, `.zshrc`, `.psqlrc`, or similar host-level config files unless the user explicitly asked for that.
 
 ```bash
@@ -97,82 +93,30 @@ CI notifications:
 - If chat is not `Discord` (for example Telegram), ask user whether they still want CI notifications and clearly warn that this config will be fully generated and not tested.
 - If chat is not `Discord` and user does not want generated notifications, do not apply Discord notification configuration from reference workflows.
 
-## Server/Deploy Terraform setup
+## Server/Deploy provisioning setup
 
-Use this only when user confirms server/deploy configuration should be configured during bootstrap.
+Use this only when user confirms server/deploy configuration should be configured during bootstrap. Follow `agents/recipes/deployment-recipe.md` ("Deployment Management Scripts (`bin/`)" and "New-Project Deployment Add-On"); this skill does not use Terraform.
 
-When hosting is `DigitalOcean`, import and adapt Terraform files from reference project:
+Summary of the flow:
+- The server for each environment is recorded in the gitignored `.kamal/servers.yml` (`main_host`, `host`, `server_id`).
+- `lib/server_provider.rb` is generated for the hosting the user chose (reference implementation: DigitalOcean through `doctl`; other hostings through their CLI or REST API). It is the only file that talks to the provider.
+- `bin/setup -d <environment>` asks whether to create a new server when no IP is recorded; `bin/remove_fully -d <environment>` runs `kamal remove` and deletes the server. Both require the user to type the full environment name first.
+- Provider settings that are not secret (`app_name`, `region`, `size`, SSH key fingerprint, domain) are constants in `lib/server_provider.rb`.
+- Provider credentials come from the provider CLI's own login (for example `doctl auth init`) or a local environment variable (for example `CLOUDFLARE_API_TOKEN`). The user sets them locally and replies `done`; never ask for them in chat and never write them into the repository.
+- Keep deploy database values in Rails credentials by default, following the reference project (`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`).
 
-```bash
-mkdir -p terraform
-curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/terraform/main.tf -o terraform/main.tf
-curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/terraform/variables.tf -o terraform/variables.tf
-curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/terraform/update_env_hosts.sh -o terraform/update_env_hosts.sh
-curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/terraform/wait_for_ssh.sh -o terraform/wait_for_ssh.sh
-chmod +x terraform/update_env_hosts.sh terraform/wait_for_ssh.sh
-```
-
-After import, adapt reference project defaults to current project:
-- Replace droplet/resource naming and default `app_name` values.
-- If using Cloudflare from reference Terraform, replace subdomain record name and domain values.
-- Keep provider versions unless user asks to upgrade.
-
-When hosting is not `DigitalOcean`:
-- Build Terraform server/deploy configuration yourself for selected hosting provider.
-- Define required providers/resources/variables for selected hosting and current project.
-
-Domain/DNS branch:
-- If domain hosting is `Cloudflare`, use/adapt Cloudflare Terraform resources from reference Terraform.
-- If domain hosting is not `Cloudflare`, build Terraform DNS configuration yourself for selected provider.
-
-Collect deploy/provider variables now (after project + `terraform/` directory exist):
-- Keep deploy database values in Rails credentials by default, following the reference project.
-  - Store `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` there unless the current project explicitly uses a different deploy design.
-- If hosting is `DigitalOcean`, collect: `do_token`, `ssh_fingerprint`, `region`, `size`, `app_name`.
-  - For `ssh_fingerprint`, default to the system default SSH key; ask custom only on explicit request.
-  - If default key is missing in DigitalOcean, add it in DigitalOcean -> API -> Tokens/Keys -> SSH Keys and use its fingerprint.
-  - `do_token` retrieval: DigitalOcean -> API -> Tokens/Keys -> Personal access tokens -> Generate New Token.
-  - Put token into `terraform/secrets.auto.tfvars` and reply `done` without posting secret value in chat.
-- If hosting is not `DigitalOcean`, collect provider-specific server/deploy Terraform inputs.
-- If domain hosting is `Cloudflare`, collect: `domain`, `cloudflare_email`, `cloudflare_api_key`.
-  - `cloudflare_api_key` retrieval: Cloudflare -> My Profile -> API Tokens -> Global API Key -> View.
-  - Put key into `terraform/secrets.auto.tfvars` and reply `done` without posting secret value in chat.
-- If domain hosting is not `Cloudflare`, collect provider-specific DNS Terraform inputs.
-- Store all Terraform variables/secrets in `terraform/secrets.auto.tfvars` and keep it gitignored.
-- Do not ask the user to create or fill `MAIN_HOST` in 1Password before Terraform apply; Terraform derives and syncs it itself in the reference-project flow.
-
-Tooling checks required by the reference Terraform flow:
+Tooling checks (no server is created by them):
 
 ```bash
-if ! command -v terraform >/dev/null 2>&1; then bash scripts/install_terraform.sh; fi
-terraform -version
-# only when using DigitalOcean reference wait script:
+command -v kamal || gem install kamal
+# DigitalOcean reference provider only:
 doctl version
-command -v nc
-```
-
-Terraform execution flow:
-
-```bash
-terraform -chdir=terraform init
-terraform -chdir=terraform validate
-terraform -chdir=terraform plan
-# run apply only after explicit user confirmation
-terraform -chdir=terraform apply
-```
-
-After successful apply:
-
-```bash
-# optional: if project .env exists and script is present
-bash terraform/update_env_hosts.sh
-terraform -chdir=terraform output
+doctl account get
 ```
 
 Important safety notes:
-- Do not commit secrets (`*.tfvars`, `.env*`, tokens, private keys, state secrets).
-- Keep Terraform credentials in local environment/secrets manager and CI/repository secrets.
-- For Terraform local secret storage, default to `terraform/secrets.auto.tfvars` (gitignored).
+- Do not commit secrets (`.env*`, tokens, private keys). `/.kamal/servers.yml` is gitignored as well.
+- Never create or delete a server on the user's behalf, and never answer the typed-confirmation prompts for them.
 - When creating or updating Kamal deployment configuration, `.kamal/secrets` must not contain shell `if` statements.
 - Keep conditional secret resolution in project scripts or external secret tooling, and keep `.kamal/secrets` as a simple declarative secret-loading file.
 
@@ -189,7 +133,7 @@ Repository secrets setup guide (never in chat):
   - Kamal registry default: localhost registry.
     - Do not require `KAMAL_REGISTRY_USERNAME` / `KAMAL_REGISTRY_PASSWORD` for localhost registry.
     - Request registry credentials only if user explicitly chooses external registry.
-  - `MAIN_HOST`: do not ask user to set it manually in 1Password before Terraform apply; Terraform syncs it itself.
+  - `MAIN_HOST`: do not ask the user to set it manually; `bin/setup -d <environment>` records the server IP in `.kamal/servers.yml` itself.
 - Ask user to reply `done` after secrets are set, without posting secret values.
 - After project creation, guide secret setup in chat one-by-one (wait for `done` after each), not by creating in-app instruction pages.
 - Recommended order:
@@ -201,15 +145,16 @@ Repository secrets setup guide (never in chat):
 
 ## Deployment management commands
 
-Use `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, and `bin/remove` (Ruby, see `agents/recipes/deployment-recipe.md` "Deployment Management Scripts") for Kamal deploy management. Do not add or use `Makefile` targets for these five commands.
+Use `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove`, and `bin/remove_fully` (Ruby, see `agents/recipes/deployment-recipe.md` "Deployment Management Scripts") for Kamal deploy management and server lifecycle. Do not add or use `Makefile` targets for these commands.
 
 ```bash
 bin/setup                    # local development bootstrap (no -d flag): bundle install, db:prepare, boot bin/dev
-bin/setup -d staging         # resolves Terraform outputs for staging, then kamal setup -d staging
-bin/deploy -d production     # resolves Terraform outputs for production, then kamal deploy -d production
-bin/logs -d staging          # resolves Terraform outputs for staging, then kamal app logs -d staging
-bin/console -d production    # resolves Terraform outputs for production, then kamal app exec --interactive -d production "bin/rails console"
-bin/remove -d staging        # resolves Terraform outputs for staging, prompts to type "staging" to confirm, then kamal remove -d staging
+bin/setup -d staging         # no server IP recorded? asks whether to create one (typed "staging" to confirm); then kamal setup -d staging
+bin/deploy -d production     # uses the recorded server for production, then kamal deploy -d production
+bin/logs -d staging          # uses the recorded server for staging, then kamal app logs -d staging
+bin/console -d production    # uses the recorded server for production, then kamal app exec --interactive -d production "bin/rails console"
+bin/remove -d staging        # prompts to type "staging" to confirm, then kamal remove -d staging; the server is kept
+bin/remove_fully -d staging  # prompts to type "staging" to confirm, then kamal remove AND deletes the server; irreversible, use with great care
 ```
 
 Whenever these scripts are added or updated, also update the project's `AGENTS.md`/`CLAUDE.md` so future agent sessions use them instead of raw `kamal` commands for `staging`/`production` operations (see `agents/recipes/deployment-recipe.md` "Deployment Management Scripts" rule 9). Do not call `kamal` directly for these environments once the `bin/` scripts exist.
@@ -341,9 +286,9 @@ curl -fsSL https://raw.githubusercontent.com/purple-magic/base_project/main/Gemf
 After downloading reference content:
 - Verify it is applicable to current project setup.
 - Rewrite project-specific values (project name, repository URL, CI env vars, service identifiers) before applying.
-- For project update/upgrade requests, always inspect the reference project for applicable updates to `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`/`lib/kamal_cli.rb`, deployment configuration, and Terraform configuration.
-- If those `bin/`, deployment, or Terraform updates are applicable, update/adapt them instead of skipping them by default.
-- For `update deployment` requests, apply all applicable deployment-related setup from the reference project, including `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`, `AGENTS.md`/`CLAUDE.md` deployment-command guidance, Terraform configuration, and Terraform usage/helper-script patterns.
+- For project update/upgrade requests, always inspect the reference project for applicable updates to `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`/`bin/remove_fully`/`lib/kamal_cli.rb`/`lib/server_provider.rb` and deployment configuration, and check for a leftover `terraform/` setup to migrate.
+- If those `bin/`, deployment, or provisioning updates are applicable, update/adapt them instead of skipping them by default.
+- For `update deployment` requests, apply all applicable deployment-related setup from the reference project, including `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`/`bin/remove_fully`, `AGENTS.md`/`CLAUDE.md` deployment-command guidance, and the server-provisioning flow (migrating any leftover `terraform/` setup per `agents/recipes/deployment-recipe.md` "Migrating Away From Terraform").
 - Report what was updated and what was not updated, including reason for each non-updated item.
 
 ## Jobs and cache

@@ -31,7 +31,7 @@ Defaults:
 
 1. Create a standard Rails app, not API-only, unless user explicitly asks otherwise.
 2. Make repositories private by default unless user asks for public.
-3. Do not collect deploy/provider secrets during pre-project questions. Collect them only after the Rails project and `terraform/` directory exist.
+3. Do not collect deploy/provider secrets during pre-project questions. Collect provider settings only after the Rails project and `lib/server_provider.rb` exist, and never collect provider credentials in chat.
 4. Do not create or edit user home dotfiles.
 
 ## Repository Handling

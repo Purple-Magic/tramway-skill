@@ -39,10 +39,9 @@ Command policy:
 6. Inside a Rails project in local development, run all Bundler commands via `dip` (for example, `dip bundle install`, `dip bundle add ...`, `dip bundle outdated`).
 7. If `dip` is missing in local development, explicitly offer the user to install it with `gem install dip`.
 8. Local development services must run in containers through `dip`. Do not use host-installed PostgreSQL, Redis, Node/Yarn, or other project services for Rails project operations unless the user explicitly asks for a non-container setup.
-9. If a task requires Terraform and `terraform` is missing, install it with `bash scripts/install_terraform.sh` before running Terraform commands.
-10. Scoped exception: when implementing the reference-project database dump/restore feature, preserve the reference script behavior. A direct `docker` volume reset is allowed only inside the imported/adapted `script/dump/restore` flow if needed to match the reference local restore behavior. In this project's own convention, the top-level entry point is `bin/dump -d ENVIRONMENT`, not `./dump ENVIRONMENT`.
-11. If `dip` reports that a required port is already in use or a container cannot be created because a name is already used, pause the task. Ask the user to free the needed resources, or explain the project-local configuration changes needed to use different ports/container names and wait for confirmation before changing them.
-12. Do not suggest direct `bundle`, `bin/rails`, `bin/rspec`, `docker`, or `docker-compose` commands for local development project operations.
+9. Scoped exception: when implementing the reference-project database dump/restore feature, preserve the reference script behavior. A direct `docker` volume reset is allowed only inside the imported/adapted `script/dump/restore` flow if needed to match the reference local restore behavior. In this project's own convention, the top-level entry point is `bin/dump -d ENVIRONMENT`, not `./dump ENVIRONMENT`.
+10. If `dip` reports that a required port is already in use or a container cannot be created because a name is already used, pause the task. Ask the user to free the needed resources, or explain the project-local configuration changes needed to use different ports/container names and wait for confirmation before changing them.
+11. Do not suggest direct `bundle`, `bin/rails`, `bin/rspec`, `docker`, or `docker-compose` commands for local development project operations.
 
 View policy:
 
@@ -145,15 +144,15 @@ Rules:
 20. If the user asks to `Implement deployment`, treat that as an explicit request to add or update deployment configuration.
 21. For `Implement deployment`, always check and implement all of these areas together:
     - Kamal deployment for `staging` and `production`
-    - Terraform configuration for creating `staging` and `production`
-    - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove` (Ruby, see `agents/recipes/deployment-recipe.md` "Deployment Management Scripts") for infra/deploy management, not `Makefile` targets
+    - Server creation/deletion for `staging` and `production` through the hosting provider's API or CLI, driven by `bin/setup -d <environment>` and `bin/remove_fully -d <environment>` (no Terraform)
+    - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove`, `bin/remove_fully` (Ruby, see `agents/recipes/deployment-recipe.md` "Deployment Management Scripts") for infra/deploy management, not `Makefile` targets
     - `AGENTS.md`/`CLAUDE.md` updated so agents use those `bin/` scripts instead of raw `kamal` commands (see `agents/recipes/deployment-recipe.md` "Deployment Management Scripts" rule 9)
     - CI configuration
 22. For `Implement deployment`, use the same approach as the reference project and use the reference project files/configuration as the source whenever they are applicable to the current project.
 23. If a reference project file is not directly applicable, preserve the same deployment approach, behavior, naming conventions, workflow shape, and operator experience from the reference project, adapting only the parts required by the current hosting/git platform.
 24. For `Implement deployment`, treat partial deployment setup as incomplete until all five areas above are covered or explicitly skipped by the user.
-25. If the user asks for project updating/upgrading, always check the reference project for applicable updates to `.gitignore`, `AGENTS.md`, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`, deployment configuration, and Terraform configuration in addition to the usual app/tooling review.
-26. If the user asks to `update deployment`, treat that as an explicit request to apply all applicable deployment-related setup from the reference project, including deployment configuration, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`, `AGENTS.md`/`CLAUDE.md` deployment-command guidance, and Terraform usage patterns.
+25. If the user asks for project updating/upgrading, always check the reference project for applicable updates to `.gitignore`, `AGENTS.md`, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`/`bin/remove_fully`, deployment configuration, and server provisioning scripts in addition to the usual app/tooling review.
+26. If the user asks to `update deployment`, treat that as an explicit request to apply all applicable deployment-related setup from the reference project, including deployment configuration, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`/`bin/remove_fully`, `AGENTS.md`/`CLAUDE.md` deployment-command guidance, and the server-provisioning flow (including migrating a leftover `terraform/` setup away from Terraform).
 27. When creating or updating Kamal deployment configuration, `.kamal/secrets` must not contain shell `if` statements. Keep conditional secret resolution in project scripts or external secret tooling, and keep `.kamal/secrets` as a simple declarative secret-loading file.
 28. If the user asks to `Implement dump`, `implement dump and restore`, `dump database to local environment`, `dump database`, or equivalent, treat that as an explicit request to add the reference-project database dump/restore workflow, adapted to this project's own command convention. Use the same operator experience as the reference project but with the final entry point relocated and reshaped: the user runs `bin/dump -d ENVIRONMENT` and the remote database is dumped, downloaded, and restored into the local development database.
 29. For database dump/restore implementation, read these reference project files remotely from GitHub `main` and adapt them to the current project:
@@ -164,7 +163,7 @@ Rules:
 29. Preserve the reference dump/restore approach unless a project-specific difference makes direct copy unsafe:
     - Top-level executable command is `bin/dump -d <environment>` (not `./dump <environment>`).
     - Secrets are prepared by `ruby script/dump/prepare_secrets.rb "$ENVIRONMENT"`.
-    - `MAIN_HOST` can come from Terraform output `main_host_ip` or environment variable.
+    - `MAIN_HOST` can come from the project's recorded server data (`.kamal/servers.yml`, see `agents/recipes/deployment-recipe.md`) or environment variable.
     - Before adapting `prepare_secrets.rb`, inspect how the current project's Kamal deployment already gets secrets and use that same source for database host/user/password/name.
     - Use Rails credentials paths from the reference project only when the current Kamal setup already uses Rails credentials for those values.
     - Remote dump is created with `kamal app exec -d "$ENVIRONMENT"` and `pg_dump --format=custom --encoding=UTF8 --no-owner`.
@@ -181,7 +180,7 @@ Rules:
     - local development database name, for example replace `base_project_development` with the current project's development database;
     - default excluded table list, keeping reference exclusions when matching tables exist and removing or changing only when the current schema requires it;
     - deploy user/host handling only when the current deployment is not `root@$MAIN_HOST`.
-32. Do not ask the user to paste database credentials. Use the existing project-defined Kamal secret source, Terraform output, local environment variables, or confirmed local secret storage following the secrets policy.
+32. Do not ask the user to paste database credentials. Use the existing project-defined Kamal secret source, recorded server data in `.kamal/servers.yml`, local environment variables, or confirmed local secret storage following the secrets policy.
 33. Validate dump/restore setup without requiring a live production dump unless the user explicitly wants to run it:
     - syntax-check `bin/dump` with `bash -n bin/dump`;
     - syntax-check Ruby scripts with `ruby -c script/dump/prepare_secrets.rb` and `ruby -c script/dump/restore`;
@@ -322,7 +321,7 @@ Required scope:
    - `config/secrets*`
    - `bin/kamal`
    - scripts referenced by Kamal secret hooks or deploy configuration
-   - `terraform/`
+   - `.kamal/servers.yml` (gitignored recorded server data)
    - `dip.yml`
    - existing `bin/dump`, `dump`, or `script/dump/`
 2. Read the reference project files remotely from GitHub `main`:
@@ -342,7 +341,7 @@ Required scope:
    - Inspect `config/deploy*.yml` `env.clear`, `env.secret`, accessories, builder/registry secrets, `.kamal/secrets*`, `config/secrets*`, `bin/kamal`, and any scripts those files call.
    - Adapt `prepare_secrets.rb` to read database secrets through the same mechanism Kamal already uses: Rails credentials, `.kamal/secrets`, 1Password/`op`, dotenv, repository/env variables, or another project-local secret command.
    - Do not introduce a second secret source just for dump/restore.
-   - Keep Terraform output for host discovery when the current deployment uses Terraform for host discovery.
+   - Keep host discovery on the same source the deployment already uses (`.kamal/servers.yml` via `KamalCli`, or the `MAIN_HOST` environment variable).
    - Keep environment variables as overrides.
    - Keep the reference `dump` script's static `EXCLUDED_TABLES=(...)` pattern inside `bin/dump`. Put the user's chosen excluded tables there, together with applicable reference defaults.
 5. Adapt hardcoded reference values to the current project:
@@ -488,7 +487,7 @@ Use this feature whenever the user asks for `update`, `upgrade`, or periodic mai
 Procedure:
 
 1. Read latest reference project remotely from GitHub `main` branch (no local clone).
-2. Detect how the user currently stores keys and credentials for the project (for example password manager, encrypted secret manager, repository secrets, `terraform/secrets.auto.tfvars`, unencrypted `.env*` files, or another local approach).
+2. Detect how the user currently stores keys and credentials for the project (for example password manager, encrypted secret manager, repository secrets, `.env*` provider tokens, unencrypted `.env*` files, or another local approach).
 3. If the project has `config/master.key` or `config/credentials/*.key`, explicitly warn that these files are mandatory recovery material, are ignored by git, and must be saved in a secure place before secret-related update work continues. Load and run `agents/recipes/save-rails-secrets-1password.md` when the user asks for help saving them or when new staging/production secrets must be stored.
 4. If current key storage is unsafe or unencrypted, explicitly propose moving to a password manager or another encrypted approach before continuing secret-related update steps.
    - Recommend `1Password` first because it is implemented and tested via this skill.
@@ -507,13 +506,13 @@ Procedure:
 12. During project update/upgrade requests, always inspect the reference project for applicable changes to:
    - `.gitignore`
    - `AGENTS.md`
-   - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove`, `lib/kamal_cli.rb`
+   - `bin/setup`, `bin/deploy`, `bin/logs`, `bin/console`, `bin/remove`, `bin/remove_fully`, `lib/kamal_cli.rb`, `lib/server_provider.rb`
    - deployment configuration such as `config/deploy.yml`, `config/deploy.staging.yml`, `config/deploy.production.yml`
-   - Terraform configuration in `terraform/`
+   - server provisioning code in `lib/server_provider.rb` (and any leftover `terraform/` directory that still needs migrating)
 13. If those `.gitignore`, `AGENTS.md`, and deployment-related updates are applicable, apply/adapt them as part of the project update instead of skipping them by default. When deployment files are included, load `agents/recipes/deployment-recipe.md`.
 14. Keep or enforce HAML-only view setup from the reference project (no new `.erb`).
 15. Run validation after each batch.
-16. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item, including whether `.gitignore`, `AGENTS.md`, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`, deployment, and Terraform updates were applied or skipped and why.
+16. After update/upgrade execution, provide summary of adopted vs skipped updates with explicit reasons for every skipped item, including whether `.gitignore`, `AGENTS.md`, `bin/setup`/`bin/deploy`/`bin/logs`/`bin/console`/`bin/remove`/`bin/remove_fully`, deployment, and server-provisioning updates were applied or skipped and why.
 17. For reference-file imports, request user approval once per import batch, not once per file.
 18. Ask only decision-level update/upgrade questions, not file-level copy questions.
 19. For each approved batch, build one temporary script for import/apply commands, run it, then remove it.
