@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.1.2
+
+- Scripts must not hang silently: `KamalCli` now validates typed IP and hostname answers (re-prompt, max 3 tries),
+  `wait_for_ssh` validates and resolves the host first and aborts immediately on a typo'd value, uses a 180s timeout with
+  an elapsed/remaining countdown, and the deployment recipe gains a "No silent hangs" rule set for all scripts.
+  Triggered by `bin/setup` waiting 5 minutes on `MAIN_HOST=production` (a name typed into the IP prompt).
+
 ## 3.1.1
 
 - `bin/setup -d <environment>` now prints detailed, colored (`colorize`) progress while creating a server: phase headers,

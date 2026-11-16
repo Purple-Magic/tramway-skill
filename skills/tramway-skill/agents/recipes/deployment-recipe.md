@@ -23,6 +23,14 @@ Required scripts:
 
 **Progress output for `bin/setup -d <environment>`.** Creating a server takes minutes, so the script must never go quiet. Use the `colorize` gem (add `gem "colorize"` to the `Gemfile` development group if absent, and run `bundle install`) via the `KamalCli.step`/`info`/`ok` helpers: print a blue `==>` line before each phase (creating the server, updating DNS, waiting for SSH, running `kamal setup`), a green `✔` line when it finishes, and a heartbeat line every ~10 seconds (`KamalCli.with_progress`) during any long blocking call such as the provider CLI waiting for the server, plus a retry line per SSH attempt. Errors use red. Never print tokens or secret values in these logs.
 
+**No silent hangs (rule for every script and helper).**
+- Validate every typed value immediately: an IP prompt accepts only an IP address (`valid_ip?`), a hostname prompt only a domain (`valid_hostname?`). A wrong answer is rejected on the spot with a hint and a re-prompt (max 3 tries), never stored.
+- Before any wait or network call, check the target resolves/is well-formed and abort at once on errors retrying cannot fix (unresolvable name, malformed address).
+- Every wait loop has an explicit short timeout, prints elapsed/remaining time on each retry, and ends with an actionable error message (what to check, which file to fix).
+- Every subprocess that can block (provider CLI, `kamal`) is wrapped in `KamalCli.with_progress` so a heartbeat shows it is alive.
+- Before handing off to `kamal setup`, print the resolved `MAIN_HOST`/`HOST` for the operator to see. `kamal setup` is for first installation only; if the server already runs the app, point the operator to `bin/deploy -d <environment>` instead.
+- `bin/setup` also validates entries already recorded in `.kamal/servers.yml` (a hand-edited or typo'd `main_host` aborts with a pointer to the file) before waiting for SSH.
+
 Shared logic (recorded-server lookup, typed confirmations, SSH wait, environment export, required-command checks) belongs in `lib/kamal_cli.rb` and is `require_relative`d from each `bin/` script, not copy-pasted per script. Provider logic (create/delete server, optional DNS) belongs only in `lib/server_provider.rb`.
 
 ### Recorded server data (`.kamal/servers.yml`)
@@ -54,6 +62,7 @@ Every action that creates or deletes a server must be confirmed by typing the **
 ```ruby
 require "fileutils"
 require "socket"
+require "ipaddr"
 require "yaml"
 require "colorize"
 require_relative "server_provider"
@@ -119,6 +128,32 @@ module KamalCli
     File.write(SERVERS_FILE, servers.reject { |name, _| name == destination }.to_yaml)
   end
 
+  # --- Input validation (fail fast on typos instead of hanging later) -------
+
+  HOSTNAME_PATTERN = /\A(?=.{1,253}\z)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}\z/i
+
+  def valid_ip?(value)
+    IPAddr.new(value.to_s)
+    value.to_s.match?(/\A[\d.:a-fA-F]+\z/) # reject names; IPAddr alone accepts some odd forms
+  rescue IPAddr::Error
+    false
+  end
+
+  def valid_hostname?(value)
+    value.to_s.match?(HOSTNAME_PATTERN)
+  end
+
+  # Asks until the answer passes `valid`, or the operator submits an empty answer to cancel.
+  def ask_valid(question, hint, &valid)
+    3.times do
+      answer = ask(question)
+      return answer if answer.empty? || valid.call(answer)
+
+      warn_line "'#{answer}' is not valid: #{hint}. Try again, or leave empty to cancel."
+    end
+    abort "Too many invalid answers. Nothing was changed.".red
+  end
+
   # --- Prompts ---------------------------------------------------------------
 
   def require_terminal!
@@ -153,7 +188,7 @@ module KamalCli
 
     if yes?("Create a new server for '#{destination}' at the hosting provider?")
       confirm_by_typing!(destination, "This will CREATE a new, billable '#{destination}' server at the hosting provider.")
-      host = ask("Public hostname for '#{destination}' (for example #{destination}.example.com)")
+      host = ask_valid("Public hostname for '#{destination}' (for example #{destination}.example.com)", "expected a domain like app.example.com") { |v| valid_hostname?(v) }
       abort "A hostname is required. Nothing was created." if host.empty?
 
       step "Creating '#{destination}' server at the hosting provider (usually 1-3 minutes)"
@@ -166,9 +201,9 @@ module KamalCli
       ServerProvider.upsert_dns(host, server["main_host"])
       ok "DNS step finished"
     else
-      ip = ask("IP of an already existing '#{destination}' server (empty to cancel)")
+      ip = ask_valid("IPv4/IPv6 address of an already existing '#{destination}' server (empty to cancel)", "expected an IP address like 203.0.113.10, not a name") { |v| valid_ip?(v) }
       abort "No server for '#{destination}'. Nothing was changed." if ip.empty?
-      host = ask("Public hostname for '#{destination}'")
+      host = ask_valid("Public hostname for '#{destination}'", "expected a domain like app.example.com") { |v| valid_hostname?(v) }
       abort "A hostname is required. Nothing was recorded." if host.empty?
 
       server = { "main_host" => ip, "host" => host } # no server_id: bin/remove_fully cannot delete it
@@ -178,8 +213,20 @@ module KamalCli
     server
   end
 
-  def wait_for_ssh(host, port: 22, timeout: 300)
-    step "Waiting for SSH on #{host}:#{port} (a fresh server needs a minute or two to boot)"
+  # Never waits blindly: validates the target first, fails immediately on errors that retrying cannot
+  # fix (bad name, bad address), and prints a countdown for the ones it does retry.
+  def wait_for_ssh(host, port: 22, timeout: 180)
+    step "Waiting for SSH on #{host}:#{port} (timeout #{timeout}s; a fresh server needs a minute or two to boot)"
+
+    unless valid_ip?(host) || valid_hostname?(host)
+      abort "'#{host}' is neither an IP address nor a hostname. Fix main_host in #{SERVERS_FILE} and retry.".red
+    end
+    begin
+      Addrinfo.getaddrinfo(host, port, nil, :STREAM)
+    rescue SocketError => e
+      abort "Cannot resolve '#{host}' (#{e.message}). Fix main_host in #{SERVERS_FILE} and retry.".red
+    end
+
     started = Time.now
     deadline = started + timeout
     attempt = 0
@@ -188,9 +235,10 @@ module KamalCli
       Socket.tcp(host, port, connect_timeout: 5) { nil }
       ok "SSH is reachable after #{(Time.now - started).to_i}s"
       true
-    rescue SystemCallError, SocketError
-      abort "Timed out waiting for SSH on #{host}:#{port}.".red if Time.now > deadline
-      info "SSH not ready yet (attempt #{attempt}, #{(Time.now - started).to_i}s elapsed), retrying in 5s...".light_black
+    rescue SystemCallError, Errno::ETIMEDOUT
+      left = (deadline - Time.now).to_i
+      abort "Timed out after #{timeout}s waiting for SSH on #{host}:#{port}. Check the IP, the firewall, and that the server is running.".red if left <= 0
+      info "SSH not ready yet (attempt #{attempt}, #{(Time.now - started).to_i}s elapsed, #{left}s left), retrying in 5s...".light_black
       sleep 5
       retry
     end
