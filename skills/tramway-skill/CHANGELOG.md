@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.2.3
+
+- The skill now always warns the user to upgrade Ruby to 4.0.10, 3.4.13 or 3.3.14 because of a fixed RCE
+  vulnerability. Added `SKILL.md` command policy rule 1a.
+
 ## 3.2.2
 
 - Secrets default to Rails credentials, but the skill must always ask whether the user also wants 1Password

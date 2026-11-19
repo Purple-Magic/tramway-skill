@@ -32,6 +32,7 @@ Version policy:
 Command policy:
 
 1. Assume Ruby is already installed on the host system.
+1a. **Security notice (RCE):** Always draw the user's attention to the fact that they MUST upgrade Ruby to a patched release: **Ruby 4.0.10**, **Ruby 3.4.13**, or **Ruby 3.3.14** (or newer within the same line), because these releases fix an RCE (remote code execution) vulnerability. At the start of any task, check the project's Ruby version (`.ruby-version`, `Gemfile`, `Dockerfile`, `ruby -v`); if it is older than the patched release of its line (or on an unpatched line), warn the user explicitly and recommend upgrading. Repeat the reminder in the final summary if the project is still on a vulnerable version.
 2. Use `dip` only in the local development environment. Never use or suggest `dip` for production, staging, or CI commands, scripts, jobs, deploy hooks, or operational runbooks.
 3. In local development, run Rails/Ruby project commands through `dip`. Do not use `docker` or `docker-compose` directly for project operations. Use `dip` as the main interface for project commands.
 4. Exception: use direct `rails new ...` only when creating a brand-new Rails project (before `dip` setup exists).
